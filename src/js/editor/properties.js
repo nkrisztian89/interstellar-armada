@@ -1262,19 +1262,21 @@ define([
      * @param {Editor~PropertyDescriptor} propertyDescriptor
      * @param {String} topName See _changeData
      * @param {Object} parent See _changeData
+     * @param {Object} objectParent The parent object of parent
      * @param {Object} topParent The top level object we are editing
      * @param {Popup} [parentPopup] If this property editor is displayed within a popup, give a reference to that popup here
      * @param {Function} [changeHandler] Operations need to be executed in case this property changes
      * @param {Element} [row] The <tr> element within which this control sits
      * @returns {Element}
      */
-    function _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, row) {
+    function _createUnsetControl(propertyDescriptor, topName, parent, objectParent, topParent, parentPopup, changeHandler, row) {
         var result = document.createElement("div"),
                 labelText, defaultValue, label, button, type = new descriptors.Type(propertyDescriptor.type), optional, setProperty, limit = false;
-        optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, null, _item.name));
+        result.title = "";
+        optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, objectParent, _item.name));
         if (((!parent || (parent === _item.data)) && _basedOn) || ((parent !== _item.data) && parent[descriptors.BASED_ON_PROPERTY_NAME])) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
-        } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.defaultText) {
+        } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.defaultText || propertyDescriptor.getDerivedDefault) {
             labelText = DEFAULT_PROPERTY_TEXT;
             if (propertyDescriptor.defaultText) {
                 labelText = propertyDescriptor.defaultText;
@@ -1282,6 +1284,9 @@ define([
                 defaultValue = propertyDescriptor.defaultValue;
                 if ((defaultValue === undefined) && propertyDescriptor.globalDefault && propertyDescriptor.settingName) {
                     defaultValue = config.getSetting(propertyDescriptor.settingName);
+                }
+                if ((defaultValue === undefined) && propertyDescriptor.getDerivedDefault) {
+                    defaultValue = propertyDescriptor.getDerivedDefault(parent, objectParent, _item.name);
                 }
                 if (typeof defaultValue === "number") {
                     labelText = defaultValue.toString();
@@ -1321,12 +1326,11 @@ define([
                     }
                 }
             }
-            if (limit && (labelText.length > 20)) {
-                labelText = labelText.substring(0, 17) + "...";
+            if (limit && (labelText.length > 25)) {
+                result.title += labelText + "\n";
+                labelText = labelText.substring(0, 22) + "...";
             }
             label = _createDefaultControl(labelText);
-        } else if (propertyDescriptor.getDerivedDefault) {
-            label = _createDefaultControl(propertyDescriptor.getDerivedDefault(parent, null, _item.name));
         } else if (optional) {
             if (type.getBaseType() === descriptors.BaseType.ROTATIONS) {
                 label = _createDefaultControl(NONE_PROPERTY_TEXT);
@@ -1359,7 +1363,7 @@ define([
         button.className = SET_PROPERTY_BUTTON_CLASS;
         button.onclick = setProperty;
         result.appendChild(button);
-        result.title = "Click to set property";
+        result.title += "Click to set property";
         result.onclick = setProperty;
         if (row) {
             row.classList.add(UNSET_PROPERTY_ROW_CLASS);
@@ -1408,7 +1412,7 @@ define([
         required = !!propertyDescriptor.isRequired && propertyDescriptor.isRequired(parent, objectParent, _item.name);
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, objectParent, _item.name));
         if (data === undefined) {
-            result = _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, row);
+            result = _createUnsetControl(propertyDescriptor, topName, parent, objectParent, topParent, parentPopup, changeHandler, row);
         } else {
             switch (type.getBaseType()) {
                 case descriptors.BaseType.BOOLEAN:
@@ -1497,7 +1501,7 @@ define([
                         control.popup.remove();
                     }
                     parentNode.removeChild(result);
-                    newControl = _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, row);
+                    newControl = _createUnsetControl(propertyDescriptor, topName, parent, objectParent, topParent, parentPopup, changeHandler, row);
                     newControl.classList.add(CONTROL_CLASS);
                     parentNode.appendChild(newControl);
                     parentNode.control = newControl;

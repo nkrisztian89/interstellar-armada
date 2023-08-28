@@ -4038,6 +4038,15 @@ define([
                 }
                 return parts.join(", ");
             },
+            _getMessageText = function (data, parent, itemName) {
+                if (!data.textID) {
+                    return undefined;
+                }
+                return strings.get(strings.MISSION.PREFIX, utils.getFilenameWithoutExtension(itemName) + strings.MISSION.MESSAGES_SUFFIX.name + data.textID);
+            },
+            _getDefaultMessageColor = function () {
+                return config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).colors.default;
+            },
             /**
              * A merge of all the different possible action parameters
              * @type Editor~TypeDescriptor
@@ -4048,7 +4057,7 @@ define([
                 getPreviewText: function (instance) {
                     // MessageAction params:
                     if ((instance.text !== undefined) || (instance.textID !== undefined)) {
-                        return "message" + (instance.text ? " (" + _getStringPreview(instance.text) + ")" : (instance.textID ? " (" + instance.textID + ")" : ""));
+                        return "message: " + (instance.text ? '"' + _getStringPreview(instance.text) + '"' : (instance.textID ? instance.textID : ""));
                     }
                     // CommandAction params:
                     if (instance.command !== undefined) {
@@ -4088,12 +4097,14 @@ define([
                         type: LONG_STRING,
                         newValue: "Test",
                         isRequired: _requiresMessage,
-                        isValid: _parentIsMessageAction
+                        isValid: _parentIsMessageAction,
+                        getDerivedDefault: _getMessageText,
+                        updateOnValidate: true
                     },
                     TEXT_ID: {
                         name: "textID",
                         type: MESSAGE_REFERENCE,
-                        optional: true,
+                        isRequired: _missionHasMessages,
                         isValid: _missionHasMessages
                     },
                     SOURCE: {
@@ -4144,6 +4155,7 @@ define([
                         name: "color",
                         type: BaseType.COLOR4,
                         optional: true,
+                        getDerivedDefault: _getDefaultMessageColor,
                         isValid: _parentIsMessageAction
                     },
                     // CommandAction params:
