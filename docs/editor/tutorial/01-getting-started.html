@@ -8,6 +8,7 @@
     </head>
     <body>
         <div class="main-content">
+            <a href="00-index.html">Back to the chapter list</a>
             <h2>Interstellar Armada Editor tutorial 01</h2>
             <h1>Getting started</h1>
             <h2>Creating the simplest mission</h2>
@@ -21,59 +22,60 @@
                 <li>export the mission to file</li>
                 <li>load and play the mission from the game</li>
             </ul>
-            <p>This tutorial is made for the Interstellar Armada Editor version 0.5.3.</p>
+            <p>This tutorial is made for the Interstellar Armada Editor version 0.5.4.</p>
             <ol>
                 <li><h3>Creating the mission</h3>
-                    <p>Click the "New" button in the top left corner.</p>
-                    <p>In the popup that appears, select "missions" as the Item type, if it is not already selected.</p>
-                    <p>Select "none" as the Copy from value, as we are going to create a whole new mission from scratch.</p>
-                    <p>Enter the name of your mission into the Name field. This will determine the name of the file when the mission is exported.</p>
-                    <p>Click "Create".</p>
+                    <p><strong>Click the "New" button</strong> in the top left corner.</p>
+                    <p>In the popup that appears, <strong>select "missions" as the Item type</strong>, if it is not already selected.</p>
+                    <p><strong>Select "none" as the Copy from value</strong>, as we are going to create a whole new mission from scratch.</p>
+                    <p><strong>Enter the name of your mission</strong> into the Name field. This will determine the name of the file when the mission is exported.</p>
+                    <p><strong>Click "Create".</strong></p>
                     <p>At this point you have successfully created a new mission, albeit it is an empty one without any spaceships. In the center, you should see the preview of the mission, and on the right side all the properties that you can edit to set up the mission. This is what we are going to continue with.</p>
                 </li>
                 <li><h3>Setting up teams</h3>
                     <p>The most basic mission needs to have two spaceships that are in different teams, so that they are hostile to each other. Before adding the ships, let's set up the two teams.</p>
-                    <p>By default, the "teams" property of the mission is not set. Click on the property (either its name, the "not set" value or the "set" button that appears when you hover it) to set it.</p>
-                    <p>The teams list is now set, but so far it is empty. Click on the "empty list" button to edit it.</p>
-                    <p>In the little popup that appears, click on the "+" button to add a new team.</p>
-                    <p>Now we have one team added. This will be the player's team, so enter "Player's team" in the name field, and hit enter.</p>
-                    <p>Click on the "+" button again to add a second team for the enemy.</p>
+                    <p>By default, <strong>the "teams" property</strong> of the mission <strong>is not set</strong>. <strong>Click on the property</strong> (either its name, the "not set" value or the "set" button that appears when you hover it) <strong>to set it.</strong></p>
+                    <p>The teams list is now set, but so far it is empty. <strong>Click on the "empty list" button</strong> to edit it.</p>
+                    <p>In the little popup that appears, <strong>click on the "+" button</strong> to add a new team.</p>
+                    <p>Now we have one team added. This will be the player's team, so <strong>enter "Player's team" in the name field, and hit enter.</strong></p>
+                    <p><strong>Click on the "+" button again</strong> to add a second team for the enemy.</p>
                     <p>The list editor popup automatically switches to editing the new team when you add one, but you can always select which team you would like to edit using the dropdown at the top of the popup (now showing "2: Team 2").</p>
-                    <p>Enter "Enemy team" as the name for this second team and hit enter.</p>
-                    <p>Now you have the teams set up. You can close the list editor by clicking on its button (now showing "[Player's team, Enemy team]" again.</p>
+                    <p><strong>Enter "Enemy team" as the name</strong> for this second team <strong>and hit enter</strong>.</p>
+                    <p>Now you have the teams set up. <strong>You can close the list editor by clicking on its button</strong> (now showing "[Player's team, Enemy team]" again.</p>
                 </li>
                 <li><h3>Adding the player</h3>
-                    <p>Similar to teams, now we will add the two spaceships. Unlike teams, the "spacecrafts" property is a required one, so it is already set to an empty list. Click on the "empty list" button to edit the list.</p>
-                    <p>In the popup, click on the "+" button to add the first spaceship.</p>
+                    <p>Similar to teams, now we will add the two spaceships. Unlike teams, <strong>the "spacecrafts" property</strong> is a required one, so it <strong>is already set to an empty list</strong>. <strong>Click on the "empty list" button</strong> to edit the list.</p>
+                    <p>In the popup, <strong>click on the "+" button</strong> to add the first spaceship.</p>
                     <p>You will now see a lot of properties show up for the first spacecraft as well as you will see it appear in the middle of the preview (unless you have moved the camera of the preview). Don't worry, we only need a few things set for now, and will cover the rest of the properties in later tutorials (coming soon...)</p>
-                    <p>This first spacecraft will be our player, so let's set its name to "Player" by entering it in place of "Spacecraft 1" and hitting enter.</p>
-                    <p>Click on the team property to set it. It's automatically set to the first team in the mission, which is the "Player's team", so we are good to go!</p>
-                    <p>For the class property, select "falcon". You should see the default container changing into a Falcon in the preview as you do.</p>
-                    <p>Click the piloted property to set it. A checkbox will appear next to it. Tick it to make this the ship that the player pilots in the mission.</p>
+                    <p>This first spacecraft will be our player, so let's <strong>set its name to "Player"</strong> by entering it in place of "Spacecraft 1" and hitting enter.</p>
+                    <p><strong>Click on the team property to set it</strong>. It's automatically set to the first team in the mission, which is the "Player's team", so we are good to go!</p>
+                    <p><strong>For the class property, select "falcon"</strong>. You should see the default container changing into a Falcon in the preview as you do.</p>
+                    <p><strong>Click the piloted property to set it</strong>. <strong>A checkbox will appear</strong> next to it. <strong>Tick it</strong> to make this the ship that the player pilots in the mission.</p>
                 </li>
                 <li><h3>Adding the enemy</h3>
-                    <p>Now it's time to add our enemy! Click the "+" button at the top of the spacecraft editor popup to add a new ship.</p>
-                    <p>Name this ship "Enemy" and set its team to the Enemy team.</p>
-                    <p>For its class, choose "wolf".</p>
-                    <p>We need to make this ship piloted by the AI. Click on the "ai" property to set it. By default, it will be set to "fighter", which is exactly what we want, since this is a fighter.</p>
-                    <p>This enemy is now directly on the top of our player, which is not really ideal. Click on "position" to set it, and then set the position to 0, 100, 0 to put the enemy 100 meters in front of the player. You can see in the preview where the enemy will be located. (you need to hit enter or click somewhere outside the number editor after changing the values for the preview to refresh)</p>
-                    <p>You might want the enemy to face the player, so click on "rotations" to turn it around. Click on the "none" button that appears, then on "+" to add a new rotation, then choose the Z axis and enter 180 degrees (then hit enter). You should see in the preview the enemy now facing the player.</p>
-                    <p>We are now done with setting up the enemy, so you can close the spacecraft editor popup by clicking its button (now showing "Spacecraft [2]")</p>
+                    <p>Now it's time to add our enemy! <strong>Click the "+" button at the top of the spacecraft editor popup</strong> to add a new ship.</p>
+                    <p><strong>Name this ship "Enemy"</strong> and <strong>set its team to the Enemy team</strong>.</p>
+                    <p><strong>For its class, choose "wolf".</strong></p>
+                    <p>We need to make this ship piloted by the AI. <strong>Click on the "ai" property to set it</strong>. By default, it will be set to "fighter", which is exactly what we want, since this is a fighter.</p>
+                    <p>This enemy is now directly on the top of our player, which is not really ideal. <strong>Click on "position" to set it</strong>, and then <strong>set the position to 0, 100, 0</strong> to put the enemy 100 meters in front of the player. You can see in the preview where the enemy will be located. (you need to hit enter or click somewhere outside the number editor after changing the values for the preview to refresh)</p>
+                    <p>You might want the enemy to face the player, so <strong>click on "rotations"</strong> to turn it around. <strong>Click on the "none" button</strong> that appears, <strong>then on "+"</strong> to add a new rotation, then <strong>choose the Z axis and enter 180 degrees</strong> (then hit enter). You should see in the preview the enemy now facing the player.</p>
+                    <p>We are now done with setting up the enemy, so you can <strong>close the spacecraft editor popup by clicking its button</strong> (now showing "Spacecraft [2]")</p>
                 </li>
                 <li><h3>Exporting the mission</h3>
                     <p>We now have our basic mission fully set up, so it's time to export it!</p>
-                    <p>Click on the "Export" button in the top left.</p>
+                    <p><strong>Click on the "Export" button</strong> in the top left.</p>
                     <p>The Item type will be automatically set to "missions" and the Item to the mission we just created.</p>
-                    <p>Enter your name into the Author field. Later if you wish to upload a (more interesting) mission to the Mission Hub for other players to try, you will need to use the same name here as for the Mission Hub, and for privacy reasons I recommend that you do not use your real name.</p>
-                    <p>Click "Export". Your browser should now save a file with your entered mission name.</p>
+                    <p><strong>Enter your name into the Author field</strong>. Later if you wish to upload a (more interesting) mission to the Mission Hub for other players to try, you will need to use the same name here as for the Mission Hub, and <strong>for privacy reasons I recommend that you do not use your real name</strong>.</p>
+                    <p><strong>Click "Export"</strong>. Your browser should now save a file with your entered mission name.</p>
                 </li>
                 <li><h3>Playing the mission</h3>
                     <p>If you have successfully exported a mission file, you can play it directly in the game.</p>
-                    <p>From the main menu, go to "Single player" / "My missions", and click on the "Choose file" button.</p>
-                    <p>Select the file that you have saved. The mission will be loaded and you will see its details.</p>
-                    <p>Click "Launch mission" as you would with any normal mission to play it!</p>
+                    <p><strong>From the main menu, go to "Single player" / "My missions", and click on the "Choose file" button.</strong></p>
+                    <p><strong>Select the file that you have saved</strong>. The mission will be loaded and you will see its details.</p>
+                    <p><strong>Click "Launch mission"</strong> as you would with any normal mission to play it!</p>
                 </li>
             </ol>
+            <a href="02-squads-formations.html">Next chapter: Squads and formations</a>
         </div>
     </body>
 </html>

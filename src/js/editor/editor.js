@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2022 Krisztián Nagy
+ * Copyright 2016-2023 Krisztián Nagy
  * @file The main module for the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -128,7 +128,7 @@ define([
             PREVIEW_INFO_ID = "previewInfo",
             PREVIEW_TOOLTIP_ID = "previewTooltip",
             NO_ITEM_SELECTED_TEXT = "select an item from the left or click New or Import in the top left menu",
-            TUTORIAL_TEXT = 'for more information, check out the <a href="docs/editor/tutorial/01-getting-started.html" target="_blank">Getting started guide</a>',
+            TUTORIAL_TEXT = 'for more information, check out the <a href="docs/editor/tutorial/00-index.html" target="_blank">Getting started guide</a>',
             NO_PREVIEW_TEXT = "preview not available for this type of item",
             NO_PROPERTIES_TEXT = "properties not available for this type of item",
             // ------------------------------------------------------------------------------

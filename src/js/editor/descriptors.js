@@ -4598,7 +4598,8 @@ define([
                                 return key.substring(6);
                             });
                         },
-                        defaultText: "none"
+                        defaultText: "none",
+                        description: "\nIf 'count' is set: the name of the squad, or one of the automatically translated squad IDs (as suggested)\nFor single ships: the name of the squad to add the ship to and the squad index separated by a space. e.g. 'Alpha 5'"
                     },
                     TEAM: {
                         name: "team",
@@ -4614,7 +4615,8 @@ define([
                         type: AI_TYPE,
                         optional: true,
                         defaultText: "none",
-                        isValid: _craftIsNotPilotedSingle
+                        isValid: _craftIsNotPilotedSingle,
+                        description: "The type of AI that should control this station.\nfighter: attacks the target head on, does charge attacks and evasive maneuvers if it gets hit\nship: approaches to weapon range and then turns according to the attack vector of the spacecraft class to attack the target with rotating weapons\nstation: does not move or turn, just attacks with its rotating weapons\nsentry: does not move, but turns according to its attack vector and attacks if the target comes within range"
                     },
                     POSITION: {
                         name: "position",
