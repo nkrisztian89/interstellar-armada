@@ -25,50 +25,50 @@
             <ol>
                 <li><h3>Importing the mission</h3>
                     <p>If you do not have the mission open anymore as you restarted the editor since you created it, first you need to import it to continue editing.</p>
-                    <p><strong>Click the "Import" button</strong> in the top left corner.</p>
-                    <p>In the popup that appears, the "missions" Item type will already be selected, as that is the only item type the editor can currently import.</p>
-                    <p><strong>Click the "Choose File" button in the popup and then select the JSON file you exported</strong>, or just drag it on top of the button from your file explorer.</p>
-                    <p><strong>Click "Import".</strong></p>
+                    <p><strong>Click the <span class="ref">Import</span> button</strong> in the top left corner.</p>
+                    <p>In the popup that appears, the <em>"missions"</em> <span class="ref">Item type</span> will already be selected, as that is the only item type the editor can currently import.</p>
+                    <p><strong>Click the <span class="ref">Choose File</span> button in the popup and then select the JSON file you exported</strong>, or just drag it on top of the button from your file explorer.</p>
+                    <p><strong>Click <span class="ref">Import</span>.</strong></p>
                     <p>At this point you should see the mission in the state you have exported it, with the player ship facing an enemy fighter.</p>
                 </li>
                 <li><h3>Setting up the enemy squad</h3>
                     <p>It is more interesting to face multiple enemy fighters attacking in a formation rather than a single one, so let's first make that single enemy into a squad.</p>
-                    <p>First, <strong>select the enemy fighter</strong>, either by clicking on the button next to the "spacecrafts" property ("Spacecraft [2]") in the right panel or clicking the fighter itself in the preview in the center.</p>
-                    <p>We can define a full squad with a single spacecraft entry. To do this, <strong>set the "count" property of the enemy spacecraft to 3</strong>. (as usual, click on the property value, the part that currently says "single ship")</p>
-                    <p>Note that the available properties of the spacecraft change when you change the count to a number larger than one.</p>
+                    <p>First, <strong>select the enemy fighter</strong>, either by clicking on the button next to the <span class="ref">spacecrafts</span> property (<span class="ref">Spacecraft [2]</span>) in the right panel or clicking the fighter itself in the preview in the center.</p>
+                    <p>We can define a full squad with a single spacecraft entry. To do this, <strong>set the <span class="ref">count</span> property of the enemy spacecraft to 3</strong>. (as usual, click on the property value, the part that currently says <span class="ref">single ship</span>)</p>
+                    <p class="hint">Note that the available properties of the spacecraft change when you change the count to a number larger than one.</p>
                     <p>At this point, we actually have 3 identical enemy fighters in the mission, but they do not belong to a squad yet and are placed right on top of each other, as we haven't set a formation for them yet.</p>
-                    <p>Let's add the enemy fighters to a squad. To do this, <strong>set the "squad" property</strong> (click on "none"). Before typing in a squad name, you can press the downward arrow or just click the text input again to bring up a list of suggestions. These suggestions are the built-in squad names that are automatically translated into the supported languages, so it is recommended to use them. <strong>Select (or type) "raider"</strong>, a typical pirate squad name.</p>
-                    <p>At this point, the 3 enemy fighters belong to the "raider" squad, so later on they can be referenced together (such as when giving them commands), and they automatically get the names Raider 1, Raider 2, Raider 3.</p>
+                    <p>Let's add the enemy fighters to a squad. To do this, <strong>set the <span class="ref">squad</span> property</strong> (click on <span class="ref">none</span>). Before typing in a squad name, you can press the downward arrow or just click the text input again to bring up a list of suggestions. These suggestions are the built-in squad names that are automatically translated into the supported languages, so it is recommended to use them. <strong>Select (or type) <em>"raider"</em></strong>, a typical pirate squad name.</p>
+                    <p>At this point, the 3 enemy fighters belong to the <em>"raider"</em> squad, so later on they can be referenced together (such as when giving them commands), and they automatically get the names <em>Raider 1, Raider 2, Raider 3</em>.</p>
                 </li>
                 <li><h3>Setting the enemy formation</h3>
                     <p>Now let's set a formation for the raiders so they don't occupy the same point in space.</p>
-                    <p><strong>Set the "formation" property</strong> of raider squad by clicking it, then <strong>bring up the options</strong> by clicking on the button that appears ("wedge (0,0,0)").</p>
-                    <p>In the popup for editing the formation, you can choose a type and set a spacing. For now, <strong>leave the type as "wedge"</strong> and <strong>set a spacing of 50, -20, 0</strong>! You should see the enemy fighters spread out as you change the coordinates.</p>
-                    <p>Hint: you can experiment with different formation types by setting a higher ship count and a spacing along all 3 axes, then changing the formation type and checking how it looks in the preview. Don't set a too tight formation, as the ships will bump into each other as they try to maneuver!</p>
-                    <p>Note that ships of a squad defined this way in a single entry share some properties, such as class, AI type or position (aside from position within the formation), but there are several properties that you can still set as different for the squad members.</p>
+                    <p><strong>Set the <span class="ref">formation</span> property</strong> of raider squad by clicking it, then <strong>bring up the options</strong> by clicking on the button that appears (<span class="ref">wedge (0,0,0)</span>).</p>
+                    <p>In the popup for editing the formation, you can choose a type and set a spacing. For now, <strong>leave the <span class="ref">type</span> as <em>"wedge"</em></strong> and <strong>set a <span class="ref">spacing</span> of 50, -20, 0</strong>! You should see the enemy fighters spread out as you change the coordinates.</p>
+                    <p class="hint">Hint: you can experiment with different formation types by setting a higher ship count and a spacing along all 3 axes, then changing the formation type and checking how it looks in the preview. Don't set a too tight formation, as the ships will bump into each other as they try to maneuver!</p>
+                    <p class="hint">Note that ships of a squad defined this way in a single entry share some properties, such as class, AI type or position (aside from position within the formation), but there are several properties that you can still set as different for the squad members.</p>
                     <p>At this point, you pretty much have the enemy squad set up! Time to add some friends!</p>
                 </li>
                 <li><h3>Setting up a friendly squad</h3>
                     <p>To even the odds against the 3 enemy fighters, now let's make a squad for the player as well!</p>
-                    <p><strong>Select the player ship</strong> by clicking on it or selecting it in the spacecrafts list.</p>
-                    <p>Just like for the enemies, <strong>set its count to 3.</strong></p>
-                    <p>Notice that as you have set the count, the enemies turned to green, as the player's spacecraft lost the "piloted" setting, since only a single ship can be set to be piloted, a group cannot!</p>
-                    <p>To fix this, <strong>set the newly appeared "pilotedIndex" property</strong>, which will tell which ship in the squad is piloted by the player. <strong>Set it to 1</strong>, giving the first spacecraft in this entry to the player.</p>
-                    <p>Just like for the enemies, <strong>set the "squad" property</strong>. Choose "alpha" this time, or come up with your own squad name and type it in, just make sure it does not have any spaces in it.</p>
-                    <p>Just like for the enemies, <strong>set the "formation" property</strong> to a wedge formation of 50,0,10 spacing, or to a formation of your choice!</p>
-                    <p>Lastly, we will need to set an AI for the player squad, since we want the wingmen of the player to be active. Don't worry, the fighter that is piloted by the player will not be taken over by the AI in this case. <strong>Set "ai" to "fighter"</strong>.</p>
+                    <p><strong>Select the player ship</strong> by clicking on it or selecting it in the <span class="ref">spacecrafts</span> list.</p>
+                    <p>Just like for the enemies, <strong>set its <span class="ref">count</span> to 3.</strong></p>
+                    <p class="hint">Notice that as you have set the count, the enemies turned to green, as the player's spacecraft lost the "piloted" setting, since only a single ship can be set to be piloted, a group cannot!</p>
+                    <p>To fix this, <strong>set the newly appeared <span class="ref">pilotedIndex</span> property</strong>, which will tell which ship in the squad is piloted by the player. <strong>Set it to 1</strong>, giving the first spacecraft in this entry to the player.</p>
+                    <p>Just like for the enemies, <strong>set the <span class="ref">squad</span> property</strong>. Choose <em>"alpha"</em> this time, or come up with your own squad name and type it in, just <strong>make sure it does not have any spaces in it.</strong></p>
+                    <p>Just like for the enemies, <strong>set the <span class="ref">formation</span> property</strong> to a <em>"wedge"</em> formation of 50,0,10 <span class="ref">spacing</span>, or to a formation of your choice!</p>
+                    <p>Lastly, we will need to set an AI for the player squad, since we want the wingmen of the player to be active. Don't worry, the fighter that is piloted by the player will not be taken over by the AI in this case. <strong>Set <span class="ref">ai</span> to <em>"fighter"</em></strong>.</p>
                 </li>
                 <li><h3>Adding an extra enemy to the enemy squad</h3>
                     <p>Let's say you want to add a spacecraft to a squad, but it is in a different position, has a different class or different AI type from the rest. You cannot do it from the same spacecraft entry, but you absolutely can by adding a new one.</p>
                     <p>Let's add a fourth fighter to the enemy squad that is in a further away position.</p>
-                    <p><strong>Add a new spacecraft, set its team to the enemy, its class to wolf, ai to fighter, its position to 0,200,0 and rotations to Z+180 degrees!</strong></p>
+                    <p><strong>Add a new spacecraft, set its <span class="ref">team</span> to the enemy, its <span class="ref">class</span> to <em>"wolf"</em>, <span class="ref">ai</span> to <em>"fighter"</em>, its <span class="ref">position</span> to 0,200,0 and <span class="ref">rotations</span> to Z+180 degrees!</strong></p>
                     <p>Now this new enemy spacecraft is in a position that doesn't fit the formation of the raider squad, but you can still make it a part of it.</p>
-                    <p><strong>Unset the name property</strong> (click the "x" button), then <strong>set the squad property to "raider 4"</strong>. This will automatically make the fighter join the rest of the raider squad as the fourth spacecraft.</p>
+                    <p><strong>Unset the <span class="ref">name</span> property</strong> (click the <strong><span class="ref">x</span></strong> button), then <strong>set the <span class="ref">squad</span> property to <em>"raider 4"</em></strong>. This will automatically make the fighter join the rest of the raider squad as the fourth spacecraft.</p>
                 </li>
                 <li><h3>Export the mission</h3>
                     <p>This concludes the second tutorial! At this point, you have a more interesting mission with multiple enemies and wingmen.</p>
                     <p>Export and load the mission as explained in the first tutorial.</p>
-                    <p>I encourage you to try adding multiple squads and maybe individual ships as well, experiment with different formations!</p>
+                    <p class="hint">Try adding multiple squads and maybe individual ships as well, experiment with different formations!</p>
                 </li>
             </ol>
             <a href="01-getting-started.html">Previous chapter: Getting started</a>
