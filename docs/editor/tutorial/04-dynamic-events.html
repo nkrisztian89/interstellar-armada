@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Interstellar Armada Editor tutorial 04</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="tutorial.css">
+    </head>
+    <body>
+        <div class="main-content">
+            <a href="00-index.html">Back to the chapter list</a>
+            <h2>Interstellar Armada Editor tutorial 04</h2>
+            <h1>Dynamic events</h1>
+            <h2>Setting up waves of enemy squads and friendly reinforcements to arrive during the mission</h2>
+            <p>In this step-by-step walkthrough, we will update the mission we created in the first three tutorials, adding two more enemy squads that arrive after the previous one gets destroyed and a friendly reinforcement squad that arrives after a set time.</p>
+            <p>During the course of this tutorial, you will learn how to</p>
+            <ul>
+                <li>add dynamic events to missions</li>
+                <li>set up events to happen when some spacecrafts get destroyed</li>
+                <li>set up events to happen automatically after a set amount of time has passed</li>
+                <li>set up events to cause spacecrafts to jump in and set the details of the jump</li>
+                <li>set up events to cause a text message to be displayed</li>
+            </ul>
+            <p>This tutorial is made for the Interstellar Armada Editor version 0.5.4. We assume you have completed the <a href="03-equipment-loadouts.html">third tutorial chapter</a> and we will continue to edit the mission created there.</p>
+            <ol>
+                <li><h3>Importing the mission</h3>
+                    <p><strong>Import the mission into the editor</strong> as you have learned to do in the first tutorial.</p>
+                </li>
+                <li><h3>Setting up the second enemy wave</h3>
+                    <p><strong>Add a new spacecraft, set the <span class="ref">count</span> to 3, <span class="ref">squad</span> to <em>"marauder"</em>, <span class="ref">team</span> to the <em>Enemy team</em>, <span class="ref">class</span> to <em>"wolf"</em>, <span class="ref">ai</span> to <em>"fighter"</em> and the <span class="ref">formation</span> to a <em>wedge</em> formation with a <span class="ref">spacing</span> of 50,-20,0.</strong></p>
+                    <p>Put this squad a bit further back, so <strong>set the <span class="ref">position</span> to 0,500,0</strong> and <strong><span class="ref">rotations</span> to Z+180 degrees.</strong></p>
+                    <p class="hint">When spacecrafts jump in, they will appear exactly at the point to where their position is set (unless you set a different position in the parameters of the jump), but they will be immediately pushed forward at great speed by the force of the jump, so make sure you always position ships that are jumping in making sure there is a clear space for several hundred meters in front of them, unless you specifically want them to crash right into someone.</p>
+                    <p>This squad will not be present at the beginning of the mission. It will only arrive later on, so <strong>set the <span class="ref">away</span> property</strong> and <strong>tick its checkbox.</strong></p>
+                    <p class="hint">Notice that spacecrafts that are set as being away appear transparent in the preview and their names are gray instead of black in the spacecrafts list dropdown.</p>
+                    <p>Let's now add the event that will make this squad jump in once the first squad is destroyed!</p>
+                    <p><strong>Set the <span class="ref">events</span> property</strong> of the mission and <strong>add a new element</strong> to the empty list.</p>
+                    <p>In the popup that appears, you can set up the first event. Let's first <strong>set the <span class="ref">name</span> to <em>"second wave"</em></strong>, so we will be able to more easily identify this event later.</p>
+                    <p>The <span class="ref">trigger</span> property determines what causes the event to happen. In this case, we want this event to happen when the first wave of enemies, the <em>Raider</em> squad, is destroyed. <strong>Click on the current value (<span class="ref">mission start</span>) of the <span class="ref">trigger</span> property</strong> to change it.</p>
+                    <p>In the popup that appears, <strong>set the <span class="ref">conditions</span> property</strong> to make this event happen conditionally. This will immediately add a new element to the conditions list. <strong>Open it by clicking <span class="ref">[none destroyed]</span>.</strong></p>
+                    <p>The <span class="ref">type</span> of the condition is already set to <em>"destroyed"</em>, which is just what we need. But we also need to set up which ships we require to be destroyed.</p>
+                    <p><strong>Click on <span class="ref">subjects</span></strong> and <strong>set <span class="ref">squads</span></strong>, then <strong>add <em>raider</em> squad as the only element of the list.</strong> Now the <span class="ref">trigger</span> of the event reads <span class="ref">raider destroyed</span>, so we have properly set up when this event will happen.</p>
+                    <p>Now it's time to define what will happen when the <em>Raider</em> squad is destroyed. <strong>Close the <span class="ref">trigger</span> editor popup by clicking on the <span class="ref">raider destroyed</span> button.</strong></p>
+                    <p><strong>Open the <span class="ref">actions</span> property</strong> and <strong>add a new element to the empty list.</strong></p>
+                    <p><strong>Set the <span class="ref">type</span> property</strong> of the fist action <strong>to <em>"command"</em></strong>, as we want to command the second wave to jump in.</p>
+                    <p class="hint">Note that only spacecraft that have their ai property set will obey the commands you issue via events.</p>
+                    <p>Similarly to how you did with the trigger, <strong>set the <span class="ref">subjects</span> of the command to be the <em>marauder</em> squad.</strong></p>
+                    <p>The <span class="ref">params</span> property is used to select what kind of command you want to issue and all its details. It is set to <span class="ref">jump</span> by default, so for now we do not need to do anything else. The event will now cause the <em>Marauder</em> squad to jump in as soon as the <em>Raider</em> squad is destroyed.</p>
+                </li>
+                <li><h3>Setting up the third enemy wave</h3>
+                    <p>Similarly to how you did before, <strong>add a new enemy squad, <em>"serpent"</em>, with a <span class="ref">class</span> and <span class="ref">count</span> of your choice!</strong> Dont't forget to set the <span class="ref">ai</span> to <em>"fighter"</em>, and also <strong>set the <span class="ref">away</span> property to yes</strong>, but <strong>don't set the <span class="ref">position</span>, <span class="ref">rotations</span> or <span class="ref">formation</span></strong>, as this time those will be specified by the jump command details!</p>
+                    <p><strong>Add a new entry to <span class="ref">events</span>. Set its <span class="ref">name</span> to <em>"third wave"</em>.</strong></p>
+                    <p><strong>Edit the <span class="ref">trigger</span> and set <span class="ref">conditions</span>.</strong></p>
+                    <p>This time we will use a different condition. Let's make it so that the third wave jumps in already when you still have one enemy remaining from the second wave, making the mission a bit more action packed.</p>
+                    <p><strong>Open the <span class="ref">conditions</span> property and set the <span class="ref">type</span></strong> of the first condition <strong>to <em>"count"</em></strong>. This type of condition can be used to trigger events when the number of spacecrafts that are still alive from a group is below or above a certain number.</p>
+                    <p><strong>For <span class="ref">subjects</span>, set the <em>"marauder"</em> squad</strong> as you have previously learned.</p>
+                    <p><strong>Open <span class="ref">params</span></strong> and <strong> set <span class="ref">count</span> to 2</strong>. This means the event will trigger when the number of spacecrafts alive from <em>Marauder</em> squad drop below two. You could also try setting <span class="ref">relation</span> to <em>"equals"</em> and <span class="ref">count</span> to 1, but in that case if two marauders get destroyed exactly at the same time, then the event will never happen.</p>
+                    <p>Our trigger is now properly set up to <span class="ref">count of marauder below 2</span>, so <strong>close the <span class="ref">trigger</span> property editor</strong> and <strong>add a new element to the <span class="ref">actions</span> list.</strong></p>
+                    <p><strong>Set the action <span class="ref">type</span> to <em>"command"</em></strong> and <strong><span class="ref">subjects</span> to the <em>"serpent"</em> squad</strong>.</p>
+                    <p>We will use a <em>jump</em> command again, but this time we will set up its details, because this allows for some more dynamic options. <strong>Close the <span class="ref">subjects</span> property and open <span class="ref">params</span>.</strong></p>
+                    <p>Leave the <span class="ref">type</span> as <em>"jump"</em> and <strong>set the <span class="ref">jump</span> property</strong>, then <strong>open it by clicking the <span class="ref">...</span> button.</strong> Here we can set up the details of the jump.</p>
+                    <p>You can leave the <span class="ref">way</span> property on <em>"automatic"</em> or set it to <em>"in"</em> explicitly. In this case, it won't make a difference.</p>
+                    <p class="hint">When leaving a jump command on automatic direction, each spacecraft that is present will jump out, and each one that is away will jump in. In a simple mission such as this, it is obvious that all the third wave enemies will be away at the point when the event is triggered, but in more complex missions, it is better to specify whether the jump is inward or outward, as it can be possible that some spacecrafts will be away and others not.</p>
+                    <p><strong>Set the <span class="ref">formation</span> property</strong> as you normally would when setting up the spacecraft <strong>to a formation of your choice.</strong></p>
+                    <p><strong>Set the <span class="ref">anchor</span> property to <em>"alpha 1"</em></strong>, so the player. This means the squad will be positioned relative to the player when jumping in.</p>
+                    <p>There are two ways to position a jump relative to the anchor. You can either set the <span class="ref">distance</span> property, which will put the jumping spacecraft the specified distance away in a random direction, facing the anchor. Alternatively, you can set a specific <span class="ref">position</span>, possibly in combination with <span class="ref">rotations</span>, which will then simply be added to the position of the anchor to set the jump position. In most cases, specifically when positioning attacking waves of enemies, the first method is more convenient, so let's use it in this case as well. <strong>Set the <span class="ref">distance</span> property to 2000</strong> to make the third wave jump in towards the player from a random direction 2 kilometers away.</p>
+                    <p class="hint">Notice that as you set up an anchored jump, the position of the spacecrafts is updated in the preview, with a blue line connecting the anchor spacecraft to the lead of the formation, so you can check if you have attained the desirable result.</p>
+                    <p>At this point, you have successfully set up all the enemy waves. You can <strong>close the <span class="ref">events</span> property</strong> for now.</p>
+                </li>
+                <li><h3>Setting up the reinforcements</h3>
+                    <p>Now let's set up some reinforcements for the player to arrive after a certain amount of time has passed.</p>
+                    <p>First, add the reinforcing ships. <strong>Add a new spacecraft, set the <span class="ref">count</span> to 3, <span class="ref">squad</span> to <em>"beta"</em>, <span class="ref">team</span> to the <em>Player's team</em>, <span class="ref">class</span> to <em>"falcon"</em>, <span class="ref">ai</span> to <em>"fighter"</em> and <span class="ref">away</span> to yes.</strong></p>
+                    <p>Then <strong>add another spacecraft, set the <span class="ref">name</span> to <em>"Excalibur"</em>, <span class="ref">team</span> to the <em>Player's team</em>, <span class="ref">class</span> to <em>"Aries"</em>, <span class="ref">ai</span> to <em>"ship"</em> and <span class="ref">away</span> to yes.</strong></p>
+                    <p>These will be the four spacecrafts that will make up the reinforcements. You can <strong>close the <span class="ref">spacecrafts</span> list editor.</strong> Now let's add the event that will inform the player about them and will command them to jump in.</p>
+                    <p><strong>Add a new entry to <span class="ref">events</span></strong> and <strong>set the <span class="ref">name</span> to <em>"reinforcements"</em>.</strong></p>
+                    <p>First let's inform the player shortly after the mission starts that reinforcements will be arriving.</p>
+                    <p><strong>Open the <span class="ref">trigger</span> property.</strong> This time we don't need any <span class="ref">conditions</span> set, because this event will always happen. However, let's <strong>set the <span class="ref">delay</span> property to 3000</strong>, so the event will happen 3 seconds after the start of the mission.</p>
+                    <p><strong>Close the <span class="ref">trigger</span> property and add a new entry to <span class="ref">actions</span>.</strong></p>
+                    <p>Leave the <span class="ref">type</span> as <em>"message"</em>, as this time we would like to display a message for the player. <strong>Open <span class="ref">params</span>.</strong></p>
+                    <p>Here you can set up quite a few things about the message, but for now we only want to set the text, the default options will do for the rest. <strong>Set the <span class="ref">text</span> property</strong> (click the button saying <span class="ref">Test</span> to open the text editor) <strong>to <em>"Reinforcements will arrive in 20 seconds!"</em> Close the <span class="ref">text</span> property editor.</strong></p>
+                    <p>Now we will use a very handy feature of the editor that lets us duplicate objects that we have set up. Let's add another reminder about the reinforcements when they are just 5 seconds away. <strong>Click on the Duplicate button in the Action list</strong>. It is right next to the <span class="ref">+</span> button, its tooltip says <em>"Duplicate this Action"</em> when hovered, and it looks like 2 overlapping sheets of paper. This will create an exact copy of the currently selected Action, add it to the end of the list and select it.</p>
+                    <p>For this new action, <strong>open <span class="ref">params</span> and change the <span class="ref">text</span> to <em>"Reinforcements will arrive in 5 seconds!"</em></strong>. Afterwards, <strong>set the <span class="ref">delay</span> for this action to 15000</strong>, so it will be executed 15 seconds after the event is triggered.</p>
+                    <p>Now that we have the two messages, let's make the reinforcements actually jump in. <strong>Add a new action, set the <span class="ref">type</span> to <em>"command"</em> and the <span class="ref">delay</span> to 20000.</strong></p>
+                    <p><strong>Open the <span class="ref">subjects</span> property, and add <em>Excalibur</em> to the <span class="ref">spacecrafts</span> list and <em>beta</em> squad to the <span class="ref">squads</span> list.</strong></p>
+                    <p><strong>Close <span class="ref">subjects</span></strong> and <strong>open <span class="ref">params</span>.</strong></p>
+                    <p><strong>Set and open the <span class="ref">jump</span> property. Set a <span class="ref">formation</span> with <span class="ref">type</span> <em>"diamond</em> and a <span class="ref">spacing</span> of 100,0,-50.</strong> Then <strong>set the <span class="ref">anchor</span> to <em>"alpha 1"</em> and the <span class="ref">position</span> to 0,50,-50</strong>, and finally <strong>set <span class="ref">relative</span> to yes.</strong> This means that the ships will jump in somewhat below and in front of the player's ship, wherever it is facing. Since we didn't set any <span class="ref">rotations</span>, they will face the same way as well.</p>
+                    <p>Finally, let's add one more message that will be transmitted by the <em>Excalibur</em> right after it arrives.</p>
+                    <p><strong>Add a new action, set the <span class="ref">delay</span> to 22000</strong> and <strong>for the <span class="ref">params</span>, set <span class="ref">text</span> to <em>"Reinforcements have arrived!"</em> and <span class="ref">source</span> to the <em>Excalibur</em></strong>. This will make it so that 2 seconds after the reinforcements jump in, this message will arrive from the <em>Excalibur</em> (its name will show in front of the message text and there will also be a visual indicator that it is the ship transmitting the message). When you set up a message this way, it will only show if the source spacecraft is alive when the action is executed.</p>
+                    <p>Now you have all the events and ships set up for this mission.</p>
+                </li>
+                <li><h3>Exporting the mission</h3>
+                    <p>This concludes the fourth tutorial! At this point, you can make interesting dynamic missions with spacecrafts arriving and leaving, showing important information or adding flavor with text messages.</p>
+                    <p>Export and load the mission as explained in the first tutorial.</p>
+                    <p class="hint">I encourage you to try and test different condition and action types for events as there are many possibilities! You can repair or damage ships when they get too close or too far, you can make an enemy switch to your team or disable their weapons when their hitpoints are too low and many more! Use your imagination, and if you come up with an interesting idea, don't hesitate to send it in to the Mission Hub via the Community missions menu option in the game. I will review it and if it meets the criteria, it will be published for all players to see and play!</p>
+                </li>
+            </ol>
+            <a href="03-equipment-loadouts.html">Previous chapter: Equipment and loadouts</a>
+        </div>
+    </body>
+</html>
