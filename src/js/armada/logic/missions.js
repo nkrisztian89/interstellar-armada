@@ -1725,7 +1725,7 @@ define([
                         for (k = 0; k < actions.length; k++) {
                             if ((actions[k].getType() === missionActions.ActionType.COMMAND) && (actions[k].getParams().command === ai.SpacecraftCommand.JUMP)) {
                                 data = actions[k].getParams();
-                                if (data.jump && (data.jump.way !== ai.JumpCommandWay.OUT)) {
+                                if (data.jump && (data.jump.way !== ai.JumpCommandWay.OUT) && data.jump.anchor) {
                                     index = actions[k].getSpacecrafts(this).indexOf(spacecraft);
                                     if (index >= 0) {
                                         data = utils.deepCopy(data);

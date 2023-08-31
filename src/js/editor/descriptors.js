@@ -3815,6 +3815,24 @@ define([
                     }
                 }
             },
+            _jumpIsNotOutward = function (data) {
+                return data.way !== ai.JumpCommandWay.OUT;
+            },
+            _jumpHasAnchor = function (data) {
+                return _jumpIsNotOutward(data) && !!data.anchor;
+            },
+            _jumpCanHaveDistance = function (data) {
+                return _jumpHasAnchor(data) && !data.position;
+            },
+            _jumpCanHavePosition = function (data) {
+                return _jumpHasAnchor(data) && (data.distance === undefined);
+            },
+            _jumpCanHaveRotations = function (data) {
+                return _jumpHasAnchor(data) && !!data.position;
+            },
+            _jumpCanHaveFallbackRotations = function (data) {
+                return _jumpHasAnchor(data) && !!data.fallbackPosition;
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -3822,53 +3840,73 @@ define([
                 baseType: BaseType.OBJECT,
                 name: "JumpCommandParams",
                 getPreviewText: function (instance) {
-                    return (instance.way || "") + (instance.anchor ? " (" + instance.anchor + ")" : "");
+                    return (instance.way || "") + (instance.anchor ? " (" + (instance.distance ? utils.getLengthString(instance.distance) + " from " : "") + instance.anchor + ")" : "");
                 },
                 properties: {
                     WAY: {
                         name: "way",
                         type: JUMP_COMMAND_WAY,
-                        optional: true
+                        optional: true,
+                        defaultText: "automatic",
+                        description: "Whether to jump out or in. If not given, spacecrafts which are present will jump out and spacecrafts that are away will jump in."
                     },
                     FORMATION: {
                         name: "formation",
                         type: FORMATION,
-                        optional: true
+                        optional: true,
+                        defaultText: "none",
+                        isValid: _jumpIsNotOutward,
+                        description: "The subject spacecrafts will jump in arranged in this formation."
                     },
                     ANCHOR: {
                         name: "anchor",
                         type: SPACECRAFT_REFERENCE,
-                        optional: true
+                        optional: true,
+                        defaultText: "none",
+                        isValid: _jumpIsNotOutward,
+                        description: "The spacecraft to jump in relative to."
                     },
                     DISTANCE: {
                         name: "distance",
                         type: DISTANCE,
-                        optional: true
+                        optional: true,
+                        isValid: _jumpCanHaveDistance,
+                        description: "The subjects will jump in facing towards the anchor this distance away from it in a random direction."
                     },
                     POSITION: {
                         name: "position",
                         type: BaseType.VECTOR3,
-                        optional: true
+                        optional: true,
+                        isValid: _jumpCanHavePosition,
+                        description: "This position will be added to the anchor's position to set the jump in coordinates."
                     },
                     ROTATIONS: {
                         name: "rotations",
                         type: BaseType.ROTATIONS,
-                        optional: true
+                        optional: true,
+                        isValid: _jumpCanHaveRotations,
+                        description: "The subject spacecrafts will be rotated accordingly for the jump."
                     },
                     RELATIVE: {
                         name: "relative",
                         type: BaseType.BOOLEAN,
-                        optional: true
+                        defaultValue: false,
+                        isValid: _jumpHasAnchor,
+                        description: "If set, the given position and rotations will be rotated according to where the anchor is facing."
                     },
                     FALLBACK_POSITION: {
                         name: "fallbackPosition",
                         type: BaseType.VECTOR3,
-                        optional: true
+                        optional: true,
+                        isValid: _jumpHasAnchor,
+                        description: "If the anchor is destroyed, this position will be used to place the spacecrafts for inward jump. It is not a universal position, but approximately relative to the camera."
                     },
                     FALLBACK_ROTATIONS: {
                         name: "fallbackRotations",
                         type: BaseType.ROTATIONS,
-                        optional: true
+                        optional: true,
+                        isValid: _jumpCanHaveFallbackRotations,
+                        description: "If the fallback position is used to place the spacecrafts, these rotations will also be applied to them."
                     }
                 }
             },
