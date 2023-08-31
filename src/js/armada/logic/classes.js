@@ -3651,9 +3651,11 @@ define([
      * ships, by only referencing the loadout to equip all the different pieces of
      * equipment stored in it.
      * @param {Object} [dataJSON]
-     * @param {Array} [loadouts] The array of loadouts of the spacecraft class
+     * @param {Array} [loadouts] The array of JSON objects defining the loadouts of the spacecraft class
+     * @param {Loadout} [baseLoadout] If this is a custom loadout to be created and it is based on
+     * one of the built-in loadouts, then the already parsed Loadout instance it is based on
      */
-    function Loadout(dataJSON, loadouts) {
+    function Loadout(dataJSON, loadouts, baseLoadout) {
         var i, baseData = [], basedOn, circular, found,
                 weapons, missiles, propulsion, sensors, jumpEngine, shield;
         if (loadouts) {
@@ -3696,6 +3698,8 @@ define([
             for (i = 0; i < weapons.length; i++) {
                 this._weaponDescriptors.push(new WeaponDescriptor(weapons[i]));
             }
+        } else if (baseLoadout) {
+            this._weaponDescriptors = baseLoadout.getWeaponDescriptors();
         }
         /**
          * The list of descriptors of the missiles in this loadout to be equipped.
@@ -3707,31 +3711,33 @@ define([
             for (i = 0; i < missiles.length; i++) {
                 this._missileDescriptors.push(new MissileDescriptor(missiles[i]));
             }
+        } else if (baseLoadout) {
+            this._missileDescriptors = baseLoadout.getMissileDescriptors();
         }
         propulsion = _getLoadoutProperty(dataJSON, baseData, "propulsion");
         /**
          * The descriptor of the propulsion system for this loadout to be equipped.
          * @type PropulsionDescriptor
          */
-        this._propulsionDescriptor = propulsion ? new PropulsionDescriptor(propulsion) : null;
+        this._propulsionDescriptor = propulsion ? new PropulsionDescriptor(propulsion) : baseLoadout ? baseLoadout.getPropulsionDescriptor() : null;
         sensors = _getLoadoutProperty(dataJSON, baseData, "sensors");
         /**
          * The descriptor of the sensor array for this loadout to be equipped.
          * @type SensorsDescriptor
          */
-        this._sensorsDescriptor = sensors ? new SensorsDescriptor(sensors) : null;
+        this._sensorsDescriptor = sensors ? new SensorsDescriptor(sensors) : baseLoadout ? baseLoadout.getSensorsDescriptor() : null;
         jumpEngine = _getLoadoutProperty(dataJSON, baseData, "jumpEngine");
         /**
          * The descriptor of the jump engine for this loadout to be equipped.
          * @type JumpEngineDescriptor
          */
-        this._jumpEngineDescriptor = jumpEngine ? new JumpEngineDescriptor(jumpEngine) : null;
+        this._jumpEngineDescriptor = jumpEngine ? new JumpEngineDescriptor(jumpEngine) : baseLoadout ? baseLoadout.getJumpEngineDescriptor() : null;
         shield = _getLoadoutProperty(dataJSON, baseData, "shield");
         /**
          * The descriptor of the shield for this loadout to be equipped.
          * @type ShieldDescriptor
          */
-        this._shieldDescriptor = shield ? new ShieldDescriptor(shield) : null;
+        this._shieldDescriptor = shield ? new ShieldDescriptor(shield) : baseLoadout ? baseLoadout.getShieldDescriptor() : null;
     }
     /**
      * Returns the name of this loadout.

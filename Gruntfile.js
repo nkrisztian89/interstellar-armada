@@ -220,7 +220,13 @@ module.exports = function (grunt) {
                 ["numVertexUniformVectors"],
                 ["numVaryingVectors"],
                 ["numTextureUnits"],
-                ["numFragmentUniformVectors"]
+                ["numFragmentUniformVectors"],
+                ["weaponDescriptors"],
+                ["missileDescriptors"],
+                ["propulsionDescriptor"],
+                ["sensorsDescriptor"],
+                ["jumpEngineDescriptor"],
+                ["shieldDescriptor"]
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [

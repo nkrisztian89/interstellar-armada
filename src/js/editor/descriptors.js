@@ -2478,13 +2478,24 @@ define([
             SPACECRAFT_LOADOUT_REFERENCE = {
                 baseType: BaseType.ENUM,
                 getValues: function (parent, topParent) {
+                    var i;
                     if (topParent.loadouts) {
                         return topParent.loadouts.map(function (loadout) {
                             return loadout.name;
                         });
                     }
+                    if (topParent.spacecrafts) {
+                        for (i = 0; i < topParent.spacecrafts.length; i++) {
+                            if (topParent.spacecrafts[i].equipment === parent) {
+                                return classes.getSpacecraftClass(topParent.spacecrafts[i].class).getLoadoutNames();
+                            }
+                        }
+                    }
                     return [];
                 }
+            },
+            _loadoutParentIsSpacecraft = function(data, parent) {
+                return !!parent.loadouts;
             },
             /**
              * @type Editor~TypeDescriptor
@@ -2495,7 +2506,8 @@ define([
                 properties: {
                     NAME: {
                         name: "name",
-                        type: BaseType.STRING
+                        type: BaseType.STRING,
+                        isValid: _loadoutParentIsSpacecraft
                     },
                     BASED_ON: {
                         name: "basedOn",

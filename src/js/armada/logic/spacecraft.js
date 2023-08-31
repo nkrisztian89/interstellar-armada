@@ -1548,7 +1548,7 @@ define([
             this.equipLoadout(this._class.getLoadout(dataJSON.loadout));
         } else if (dataJSON.equipment) {
             // if a custom loadout is specified, simply create it from the given object, and equip that
-            loadout = new classes.Loadout(dataJSON.equipment);
+            loadout = new classes.Loadout(dataJSON.equipment, null, dataJSON.equipment.basedOn ? this._class.getLoadout(dataJSON.equipment.basedOn) : null);
             this.equipLoadout(loadout);
             // if there is no equipment specified, attempt to load the default loadout
         } else if (this._class.getDefaultLoadout()) {
