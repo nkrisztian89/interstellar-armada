@@ -11,8 +11,6 @@
 
 html, body {
     background-color: #aaaaaa;
-    /*background-color: black;*/
-    /*background-color: #F5F5F5;*/
     padding: 0;
     margin: 0;
     border: 0;
@@ -22,27 +20,21 @@ html, body {
 div.main-content {
     margin: 0  auto;
     padding: 2em;
-    /*background-color: white;*/
-    /*background-color: #0A192F;*/
     background-color: #F5F5F5;
     width: 75em;
     max-width: 90%;
     box-shadow: #444444 0 0 10em;
     min-height: 100vh;
     box-sizing: border-box;
-    /*color: #D0D7E1;*/
     color: #222;
 }
 
 h1,h2,h3 {
-    /*color: #6E7E91;*/
-    /*color: #6E7E91;*/
     border-bottom: 1px solid #ccc;
 }
 
-strong {
+p:not(.hint):not(.note) strong {
     background-color: #fd2;
-    /*color: #35A7FF;*/
 }
 
 span.ref {
@@ -65,6 +57,14 @@ p.hint {
     background-color: #bfb;
     color: #050;
     border: 1px solid #0a0;
+    padding: 0.5em;
+    border-radius: 4px;
+}
+
+p.note {
+    background-color: #fcb;
+    color: #640;
+    border: 1px solid #a60;
     padding: 0.5em;
     border-radius: 4px;
 }

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Interstellar Armada Editor tutorial 02</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="tutorial.css">
+    </head>
+    <body>
+        <div class="main-content">
+            <a href="00-index.html">Back to the chapter list</a>
+            <h2>Interstellar Armada Editor tutorial 03</h2>
+            <h1>Equipment and loadouts</h1>
+            <h2>Setting equipment using preset and custom loadouts for individual ships and squads</h2>
+            <p>In this step-by-step walkthrough, we will update the mission we created in the first two tutorials, setting specific equipment for all the spacecrafts in multiple ways.</p>
+            <p>During the course of this tutorial, you will learn how to</p>
+            <ul>
+                <li>set the equipment of a spacecraft or whole squad using a preset loadout</li>
+                <li>set different equipment loadouts for ships in the same squad</li>
+                <li>set a custom loadout by picking the pieces of equipment manually</li>
+            </ul>
+            <p>This tutorial is made for the Interstellar Armada Editor version 0.5.4. We assume you have completed the <a href="02-squads-formations.html">second tutorial chapter</a> and we will continue to edit the mission created there.</p>
+            <ol>
+                <li><h3>Importing the mission</h3>
+                    <p><strong>Import the mission into the editor</strong> as you have learned to do in the previous tutorial.</p>
+                </li>
+                <li><h3>Setting a loadout for a single spacecraft</h3>
+                    <p>Spacecrafts can have various different pieces of equipment, such as sensors, weapons, missiles, shields, propulsion systems and jump engines. To make managing these easier while editing a mission, nearly all spacecraft classes come with a set of predefined equipment loadouts. To view them, open the <span class="ref">spacecraftClasses</span> list in the left panel (within the <span class="ref">classes</span> section) and click a spacecraft class, e.g. <span class="ref">wolf</span>. In the right side properties panel you will see a <span class="ref">loadouts</span> property, and by opening it you can examine the details of all the loadouts of this class.</p>
+                    <p class="note">Note that although <strong>you can add new loadouts</strong> to a spacecraft class with the editor, <strong>these cannot be used in missions as they are not exported with the mission file!</strong> This feature is planned for later. For now, stick to using the built-in loadouts! The same goes for new classes or resources created in the editor, they will not be exported with the mission and thus can't be used yet.</p>
+                    <p class="hint">Hint: when viewing a spacecraft class, you can select any of its loadouts at the top options panel, and you will see a summary of the important stats such as speed, firepower and shield capacity with that loadout equipped at the bottom of the window in the info panel. This way you can quickly gauge the strength of a loadout without having the examine the details of the equipment it includes.</p>
+                    <p>The simplest way to define equipment for a spacecraft is by using one of these loadouts. <strong>Select the <em>"Raider 4"</em> fighter</strong>. You will see its <span class="ref">loadout</span> property is listed as <em>"pirate-full"</em>. This is because each class can have a default loadout specified, which is applied if no loadout is set for it explicitly. Now let's make this fighter more powerful. <strong>Set the <span class="ref">loadout</span> property to <em>"pirate-elite"</em></strong>, which includes a strong shield next to the 3 guns that <em>pirate-full</em> has.</p>
+                    <p>At this point you have set up <em>Raider 4</em> to be more powerful than the other 3 members of its squad.</p>
+                </li>
+                <li><h3>Setting a loadout for a whole squad</h3>
+                    <p>Since squads (or multiple spacecrafts defined by the same spacecraft entry) share the same spacecraft class, you can easily set a shared loadout that will apply to all of them.</p>
+                    <p>Let's go ahead and <strong>select the <em>raider</em> squad</strong> by clicking any of its first 3 members in the preview or selecting the <em>"raider (3)"</em> entry in the <span class="ref">spacecrafts</span> list.</p>
+                    <p>You will see both a <span class="ref">loadout</span> and a <span class="ref">loadouts</span> (plural) property available. <strong>Set the singular <span class="ref">loadout</span> to <em>"pirate-medium"</em>.</strong>
+                    <p>This will set the loadout of all the 3 members defined by this entry to the selected loadout, so in this case they will all become a bit weaker, having only 2 guns instead of 3.</p>
+                </li>
+                <li><h3>Setting different loadouts for members of the same squad</h3>
+                    <p>As you have noticed, in case of multiple spacecrafts being defined, there is also a plural <span class="ref">loadouts</span> property available. We can use this to choose different loadouts within the same spacecraft group or squad.</p>
+                    <p><strong>Select the player's squad</strong> by clicking on any of its members or selecting it in the <span class="ref">spacecrafts</span> list.</p>
+                    <p><strong>Set the <span class="ref">loadouts</span> property</strong>, which will initially become and <span class="ref">empty list</span>. <strong>Open it and add 3 elements to the list by clicking <span class="ref">+</span>.</strong> Now you can select the 3 different loadouts you wish the 3 squad members to use. <strong>Select <em>"player-tier1"</em> for the first and <em>"imperial-tier1"</em> for the other two elements.</strong></p>
+                    <p>Now you have made the player use a player specific loadout while the wingmen will use the regular imperial version.</p>
+                </li>
+                <li><h3>Setting specific equipment for a spacecraft</h3>
+                    <p>Maybe we have made <em>Raider 4</em> a little bit too strong. We want it to have 2 guns equipped but still have the shield. Unfortunately, there is no such loadout available for us to choose, so we will have to define this equipment piece by piece.</p>
+                    <p><strong>Select <em>Raider 4</em> and unset the <span class="ref">loadout</span> property</strong> (by clicking the <span class="ref">x</span> button appearing next to it), which you have previously set to <em>"pirate-elite"</em>. This will unlock the <span class="ref">equipment</span> property, which was previously hidden.</p>
+                    <p class="hint">Note that the editor doesn't let you set properties that conflict with each other. Whenever you set a property, the others which would conflict with it are automatically hidden. Therefore if you don't see a property that you want to set, it means you have some other property values you need to change or unset to make it available again.</p>
+                    <p><strong>Set the <span class="ref">equipment</span> property and open it</strong> (by clicking the <span class="ref">Loadout</span> button that appears).</p>
+                    <p><strong>Set the <span class="ref">basedOn</span> property of the equipment to <em>"pirate-medium"</em></strong>. This way we only need to set the differences in equipment compared to that loadout, and don't have to set up everything from scratch.</p>
+                    <p>The <em>pirate-medium</em> loadout already has the weapons, missiles, sensors and jump engine set up as we want it. So let's just <strong>set the <span class="ref">propulsion</span> property to <em>"pirateFighterMk2"</em> and the <span class="ref">shield</span> property also to <em>"pirateFighterMk2"</em>.</strong></p>
+                    <p>Now you have a custom equipment set up for <em>Raider 4</em>.</p>
+                </li>
+                <li><h3>Exporting the mission</h3>
+                    <p>This concludes the third tutorial! At this point, you have full control over the equipment of all the spacecrafts in the mission.</p>
+                    <p>Export and load the mission as explained in the first tutorial.</p>
+                    <p class="hint">Using the custom equipment feature you can set up interesting and unexpected equipment combinations for spacecrafts! Feel free to experiment, but note that in future game versions some variations will not work, as each equipment and slot will have more detailed types that need to match. (such as not being able to equip huge turrets or cannons or large amounts of missiles on small fighters)</p>
+                </li>
+            </ol>
+            <a href="02-squads-formations.html">Previous chapter: Squads and formations</a>
+        </div>
+    </body>
+</html>
