@@ -2494,7 +2494,7 @@ define([
                     return [];
                 }
             },
-            _loadoutParentIsSpacecraft = function(data, parent) {
+            _loadoutParentIsSpacecraft = function (data, parent) {
                 return !!parent.loadouts;
             },
             /**
@@ -3707,6 +3707,11 @@ define([
                 return (data.once === true) ||
                         ((data.once === undefined) && _getTriggerDefaultOnce(data));
             },
+            _triggerTriggersWinOrLose = function (data, parent) {
+                return !!parent.actions && parent.actions.some(function (action) {
+                    return (action.type === ActionType.WIN) || (action.type === ActionType.LOSE);
+                });
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -3738,7 +3743,9 @@ define([
                                 return "[" + instance.map(CONDITION.getPreviewText).join(", ") + "]";
                             }
                         }),
-                        optional: true
+                        defaultText: "none",
+                        isRequired: _triggerTriggersWinOrLose,
+                        updateOnValidate: true
                     },
                     WHICH: {
                         name: "which",
@@ -3772,7 +3779,19 @@ define([
              */
             ACTION_TYPE = {
                 baseType: BaseType.ENUM,
-                values: ActionType
+                getValues: function (parent, topParent) {
+                    var i, result = Object.values(ActionType);
+                    for (i = 0; i < topParent.events.length; i++) {
+                        if (topParent.events[i].actions && (topParent.events[i].actions.indexOf(parent) >= 0)) {
+                            if (!topParent.events[i].trigger.conditions || (topParent.events[i].trigger.conditions.length === 0)) {
+                                result.splice(result.indexOf(ActionType.WIN), 1);
+                                result.splice(result.indexOf(ActionType.LOSE), 1);
+                                break;
+                            }
+                        }
+                    }
+                    return result;
+                }
             },
             /**
              * @type Editor~TypeDescriptor
@@ -4413,7 +4432,8 @@ define([
                     },
                     TRIGGER: {
                         name: "trigger",
-                        type: TRIGGER
+                        type: TRIGGER,
+                        updateOnValidate: true
                     },
                     ACTIONS: {
                         name: "actions",

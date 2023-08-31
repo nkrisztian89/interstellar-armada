@@ -1347,12 +1347,12 @@ define([
             if (!parentNode) {
                 return;
             }
-            value = _getDefaultValue(propertyDescriptor, _basedOn, parent, null, topParent);
+            value = _getDefaultValue(propertyDescriptor, _basedOn, parent, objectParent, topParent);
             parentNode.removeChild(result);
             if (row) {
                 row.classList.remove(UNSET_PROPERTY_ROW_CLASS);
             }
-            control = _createControl(propertyDescriptor, value, topName, parent, null, null, topParent, parentPopup, changeHandler, row);
+            control = _createControl(propertyDescriptor, value, topName, parent, null, objectParent, topParent, parentPopup, changeHandler, row);
             parentNode.appendChild(control);
             parentNode.control = control;
             _changeData(topName, value, parent, propertyDescriptor.name, changeHandler);
