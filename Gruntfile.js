@@ -226,7 +226,9 @@ module.exports = function (grunt) {
                 ["propulsionDescriptor"],
                 ["sensorsDescriptor"],
                 ["jumpEngineDescriptor"],
-                ["shieldDescriptor"]
+                ["shieldDescriptor"],
+                ['transformMatrix'],
+                ['barrelMarkers']
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [

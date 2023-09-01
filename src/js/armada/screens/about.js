@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2023 Krisztián Nagy
  * @file This module manages and provides the About screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -98,28 +98,29 @@ define([
             inkscape: _link("https://inkscape.org", "Inkscape"),
             blender: _link("https://www.blender.org/", "Blender"),
             gimp: _link("https://www.gimp.org", "GIMP"),
-            audacity: _link("http://www.audacityteam.org", "Audacity"),
-            bfxr: _link("http://www.bfxr.net", "Bfxr"),
+            audacity: _link("https://www.audacityteam.org", "Audacity"),
+            bfxr: _link("https://www.bfxr.net", "Bfxr"),
             lmms: _link("https://lmms.io", "LMMS"),
-            fontforge: _link("https://fontforge.github.io/en-US/", "FontForge"),
-            netbeans: _link("https://netbeans.org/", "Netbeans"),
+            fontforge: _link("https://fontforge.org/en-US", "FontForge"),
+            netbeans: _link("https://netbeans.apache.org", "Netbeans"),
             git: _link("https://git-scm.com/", "git"),
             npm: _link("https://www.npmjs.com/", "npm"),
             grunt: _link("https://gruntjs.com/", "Grunt"),
-            sass: _link("http://sass-lang.com/", "Sass"),
-            lazarus: _link("http://www.lazarus-ide.org/", "Lazarus"),
+            sass: _link("https://sass-lang.com", "Sass"),
+            lazarus: _link("https://www.lazarus-ide.org", "Lazarus"),
             chrome: _link("https://www.google.com/chrome", "Google Chrome"),
             firefox: _link("https://www.mozilla.org/firefox", "Firefox"),
-            ubuntu: _link("http://www.ubuntu.com/desktop", "Ubuntu"),
-            eslint: _link("https://github.com/joakim-eriksson/nb-eslint", "ESLint")
+            ubuntu: _link("https://ubuntu.com/desktop", "Ubuntu"),
+            eslint: _link("https://github.com/joakim-eriksson/nb-eslint", "ESLint"),
+            python: _link("https://github.com/albilu/netbeansPython", "Python")
         });
         this._aboutLicenseParagraph.customizeContent({
-            license: _link("http://www.gnu.org/licenses/gpl-3.0-standalone.html", "GNU GPLv3"),
-            sansation: _link("http://www.dafont.com/sansation.font", "Sansation"),
+            license: _link("https://www.gnu.org/licenses/gpl-3.0-standalone.html", "GNU GPLv3"),
+            sansation: _link("https://www.dafont.com/sansation.font", "Sansation"),
             aldrich: _link("https://fonts.google.com/specimen/Aldrich", "Aldrich"),
             audiowide: _link("https://fonts.google.com/specimen/Audiowide", "Audiowide"),
             fontlog: _link("assets/fonts/FONTLOG.txt", "fontlog"),
-            requireJS: _link("http://requirejs.org/", "RequireJS"),
+            requireJS: _link("https://requirejs.org", "RequireJS"),
             requireJSLicense: _link("license/RequireJS-License.txt", strings.get(strings.ABOUT.REQUIRE_JS_LICENSE)),
             assetLicense: _link("https://creativecommons.org/licenses/by/4.0/", "CC BY 4.0"),
             soundLicense: _link("license/sfx-license.txt", strings.get(strings.ABOUT.HERE))
