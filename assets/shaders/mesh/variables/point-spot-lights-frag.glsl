@@ -3,7 +3,7 @@
 
 struct PointLight
     {
-        lowp vec4 color; // RGB color and intensity
+        highp vec4 color; // RGB color and intensity
         vec3 position; // position
     };
 

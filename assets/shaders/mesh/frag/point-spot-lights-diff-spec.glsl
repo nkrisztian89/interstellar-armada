@@ -1,8 +1,8 @@
     // handling dynamic point-like light sources
-    vec3 direction;
+    highp vec3 direction;
     float intensity;
-    float dist;
-    float specDist;
+    highp float dist;
+    highp float specDist;
     float viewDist = length(v_viewDir);
     for (int i = 0; i < MAX_POINT_LIGHTS; i++) {
         if (i < u_numPointLights) {
