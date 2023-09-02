@@ -1,7 +1,7 @@
 {
     "name": "interstellar-armada",
     "version": "0.5.4",
-    "description": "Interstellar Armada: Galactic Ace is a mission-based 3D space combat simulator where you take the role of a mercenary fighter pilot. Complete missions to earn fortune and fame and help the rising Empire unite humankind under its flag, or aid the shrinking number of opposing Republic worlds to stop its advance. The game uses Newtonian mechanics with an assisted, six degrees of freedom flight model and supports keyboard, mouse, joystick, gamepad and touch controls.This development version features several training and combat missions, a basic multiplayer mode and support for creating and publishing user-created custom missions. The game is built with open web technologies and is packaged as a standalone app using Electron.",
+    "description": "Interstellar Armada: Galactic Ace is a mission-based 3D space combat simulator where you take the role of a mercenary fighter pilot. Complete missions to earn fortune and fame and help the rising Empire unite humankind under its flag, or aid the shrinking number of opposing Republic worlds to stop its advance. The game uses Newtonian mechanics with an assisted, six degrees of freedom flight model and supports keyboard, mouse, joystick, gamepad and touch controls. This development version features several training and combat missions, a basic multiplayer mode and support for creating and publishing user-created custom missions. The game is built with open web technologies and is packaged as a standalone app using Electron.",
     "main": "main.js",
     "scripts": {
         "clean": "grunt clean",
@@ -70,8 +70,8 @@
         "url": "https://github.com/nkrisztian89/interstellar-armada/issues"
     },
     "devDependencies": {
-        "electron": "^18.2.0",
-        "electron-builder": "^23.0.3",
+        "electron": "^26.1.0",
+        "electron-builder": "^24.6.3",
         "grunt": "^1.5.3",
         "grunt-concurrent": "^3.0.0",
         "grunt-contrib-clean": "^2.0.0",

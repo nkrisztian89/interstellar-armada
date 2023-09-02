@@ -1,9 +1,9 @@
 {
-    "version": "0.5.4-dev:1181 (2023.09.02.)",
+    "version": "0.5.4:1182 (2023.09.02.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "platform": "web",
-    "releases": ["0.4.3", "0.4.4", "0.4.5", "0.4.6", "0.5.0", "0.5.1", "0.5.2", "0.5.3"],
+    "releases": ["0.4.3", "0.4.4", "0.4.5", "0.4.6", "0.5.0", "0.5.1", "0.5.2", "0.5.3", "0.5.4"],
     "folders": {
         "config": "config/",
         "strings": "{{config}}/strings/",

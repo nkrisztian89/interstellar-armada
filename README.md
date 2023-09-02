@@ -3,11 +3,16 @@
 Interstellar Armada: Galactic Ace is a free, Open Source browser-based 3D space 
 combat simulator developed in JavaScript-WebGL by Krisztián Nagy (<nkrisztian89@gmail.com>).
 
+It follows in the traditions of old classics like the FreeSpace series with a mission based gameplay
+and adds slightly more realism with a Newtonian mechanics based movement system. It has a desktop
+focused design, but can be played on mobile devices as well as it supports touchscreen input (next to mouse,
+keyboard, joystick and gamepad). It also has a mission editor and an online mission sharing service included.
+
 Play now!
 =========
 
-Though the game is far from being ready, it is possible to try out what has already
-been completed from it.
+Though the game is not yet fully complete, it is already in a well playable state and its current development
+version is released in an "early access" fashion.
 
 ## Web version
 Just head to **[this page](https://nkrisztian89.github.io/interstellar-armada/)** 
@@ -31,7 +36,7 @@ As this is an early version, the performance is subject to changes (and bugs).
 For developers
 ==============
 
-I use [NetBeans](https://netbeans.org/) with its web development (+
+I use [NetBeans](https://netbeans.apache.org/) with its web development (+
 [ESLint](https://github.com/joakim-eriksson/nb-eslint) and GLSL) plugins 
 to develop this game. To build the game, you will need
 [npm](https://www.npmjs.com/), [Grunt](https://gruntjs.com/) and 
@@ -60,7 +65,8 @@ Editor
 
 The game includes an editor (also written in JS, in fact it uses modules from the
 game itself to load / display game data). You can open it by serving and opening
-`editor.html` after making a dev-build (see the previous section).
+`editor.html` after making a dev-build or a build-with-editor (see the previous section).
+It is also accessible from the game itself under Single player / My missions.
 Please note that the editor is even less complete than the game, there are
 things that cannot be edited with it (most notably game configuration / settings and
 language files), and it has limitations for even the things it can edit (such as not being
@@ -100,9 +106,9 @@ The same goes as for snaps, just use `npm run build-appimage` instead.
 
 Latest versions tested:
 
-Electron: 18.2.0
+Electron: 26.1.0
 
-electron-builder: 23.0.3
+electron-builder: 24.6.3
 
 License and copyright
 =====================
@@ -117,4 +123,4 @@ With game related questions, suggestions and feedback please contact me at
 
 Krisztián Nagy
 
-30.04.2022.
+02.09.2023.
