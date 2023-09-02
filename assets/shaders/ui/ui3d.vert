@@ -4,9 +4,9 @@ precision mediump float;
 
 #include "ui/scaleMode-variables.glsl"
 
-uniform mat4 u_viewProjMatrix;
+uniform highp mat4 u_viewProjMatrix;
 
-uniform vec3 u_position;
+uniform highp vec3 u_position;
 
 attribute vec3 a_position;
 attribute mediump vec2 a_texCoord;
