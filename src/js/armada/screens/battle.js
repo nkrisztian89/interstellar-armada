@@ -185,6 +185,7 @@ define([
             /** This governs what suppements are target view items added with @type Object */
             TARGET_VIEW_SUPPLEMENTS = {weapons: true},
             POINTER_LOCK_DELAY = 1000,
+            WAKE_LOCK_SUPPORTED = !!navigator.wakeLock, // note: this will only work with HTTPS://
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -243,6 +244,11 @@ define([
              */
             _handleResize,
             /**
+             * A function handling the change of page visibility while we are on the battle screen
+             * @type Function
+             */
+            _handleVisibilityChange,
+            /**
              * Stores the parameters of the last sent analytics event
              * @type Object
              */
@@ -257,6 +263,11 @@ define([
              * @type Number
              */
             _pointerLockTimeout = -1,
+            /**
+             * 
+             * @type WakeLock
+             */
+            _wakeLock,
             /**
              * The object that will be returned as this module
              * @type Battle
@@ -2585,8 +2596,35 @@ define([
      */
     BattleScreen.prototype.setActive = function (active) {
         screens.HTMLScreen.prototype.setActive.call(this, active);
-        if (!active) {
+        if (active) {
+            if (WAKE_LOCK_SUPPORTED && !_wakeLock) {
+                navigator.wakeLock.request("screen").then(function (wakeLock) {
+                    _wakeLock = wakeLock;
+                    _wakeLock.onrelease = function () {
+                        _wakeLock = null;
+                    };
+                }).catch(function () {
+                    application.log_DEBUG("Failed to acquire wake lock. Might be because the battery is low or battery saver mode is turned on.");
+                });
+            }
+            if (_handleVisibilityChange) {
+                document.removeEventListener("visibilitychange", _handleVisibilityChange);
+            }
+            _handleVisibilityChange = _handleVisibilityChange || function () {
+                if ((document.visibilityState !== "visible") && !this._touchControlSheet.isVisible() && !this._infoBox.isVisible()) {
+                    control.getController(control.GENERAL_CONTROLLER_NAME).executeAction("quit");
+                }
+            }.bind(this);
+            document.addEventListener("visibilitychange", _handleVisibilityChange);
+        } else {
             control.exitPointerLock();
+            if (_wakeLock) {
+                _wakeLock.release();
+            }
+            if (_handleVisibilityChange) {
+                document.removeEventListener("visibilitychange", _handleVisibilityChange);
+                _handleVisibilityChange = null;
+            }
         }
     };
     /**
