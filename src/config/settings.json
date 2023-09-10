@@ -1640,6 +1640,9 @@
                         "direction": "down",
                         "area": "bottom-right",
                         "range": 0.2
+                    }, {
+                        "action": "followNext",
+                        "type": "tap"
                     }
                 ]
             }
