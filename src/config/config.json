@@ -1,5 +1,5 @@
 {
-    "version": "0.5.5-dev:1184 (2023.09.10.)",
+    "version": "0.5.5-dev:1185 (2023.09.10.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "platform": "web",
@@ -711,6 +711,8 @@
                         "name": "changeFlightMode"
                     }, {
                         "name": "jumpOut"
+                    }, {
+                        "name": "toggleSpotlights"
                     }
                 ]
             },

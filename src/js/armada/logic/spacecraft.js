@@ -2007,9 +2007,12 @@ define([
             emittingObjects = [visualModel];
             for (i = 0; i < lightSources.length; i++) {
                 if (lightSources[i].spotDirection) {
-                    light = new lights.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, visualModel);
-                    this._spotLights.push(light);
-                    scene.addSpotLightSource(light);
+                    // only add spotlights for piloted spacecraft
+                    if (this._piloted) {
+                        light = new lights.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, visualModel);
+                        this._spotLights.push(light);
+                        scene.addSpotLightSource(light);
+                    }
                 } else {
                     light = new lights.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, emittingObjects);
                     scene.addPointLightSource(light, constants.SPACECRAFT_LIGHT_PRIORITY);
@@ -3122,6 +3125,23 @@ define([
      */
     Spacecraft.prototype.getLockingTimeFactor = function () {
         return this._class.getLockingTimeFactor();
+    };
+    /**
+     * Toggles the visibility of spot lights emitted by this spacecraft.
+     */
+    Spacecraft.prototype.toggleSpotLights = function () {
+        var i;
+        if (this._spotLights.length > 0) {
+            if (this._spotLights[0].isVisible()) {
+                for (i = 0; i < this._spotLights.length; i++) {
+                    this._spotLights[i].hide();
+                }
+            } else {
+                for (i = 0; i < this._spotLights.length; i++) {
+                    this._spotLights[i].show();
+                }
+            }
+        }
     };
     /**
      * Return the data to be sent to the guests by the host in the next game update message to synchronize the 

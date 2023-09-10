@@ -945,6 +945,7 @@
         "rollLeft": "Gép döntése balra",
         "rollRight": "Gép döntése jobbra",
         "jumpOut": "Hiperhajtómű aktiválása és a csatamező elhagyása",
+        "toggleSpotlights": "Lámpák ki-/bekapcsolása",
         "controlCamera": "Amíg lenyomva van tartva, a vadászgép helyett a kamera irányítható elsődlegesen",
         "cameraMoveLeft": "Kamera mozgatása balra (ha a nézet engedi)",
         "cameraMoveRight": "Kamera mozgatása jobbra (ha a nézet engedi)",

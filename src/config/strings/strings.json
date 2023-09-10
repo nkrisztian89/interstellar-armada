@@ -897,6 +897,7 @@
         "rollLeft": "Roll to the left",
         "rollRight": "Roll to the right",
         "jumpOut": "Engage jump engines and leave the battlefield",
+        "toggleSpotlights": "Toggle ship lights",
         "controlCamera": "Hold this button to control the camera instead of your spacecraft if you have the same controls assigned",
         "cameraMoveLeft": "Move the camera to the left (if possible for the current view)",
         "cameraMoveRight": "Move the camera to the right (if possible for the current view)",

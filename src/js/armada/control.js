@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2023 Krisztián Nagy
  * @file Provides functionality to load and access control configuration and settings for Interstellar Armada.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -457,6 +457,9 @@ define([
         }.bind(this));
         this.setActionFunction("jumpOut", true, function () {
             this._controlledSpacecraft.jumpOut(true);
+        }.bind(this));
+        this.setActionFunction("toggleSpotlights", true, function () {
+            this._controlledSpacecraft.toggleSpotLights();
         }.bind(this));
     }
     FighterController.prototype = new control.Controller();
