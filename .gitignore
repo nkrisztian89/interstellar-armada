@@ -3,7 +3,7 @@
 /dist
 /node_modules/
 /.sass-cache/
-#/config
-#/data
-#/css
-#/js
+/config
+/data
+/css
+/js
