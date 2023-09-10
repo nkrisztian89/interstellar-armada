@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2023 Krisztián Nagy
  * @file Provides different types of light source classes to add to scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -305,21 +305,15 @@ define([
      * @param {Number[3]} positionVector The position of the light source - if there is no specific object emitting it, then relative to the
      * scene origo, if there is one specific object, then relative to that object, and if there are multiple object, this value is not 
      * considered.
-     * @param {RenderableObject3D[]} [emittingObjects] The list of objects that together act as this light source. If none specified, the 
-     * light source will act as a static, global light source in the scene, and if multiple objects are specified, it will be positioned
-     * at the average position of those objects. In this case, all objects will be considered to contribute the same amount of intensity
-     * of the same color.
+     * @param {RenderableObject3D[]} emittingObjects The list of objects that together emit this light source. Needs to have at least
+     * one object, and if multiple objects are specified, the light will be positioned at the average position of those objects. In this case, 
+     * all objects will be considered to contribute the same amount of intensity of the same color.
      * @param {PointLightSource~LightState[]} [states] The list of states this light source should go through, if a dynamic behavior is
      * desired.
      * @param {Boolean} [looping] If states are given, this parameter tells whether to loop through them, starting over once the last
      * state is reached, or just stay in it.
      */
     function PointLightSource(color, intensity, positionVector, emittingObjects, states, looping) {
-        /**
-         * The color of the light emitted by this source.
-         * @type Number[3]
-         */
-        this._color = color;
         /**
          * The intensity of light emitted by one object
          * @type Number
@@ -338,7 +332,7 @@ define([
          */
         this._hasRelativePosition = (positionVector && ((positionVector[0] !== 0) || (positionVector[1] !== 0) || (positionVector[2] !== 0)));
         /**
-         * The list of all objects acting together as this light source. If null / undefined, then the light source is considered static.
+         * The list of all objects acting together as this light source. Needs to have at least one element.
          * @type RenderableObject3D[]
          */
         this._emittingObjects = emittingObjects;
@@ -348,23 +342,13 @@ define([
          */
         this._singleEmittingObject = (!!emittingObjects && (emittingObjects.length === 1));
         /**
-         * Storing the calculated total intensity of this light source emitted by all of its emitting objects.
-         * @type Number
-         */
-        this._totalIntensity = intensity * (emittingObjects ? emittingObjects.length : 1);
-        /**
-         * While set to false, isVisible() and shouldBeRendered() returns false, intensity is set to 0 and position is not updated, but state
-         * intensity / color still is
-         * @type Boolean
-         */
-        this._visible = true;
-        /**
          * The calculated position vector of this light source in world-space.
          * @type Number[3]
          */
         this._positionVector = [0, 0, 0];
         /**
          * The list of states (storing the values for attributes like color and intensity) this light source will go through.
+         * Should have at least two elements.
          * If it is not given, the light source will have a static state.
          * @type PointLightSource~LightState[]
          */
@@ -389,7 +373,7 @@ define([
          * A cached value of the color vector to be assigned to uniforms (containing the RGB color and the intensity)
          * @type Number[4]
          */
-        this._uniformColor = [0, 0, 0, this._totalIntensity];
+        this._uniformColor = [color[0], color[1], color[2], intensity * (emittingObjects ? emittingObjects.length : 1)];
         /**
          * Holds the data to be passed to the corresponding uniform struct.
          * @type SceneGraph~PointLightUniformData
@@ -398,30 +382,13 @@ define([
             color: this._uniformColor,
             position: this._positionVector
         };
-        if (color) {
-            this._updateUniformColor();
-        }
     }
-    /**
-     * Updates the cached color vector to be used when assigning uniforms.
-     */
-    PointLightSource.prototype._updateUniformColor = function () {
-        this._uniformColor[0] = this._color[0];
-        this._uniformColor[1] = this._color[1];
-        this._uniformColor[2] = this._color[2];
-    };
     /**
      * Returns whether the light is currently visible in the scene (it has at least one visible emitting object)
      * @returns {Boolean}
      */
     PointLightSource.prototype.isVisible = function () {
         var i;
-        if (!this._visible) {
-            return false;
-        }
-        if (!this._emittingObjects) {
-            return true;
-        }
         if (this._singleEmittingObject) {
             return this._emittingObjects[0].isVisible();
         }
@@ -438,8 +405,7 @@ define([
      */
     PointLightSource.prototype.updateState = function (dt) {
         var nextStateIndex, stateProgress;
-        // only animating through states if there is more than one of them
-        if (this._states && (this._states.length > 1) && (dt > 0)) {
+        if (this._states && (dt > 0)) {
             this._timeSinceLastTransition += dt;
             // find out which state did we arrive to and which is next
             nextStateIndex = (this._currentStateIndex + 1) % this._states.length;
@@ -466,40 +432,30 @@ define([
      * @param {Number} dt The time elapsed since the last update, in milliseconds
      */
     PointLightSource.prototype.update = function (dt) {
-        var i, count, previousIntensity = this._totalIntensity;
+        var i, count;
         this.updateState(dt);
-        if (!this._visible) {
-            this._totalIntensity = 0;
-        } else {
-            // calculate attributes that depend on the emitting objects
-            if (!this._emittingObjects) {
-                this._totalIntensity = this._objectIntensity;
-                vec.setVector3(this._positionVector, this._relativePositionVector);
-            } else if (this._singleEmittingObject) {
-                this._totalIntensity = this._objectIntensity;
-                this._emittingObjects[0].copyPositionToVector(this._positionVector);
-                if (this._hasRelativePosition) {
-                    vec.add3(this._positionVector, vec.prodVec3Mat4Aux(this._relativePositionVector, mat.prod3x3SubOf4Aux(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
-                }
-            } else {
-                vec.setNull3(this._positionVector);
-                count = 0;
-                for (i = 0; i < this._emittingObjects.length; i++) {
-                    if (this._emittingObjects[i] && !this._emittingObjects[i].canBeReused() && this._emittingObjects[i].isVisible()) {
-                        this._emittingObjects[i].addPositionToVector(this._positionVector);
-                        count++;
-                    }
-                }
-                if (count > 0) {
-                    this._positionVector[0] /= count;
-                    this._positionVector[1] /= count;
-                    this._positionVector[2] /= count;
-                }
-                this._totalIntensity = this._objectIntensity * count;
+        // calculate attributes that depend on the emitting objects
+        if (this._singleEmittingObject) {
+            this._uniformColor[3] = this._objectIntensity;
+            this._emittingObjects[0].copyPositionToVector(this._positionVector);
+            if (this._hasRelativePosition) {
+                vec.add3(this._positionVector, vec.prodVec3Mat4Aux(this._relativePositionVector, mat.prod3x3SubOf4Aux(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
             }
-        }
-        if (this._totalIntensity !== previousIntensity) {
-            this._uniformColor[3] = this._totalIntensity;
+        } else {
+            vec.setNull3(this._positionVector);
+            count = 0;
+            for (i = 0; i < this._emittingObjects.length; i++) {
+                if (this._emittingObjects[i] && !this._emittingObjects[i].canBeReused() && this._emittingObjects[i].isVisible()) {
+                    this._emittingObjects[i].addPositionToVector(this._positionVector);
+                    count++;
+                }
+            }
+            if (count > 1) {
+                this._positionVector[0] /= count;
+                this._positionVector[1] /= count;
+                this._positionVector[2] /= count;
+            }
+            this._uniformColor[3] = this._objectIntensity * count;
         }
     };
     /**
@@ -516,9 +472,6 @@ define([
      */
     PointLightSource.prototype.canBeReused = function () {
         var i;
-        if (!this._emittingObjects) {
-            return false;
-        }
         if (this._singleEmittingObject) {
             return this._emittingObjects[0].canBeReused();
         }
@@ -534,10 +487,9 @@ define([
      * @param {Number[3]} value
      */
     PointLightSource.prototype.setColor = function (value) {
-        this._color[0] = value[0];
-        this._color[1] = value[1];
-        this._color[2] = value[2];
-        this._updateUniformColor();
+        this._uniformColor[0] = value[0];
+        this._uniformColor[1] = value[1];
+        this._uniformColor[2] = value[2];
     };
     /**
      * Sets a new intensity for the light emitted by the objects contributing to this light source.
@@ -562,7 +514,7 @@ define([
     PointLightSource.prototype.shouldBeRendered = function (camera) {
         var viewMatrix = camera.getViewMatrix();
         // calculating the Z position in camera space by multiplying the world space position vector with the view matrix (only the applicable parts)
-        return (this._totalIntensity > 0) && ((this._positionVector[0] * viewMatrix[2] + this._positionVector[1] * viewMatrix[6] + this._positionVector[2] * viewMatrix[10] + viewMatrix[14]) < this._totalIntensity);
+        return (this._uniformColor[3] > 0) && ((this._positionVector[0] * viewMatrix[2] + this._positionVector[1] * viewMatrix[6] + this._positionVector[2] * viewMatrix[10] + viewMatrix[14]) < this._uniformColor[3]);
     };
     /**
      * Sets the animation state of the light source to be the one occuring after the passed amount of time from the start
@@ -573,18 +525,6 @@ define([
         this._currentStateIndex = 0;
         this.updateState(elapsedTime);
     };
-    /**
-     * Causes the light source to not be rendered (isVisible() and shouldBeRendered() to be false) and its position not be updated
-     */
-    PointLightSource.prototype.hide = function () {
-        this._visible = false;
-    };
-    /**
-     * Restores the default visibility state of the light source (where rendering depends on camera frustum and current intensity)
-     */
-    PointLightSource.prototype.show = function () {
-        this._visible = true;
-    };
     // #########################################################################
     /**
      * @typedef {SceneGraph~PointLightUniformData} SceneGraph~SpotLightUniformData
@@ -594,10 +534,10 @@ define([
      */
     /**
      * @class A directed point-like light source.
-     * @extends PointLightSource
-     * @param {Number[3]} color See PointLightSource.
-     * @param {Number} intensity See PointLightSource.
-     * @param {Number[3]} positionVector See PointLightSource.
+     * @param {Number[3]} color The color of the light emitted by this source.
+     * @param {Number} intensity The intensity of the light - the level of lighting for point light sources depends on the distance
+     * from the illuminated object, and it will be multiplied by this factor.
+     * @param {Number[3]} positionVector The position of the light source relative to the object.
      * @param {Number[3]} spotDirection The (relative) direction in which the light cone of this light source is pointed. If there is one
      * emitting object, the direction will be relative to the orientation of that object, otherwise it will be taken as absolute.
      * @param {Number} spotCutoffAngle Light will not be emitted in directions with angles larger than this to the primary spot direction.
@@ -605,86 +545,103 @@ define([
      * @param {Number} spotFullIntensityAngle Light will be emitted at full intensity only in direction with angles smaller than this to the
      * primary direction. Between this and the cutoff angle, the intensity will transition to zero. If this is larger than the cutoff angle,
      * light will be emitted with full intensity everywhere within the cutoff angle. In degrees.
-     * @param {RenderableObject3D[]} emittingObjects See PointLightSource.
-     * @param {PointLightSource~LightState[]} [states] See PointLightSource.
-     * @param {Boolean} [looping] See PointLightSource.
+     * @param {RenderableObject3D} emittingObject The object emitting the spot light.
      */
-    function SpotLightSource(color, intensity, positionVector, spotDirection, spotCutoffAngle, spotFullIntensityAngle, emittingObjects, states, looping) {
-        PointLightSource.call(this, color, intensity, positionVector, emittingObjects, states, looping);
+    function SpotLightSource(color, intensity, positionVector, spotDirection, spotCutoffAngle, spotFullIntensityAngle, emittingObject) {
         /**
-         * The (relative) direction in which the light cone of this light source is pointed. If there is one
-         * emitting object, the direction will be relative to the orientation of that object, otherwise it will be taken as absolute.
-         * @type Numberf[3]
+         * Whether the spot light is turned on and emitting.
+         * @type Boolean
+         */
+        this._visible = true;
+        /**
+         * The array storing the color and intensity values to be passed to the shaders.
+         * @type Number[4]
+         */
+        this._uniformColor = [color[0], color[1], color[2], intensity];
+        /**
+         * The position of the light source relative to the emitting object.
+         * @type Number[3]
+         */
+        this._relativePositionVector = positionVector;
+        /**
+         * The calculated position of the light source in world space.
+         * The 4th coordinate is the cosine of the full intensity angle (zero if there if full intensity needs to be applied everywhere)
+         * @type Number[4]
+         */
+        this._positionVector = [0, 0, 0, (spotFullIntensityAngle < spotCutoffAngle) ? Math.cos(Math.radians(spotFullIntensityAngle)) : 0];
+        /**
+         * The (relative) direction in which the light cone of this light source is pointed.
+         * The direction will be relative to the orientation of the emitting object.
+         * @type Number[3]
          */
         this._relativeSpotDirection = spotDirection;
         /**
-         * The cosine of the cutoff angle.
-         * @type Number
+         * The object emitting the light.
+         * @type RenderableObject3D
          */
-        this._spotCutoffCosine = Math.cos(Math.radians(spotCutoffAngle));
-        /**
-         * The cosine of th full intensity angle (zero if there if full intensity needs to be applied everywhere)
-         * @type Number
-         */
-        this._spotFullIntensityCosine = (spotFullIntensityAngle < spotCutoffAngle) ? Math.cos(Math.radians(spotFullIntensityAngle)) : 0;
-        /**
-         * The direction of the light cone in world-space.
-         * @type Numberf[3]
-         */
-        this._spotDirection = [0, 0, 0];
+        this._emittingObject = emittingObject;
         /**
          * Holds the data to be passed to the corresponding uniform struct.
          * @type SceneGraph~StopLightUniformData
          */
         this._uniformData = {
             color: this._uniformColor,
-            spot: [0, 0, 0, 0],
-            position: [0, 0, 0, 0]
+            position: this._positionVector,
+            // The 4th coordinate is the cosine of the cutoff angle.
+            spot: [0, 0, 0, Math.cos(Math.radians(spotCutoffAngle))]
         };
     }
-    SpotLightSource.prototype = new PointLightSource();
-    SpotLightSource.prototype.constructor = SpotLightSource;
     /**
-     * @param {Number[3]} value
+     * Returns whether the light is currently visible in the scene
+     * @returns {Boolean}
      */
-    SpotLightSource.prototype.setSpotDirection = function (value) {
-        this._relativeSpotDirection = value;
+    SpotLightSource.prototype.isVisible = function () {
+        return this._visible && this._emittingObject.isVisible();
     };
     /**
-     * @param {Number} value
+     * Updates the properties of the light source based on the status of the emitting object.
      */
-    SpotLightSource.prototype.setSpotCutoffAngle = function (value) {
-        this._spotCutoffCosine = Math.cos(Math.radians(value));
+    SpotLightSource.prototype.update = function () {
+        // calculate attributes that depend on the emitting object
+        this._emittingObject.copyPositionToVector(this._positionVector);
+        vec.add3(this._positionVector, vec.prodVec3Mat4Aux(this._relativePositionVector, mat.prod3x3SubOf4Aux(this._emittingObject.getCascadeScalingMatrix(), this._emittingObject.getOrientationMatrix())));
+        vec.setProdVec3Mat4(this._uniformData.spot, this._relativeSpotDirection, this._emittingObject.getOrientationMatrix());
     };
     /**
-     * @override
-     * @param {Number} dt
-     */
-    SpotLightSource.prototype.update = function (dt) {
-        PointLightSource.prototype.update.call(this, dt);
-        if (this._visible) {
-            // calculate attributes that depend on the emitting objects
-            if (!this._emittingObjects || (this._emittingObjects.length !== 1)) {
-                vec.setVector3(this._spotDirection, this._relativeSpotDirection);
-            } else {
-                vec.setProdVec3Mat4(this._spotDirection, this._relativeSpotDirection, this._emittingObjects[0].getOrientationMatrix());
-            }
-        }
-    };
-    /**
-     * @override
      * @returns {SceneGraph~SpotLightUniformData}
      */
     SpotLightSource.prototype.getUniformData = function () {
-        this._uniformData.spot[0] = this._spotDirection[0];
-        this._uniformData.spot[1] = this._spotDirection[1];
-        this._uniformData.spot[2] = this._spotDirection[2];
-        this._uniformData.spot[3] = this._spotCutoffCosine;
-        this._uniformData.position[0] = this._positionVector[0];
-        this._uniformData.position[1] = this._positionVector[1];
-        this._uniformData.position[2] = this._positionVector[2];
-        this._uniformData.position[3] = this._spotFullIntensityCosine;
         return this._uniformData;
+    };
+    /**
+     * Returns whether this light source object can be reused as the light source it represents is not needed anymore (its emitting
+     * object has been deleted)
+     * @returns {Boolean}
+     */
+    SpotLightSource.prototype.canBeReused = function () {
+        return this._emittingObject.canBeReused();
+    };
+    /**
+     * Returns whether the light source should be considered for rendering if the passed camera is used.
+     * @param {Camera} camera
+     * @returns {Boolean}
+     */
+    SpotLightSource.prototype.shouldBeRendered = function (camera) {
+        var viewMatrix = camera.getViewMatrix();
+        // calculating the Z position in camera space by multiplying the world space position vector with the view matrix (only the applicable parts)
+        return ((this._positionVector[0] * viewMatrix[2] + this._positionVector[1] * viewMatrix[6] + this._positionVector[2] * viewMatrix[10] + viewMatrix[14]) < this._uniformColor[3]);
+    };
+    /**
+     * Causes the light source to not be rendered (isVisible() and shouldBeRendered() to be false) and its position not be updated
+     */
+    SpotLightSource.prototype.hide = function () {
+        this._visible = false;
+    };
+    /**
+     * Restores the default visibility state of the light source (where rendering depends on camera frustum and current intensity)
+     */
+    SpotLightSource.prototype.show = function () {
+        this._visible = true;
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

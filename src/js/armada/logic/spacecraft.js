@@ -352,10 +352,10 @@ define([
          */
         this._blinkers = null;
         /**
-         * The point and spot lights attached to the visual model of this spacecraft
-         * @type PointLightSource[]
+         * The spot lights attached to the visual model of this spacecraft
+         * @type SpotLightSource[]
          */
-        this._lights = null;
+        this._spotLights = null;
         /**
          * The time value to be set for the blinkers when the spacecraft is added to the
          * scene. -1 means there is no specified time (left at 0 or randomly chosen based
@@ -715,7 +715,7 @@ define([
         for (i = 0; i < blinkerDescriptors.length; i++) {
             this._blinkers.push(new Blinker(blinkerDescriptors[i]));
         }
-        this._lights = [];
+        this._spotLights = [];
         // equipping the craft if a loadout name was given
         if (loadoutName) {
             this.equipLoadout(this._class.getLoadout(loadoutName));
@@ -776,7 +776,7 @@ define([
      * @param {Boolean} value 
      */
     Spacecraft.prototype.setAway = function (value) {
-        var i, p;
+        var p;
         if (this._away !== value) {
             this._away = value;
             if (this._away) {
@@ -784,11 +784,6 @@ define([
                 p = this.getPhysicalPositionMatrix();
                 if (this._visualModel && (!this._visualModel.isWireframe() || ((p[12] === 0) && (p[13] === 0) && (p[14] === 0)))) {
                     this._visualModel.getNode().hide();
-                }
-                if (this._lights) {
-                    for (i = 0; i < this._lights.length; i++) {
-                        this._lights[i].hide();
-                    }
                 }
                 if (this._physicalModel) {
                     this._physicalModel.reset();
@@ -803,11 +798,6 @@ define([
             } else {
                 if (this._visualModel) {
                     this._visualModel.getNode().show();
-                }
-                if (this._lights) {
-                    for (i = 0; i < this._lights.length; i++) {
-                        this._lights[i].show();
-                    }
                 }
             }
         }
@@ -2013,17 +2003,16 @@ define([
         // add light sources
         if (_dynamicLights && addSupplements.lightSources === true) {
             lightSources = this._class.getLightSources();
-            this._lights.length = 0;
+            this._spotLights.length = 0;
             emittingObjects = [visualModel];
             for (i = 0; i < lightSources.length; i++) {
                 if (lightSources[i].spotDirection) {
-                    light = new lights.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, emittingObjects);
-                    this._lights.push(light);
+                    light = new lights.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, visualModel);
+                    this._spotLights.push(light);
                     scene.addSpotLightSource(light);
                 } else {
                     light = new lights.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, emittingObjects);
                     scene.addPointLightSource(light, constants.SPACECRAFT_LIGHT_PRIORITY);
-                    this._lights.push(light);
                 }
             }
         }
@@ -3313,7 +3302,7 @@ define([
             this._visualModel.getNode().markAsReusable(true);
         }
         this._visualModel = null;
-        this._lights = null;
+        this._spotLights = null;
         this._physicalModel = null;
         if (this._activeDamageIndicators) {
             // damage indicators are pooled objects (Explosions), so we do not destroy them (properties and reusability state need to be 

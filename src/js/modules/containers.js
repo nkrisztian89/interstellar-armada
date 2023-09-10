@@ -1,5 +1,5 @@
 /**
- * Copyright 2017, 2020-2021 Krisztián Nagy
+ * Copyright 2017, 2020-2021, 2023 Krisztián Nagy
  * @file Provides container classes for general use.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -101,13 +101,6 @@ define(function () {
      */
     DirectDoubleLinkedList.prototype.getFirst = function () {
         return this._first;
-    };
-    /**
-     * Returns the last element of the list.
-     * @returns {DirectDoubleLinkedList~Element}
-     */
-    DirectDoubleLinkedList.prototype.getLast = function () {
-        return this._last;
     };
     /**
      * Returns the element coming after the passed element in the list, or the first element, if the passed element is the last element in

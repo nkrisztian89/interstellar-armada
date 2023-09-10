@@ -228,7 +228,9 @@ module.exports = function (grunt) {
                 ["jumpEngineDescriptor"],
                 ["shieldDescriptor"],
                 ['transformMatrix'],
-                ['barrelMarkers']
+                ['barrelMarkers'],
+                ['first'],
+                ['uniformData']
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [
@@ -272,7 +274,8 @@ module.exports = function (grunt) {
                 ["clearColor"],
                 ["ambientColor"],
                 ["revealState"],
-                ["piloted"]
+                ["piloted"],
+                ["objectIntensity"]
             ].map(
             function (replacement) {
 // create the replacements for each simple setter
