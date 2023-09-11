@@ -494,7 +494,11 @@ module.exports = function (grunt) {
                 ["musicFadeOutDuration", "general"],
                 ["slowConnectionThreshold", "multi"],
                 ["connectionLostThreshold", "multi"],
-                ["disconnectThreshold", "multi"]
+                ["disconnectThreshold", "multi"],
+                ["defaultFOV", "camera", "DEFAULT_FOV"],
+                ["defaultSpan", "camera"],
+                ["defaultBaseOrientation", "camera"],
+                ["defaultPointToFallback", "camera"]
             ],
             settingConfigReplacements = settingsToReplace.map(
                     function (replacement) {
@@ -512,7 +516,7 @@ module.exports = function (grunt) {
                                 value = settings.logic[replacement[1]][replacement[0]];
                         return [{
                                 // replacing usages of this setting
-                                match: "config.getSetting(config." + replacement[1].toUpperCase() + "_SETTINGS." + constName + ")",
+                                match: new RegExp("(config|this).getSetting\\((config.|)" + replacement[1].toUpperCase() + "_SETTINGS." + constName + "\\)", "g"),
                                 replacement: (typeof value === "string") ? '"' + value + '"' : value
                             }, {
                                 // removing the definition of this setting from configuration.js

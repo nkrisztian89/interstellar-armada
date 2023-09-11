@@ -1796,7 +1796,7 @@ define([
                         }
                     }
                 } else if (this.getPilotedSpacecraft()) {
-                    battleScene.getCamera().followNode(this.getPilotedSpacecraft().getVisualModel().getNode(), true, 0, null, config.getDefaultCamerConfigurationName(this.getPilotedSpacecraft()));
+                    battleScene.getCamera().followNode(this.getPilotedSpacecraft().getVisualModel().getNode(), true, 0, null, config.getDefaultCameraConfigurationName(this.getPilotedSpacecraft()));
                 }
                 battleScene.getCamera().update(0);
                 // prefilling the pools with objects to avoid creating lots of new objects at the start of the mission as the pools grow

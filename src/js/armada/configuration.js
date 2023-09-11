@@ -1957,7 +1957,7 @@ define([
      * @param {Spacecraft} spacecraft
      * @returns {String}
      */
-    ConfigurationContext.prototype.getDefaultCamerConfigurationName = function (spacecraft) {
+    ConfigurationContext.prototype.getDefaultCameraConfigurationName = function (spacecraft) {
         return spacecraft.isFighter() ?
                 this.getBattleSetting(BATTLE_SETTINGS.DEFAULT_FIGHTER_VIEW_NAME) :
                 this.getBattleSetting(BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME);
@@ -2006,7 +2006,7 @@ define([
         getDefaultCameraSpan: _context.getDefaultCameraSpan.bind(_context),
         getDefaultCameraBaseOrientation: _context.getDefaultCameraBaseOrientation.bind(_context),
         getDefaultCameraPointToFallback: _context.getDefaultCameraPointToFallback.bind(_context),
-        getDefaultCamerConfigurationName: _context.getDefaultCamerConfigurationName.bind(_context),
+        getDefaultCameraConfigurationName: _context.getDefaultCameraConfigurationName.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context)
     };
 });

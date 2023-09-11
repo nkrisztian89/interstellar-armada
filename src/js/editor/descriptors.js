@@ -134,8 +134,6 @@ define([
              * Use this for properties for which the game logic actually replaces undefined values with a proper value upon loading.
              * When a new object is created having this property, this default value will be set for it. (unless an explicit newValue is 
              * specified)
-             * @property {Boolean} [globalDefault] If the value is undefined, the value of the property will be set from a global (configuration) variable
-             * @property {String} [settingName] If globalDefault is true, the name of the setting from where the default value is retrieved from can be given here
              * @property {} [newValue] When a new object is created having this property, this value will be set as its value.
              * @property {String} [defaultText] The text to show in the editor when the property is unset and has no default value or it is better to show
              * some explanation instead of the default value
@@ -1386,14 +1384,12 @@ define([
                 FULL_NAME: {
                     name: "fullName",
                     type: BaseType.STRING,
-                    optional: true,
                     getDerivedDefault: _getName,
                     updateOnValidate: true
                 },
                 SHORT_NAME: {
                     name: "shortName",
                     type: BaseType.STRING,
-                    optional: true,
                     getDerivedDefault: _getShortName,
                     updateOnValidate: true
                 },
@@ -1644,7 +1640,6 @@ define([
                 FULL_NAME: {
                     name: "fullName",
                     type: BaseType.STRING,
-                    optional: true,
                     getDerivedDefault: _getName,
                     updateOnValidate: true
                 },
@@ -1728,7 +1723,6 @@ define([
                 FULL_NAME: {
                     name: "fullName",
                     type: BaseType.STRING,
-                    optional: true,
                     getDerivedDefault: _getName,
                     updateOnValidate: true
                 },
@@ -1789,7 +1783,6 @@ define([
                 FULL_NAME: {
                     name: "fullName",
                     type: BaseType.STRING,
-                    optional: true,
                     getDerivedDefault: _getName,
                     updateOnValidate: true
                 },
@@ -1879,42 +1872,36 @@ define([
                 JUMP_IN_DECELERATION: {
                     name: "jumpInDeceleration",
                     type: POSITIVE_METERS_PER_SECOND_SQUARED,
-                    optional: true,
                     getDerivedDefault: _getDefaultJumpInDeceleration,
                     updateOnValidate: true
                 },
                 JUMP_IN_DURATION: {
                     name: "jumpInDuration",
                     type: POSITIVE_MILLISECONDS,
-                    optional: true,
                     getDerivedDefault: _getDefaultJumpInDuration,
                     updateOnValidate: true
                 },
                 JUMP_IN_VELOCITY: {
                     name: "jumpInVelocity",
                     type: METERS_PER_SECOND,
-                    optional: true,
                     getDerivedDefault: _getDefaultJumpInVelocity,
                     updateOnValidate: true
                 },
                 JUMP_IN_SCALING: {
                     name: "jumpInScaling",
                     type: POSITIVE_SCALE,
-                    optional: true,
                     getDerivedDefault: _getDefaultJumpInScaling,
                     updateOnValidate: true
                 },
                 JUMP_IN_SOUND: {
                     name: "jumpInSound",
                     type: SOUND_DESCRIPTOR,
-                    optional: true,
                     getDerivedDefault: _getDefaultJumpInSound,
                     updateOnValidate: true
                 },
                 JUMP_IN_EXPLOSION: {
                     name: "jumpInExplosion",
                     type: EXPLOSION_CLASS_REFERENCE,
-                    optional: true,
                     getDerivedDefault: _getDefaultJumpInExplosion,
                     updateOnValidate: true
                 }
@@ -1931,7 +1918,6 @@ define([
                 FULL_NAME: {
                     name: "fullName",
                     type: BaseType.STRING,
-                    optional: true,
                     getDerivedDefault: _getName,
                     updateOnValidate: true
                 },
@@ -1991,7 +1977,6 @@ define([
                 FULL_NAME: {
                     name: "fullName",
                     type: BaseType.STRING,
-                    optional: true,
                     getDerivedDefault: _getName,
                     updateOnValidate: true
                 },
@@ -2223,8 +2208,7 @@ define([
                     FOV: {
                         name: "fov",
                         type: POSITIVE_DEGREES_180,
-                        globalDefault: true,
-                        settingName: config.CAMERA_SETTINGS.DEFAULT_FOV
+                        getDerivedDefault: config.getDefaultCameraFOV
                     },
                     FOV_RANGE: {
                         name: "fovRange",
@@ -2235,8 +2219,7 @@ define([
                     SPAN: {
                         name: "span",
                         type: POSITIVE_LENGTH,
-                        globalDefault: true,
-                        settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN
+                        getDerivedDefault: config.getDefaultCameraSpan
                     },
                     FPS: {
                         name: "fps",
@@ -2258,15 +2241,13 @@ define([
                     BASE_ORIENTATION: {
                         name: "baseOrientation",
                         type: BASE_ORIENTATION,
-                        globalDefault: true,
-                        settingName: config.CAMERA_SETTINGS.DEFAULT_BASE_ORIENTATION,
+                        getDerivedDefault: config.getDefaultCameraBaseOrientation,
                         isValid: _isFPS
                     },
                     POINT_TO_FALLBACK: {
                         name: "pointToFallback",
                         type: POINT_TO_FALLBACK,
-                        globalDefault: true,
-                        settingName: config.CAMERA_SETTINGS.DEFAULT_POINT_TO_FALLBACK,
+                        getDerivedDefault: config.getDefaultCameraPointToFallback,
                         isValid: _pointsTowardObjects
                     },
                     STARTS_WITH_RELATIVE_POSITION: {
@@ -2698,7 +2679,6 @@ define([
                 FULL_NAME: {
                     name: "fullName",
                     type: BaseType.STRING,
-                    optional: true,
                     getDerivedDefault: _getName,
                     updateOnValidate: true
                 },
@@ -3763,8 +3743,7 @@ define([
                         name: "once",
                         type: BaseType.BOOLEAN,
                         getDerivedDefault: _getTriggerDefaultOnce,
-                        isValid: _isTriggerOnceValid,
-                        optional: true
+                        isValid: _isTriggerOnceValid
                     },
                     DELAY: {
                         name: "delay",
@@ -4223,7 +4202,6 @@ define([
                     COLOR: {
                         name: "color",
                         type: BaseType.COLOR4,
-                        optional: true,
                         getDerivedDefault: _getDefaultMessageColor,
                         isValid: _parentIsMessageAction
                     },
@@ -4462,20 +4440,18 @@ define([
                     FOV: {
                         name: "fov",
                         type: DEGREES,
-                        globalDefault: true,
-                        settingName: config.CAMERA_SETTINGS.DEFAULT_FOV
+                        getDerivedDefault: config.getDefaultCameraFOV
                     },
                     FOV_RANGE: {
                         name: "fovRange",
                         type: BaseType.RANGE,
-                        globalDefault: true,
-                        settingName: config.CAMERA_SETTINGS.DEFAULT_FOV_RANGE
+                        optional: true,
+                        defaultText: "fixed"
                     },
                     SPAN: {
                         name: "span",
                         type: DISTANCE,
-                        globalDefault: true,
-                        settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN
+                        getDerivedDefault: config.getDefaultCameraSpan
                     },
                     FPS: {
                         name: "fps",
@@ -4485,8 +4461,7 @@ define([
                     BASE_ORIENTATION: {
                         name: "baseOrientation",
                         type: BASE_ORIENTATION,
-                        globalDefault: true,
-                        settingName: config.CAMERA_SETTINGS.DEFAULT_BASE_ORIENTATION,
+                        getDerivedDefault: config.getDefaultCameraBaseOrientation,
                         isValid: _isFPS
                     },
                     POINT_TO_FALLBACK: {
@@ -4703,7 +4678,6 @@ define([
                     LOADOUT: {
                         name: "loadout",
                         type: CLASS_LOADOUT_REFERENCE,
-                        optional: true,
                         isValid: _craftCanHaveLoadout,
                         getDerivedDefault: _getDefaultLoadout,
                         updateOnValidate: true

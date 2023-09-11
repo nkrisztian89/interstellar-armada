@@ -409,8 +409,8 @@ define([
             }
             return NEW_OBJECT_NAME_PREFIX + typeName;
         }
-        if ((undefinedIfOptionalWithNoDefault && optional && (propertyDescriptor.defaultValue === undefined)) ||
-                (undefinedIfOptionalOrHasDefault && (optional || (propertyDescriptor.defaultValue !== undefined)))) {
+        if ((undefinedIfOptionalWithNoDefault && optional && (propertyDescriptor.defaultValue === undefined) && (propertyDescriptor.getDerivedDefault === undefined)) ||
+                (undefinedIfOptionalOrHasDefault && (optional || (propertyDescriptor.defaultValue !== undefined) || (propertyDescriptor.getDerivedDefault !== undefined)))) {
             return undefined;
         }
         if (basedOn) {
@@ -430,9 +430,6 @@ define([
         }
         if (propertyDescriptor.defaultValue) {
             return utils.deepCopy(propertyDescriptor.defaultValue);
-        }
-        if (propertyDescriptor.globalDefault && propertyDescriptor.settingName) {
-            return utils.deepCopy(config.getSetting(propertyDescriptor.settingName));
         }
         switch (type.getBaseType()) {
             case descriptors.BaseType.BOOLEAN:
@@ -1276,15 +1273,12 @@ define([
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, objectParent, _item.name));
         if (((!parent || (parent === _item.data)) && _basedOn) || ((parent !== _item.data) && parent[descriptors.BASED_ON_PROPERTY_NAME])) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
-        } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.defaultText || propertyDescriptor.getDerivedDefault) {
+        } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.defaultText || propertyDescriptor.getDerivedDefault) {
             labelText = DEFAULT_PROPERTY_TEXT;
             if (propertyDescriptor.defaultText) {
                 labelText = propertyDescriptor.defaultText;
             } else {
                 defaultValue = propertyDescriptor.defaultValue;
-                if ((defaultValue === undefined) && propertyDescriptor.globalDefault && propertyDescriptor.settingName) {
-                    defaultValue = config.getSetting(propertyDescriptor.settingName);
-                }
                 if ((defaultValue === undefined) && propertyDescriptor.getDerivedDefault) {
                     defaultValue = propertyDescriptor.getDerivedDefault(parent, objectParent, _item.name);
                 }
@@ -1485,7 +1479,7 @@ define([
                 row.classList.remove(UNSET_PROPERTY_ROW_CLASS);
             }
             // add unset button for optional values
-            if (!required && (optional || (propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.getDerivedDefault ||
+            if (!required && (optional || (propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.getDerivedDefault ||
                     ((!parent || (parent === _item.data)) && _basedOn && (propertyDescriptor.name !== descriptors.NAME_PROPERTY_NAME))) && ((parent !== _item.data) || (propertyDescriptor.name !== descriptors.BASED_ON_PROPERTY_NAME))) {
                 if (!control) {
                     control = result;
@@ -1539,7 +1533,7 @@ define([
             row.appendChild(nameCell);
             valueCell = document.createElement("td");
             valid = !propertyDescriptor.isValid || propertyDescriptor.isValid(data, parent, _item.name);
-            required = !propertyDescriptor.optional && !propertyDescriptor.globalDefault && (propertyDescriptor.defaultValue === undefined) && (!propertyDescriptor.isRequired || propertyDescriptor.isRequired(data, parent, _item.name));
+            required = (!!propertyDescriptor.isRequired && propertyDescriptor.isRequired(data, parent, _item.name)) || (!propertyDescriptor.optional && (propertyDescriptor.defaultValue === undefined) && (propertyDescriptor.getDerivedDefault !== undefined));
             if (!valid || (row.required && !required)) {
                 delete data[propertyDescriptor.name];
             } else if (required && (data[propertyDescriptor.name] === undefined) && (!_basedOn || (data !== _item.data))) {

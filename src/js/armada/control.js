@@ -609,7 +609,7 @@ define([
                 pilotedSpacecraft.getVisualModel(),
                 skipTransition ? 0 : config.getSetting(config.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_DURATION),
                 config.getSetting(config.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_STYLE),
-                config.getDefaultCamerConfigurationName(pilotedSpacecraft));
+                config.getDefaultCameraConfigurationName(pilotedSpacecraft));
         this.disableAction("followNext");
         this.disableAction("followPrevious");
         game.getScreen(armadaScreens.BATTLE_SCREEN_NAME).setHeaderContent("");
