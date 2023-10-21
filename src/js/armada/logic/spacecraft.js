@@ -194,6 +194,43 @@ define([
     function setMultiGuest(value) {
         _isMultiGuest = value;
     }
+    /**
+     * Extract the squad name from the squad property value of a spacecraft entry
+     * in a mission file. e.g. "alpha" -> "alpha", "alpha 5" -> "alpha"
+     * @param {String} squadString
+     * @returns {String}
+     */
+    function getSquadName(squadString) {
+        var index, indexInSquad;
+        index = squadString.lastIndexOf(" ");
+        if (index < 0) {
+            return squadString;
+        }
+        indexInSquad = squadString.substring(index + 1);
+        if (isNaN(indexInSquad)) {
+            return squadString;
+        }
+        return squadString.substring(0, index);
+    }
+    /**
+     * Extract the squad index from the squad property value of a spacecraft entry
+     * in a mission file. Returns zero if the passed string contains no index.
+     * e.g. "alpha" -> 0, "alpha 5" -> 5
+     * @param {String} squadString
+     * @returns {Number}
+     */
+    function getSquadIndex(squadString) {
+        var index, indexInSquad;
+        index = squadString.lastIndexOf(" ");
+        if (index < 0) {
+            return 0;
+        }
+        indexInSquad = parseInt(squadString.substring(index + 1), 10);
+        if (isNaN(indexInSquad)) {
+            return 0;
+        }
+        return indexInSquad;
+    }
     // #########################################################################
     /**
      * @class
@@ -1519,7 +1556,7 @@ define([
      * situated in
      */
     Spacecraft.prototype.loadFromJSON = function (dataJSON, spacecraftArray, environment) {
-        var loadout, squadData;
+        var loadout;
         this._init(
                 classes.getSpacecraftClass(dataJSON.class),
                 dataJSON.name,
@@ -1529,8 +1566,7 @@ define([
                 spacecraftArray,
                 environment);
         if (dataJSON.squad) {
-            squadData = dataJSON.squad.split(" ");
-            this.setSquad(squadData[0], parseInt(squadData[1], 10));
+            this.setSquad(getSquadName(dataJSON.squad), getSquadIndex(dataJSON.squad));
         }
         // equipping the created spacecraft
         if (dataJSON.loadout) {
@@ -3356,6 +3392,8 @@ define([
         MULTI_HOST_DATA_LENGTH: MULTI_HOST_DATA_LENGTH,
         MULTI_GUEST_DATA_LENGTH: MULTI_GUEST_DATA_LENGTH,
         setMultiGuest: setMultiGuest,
+        getSquadName: getSquadName,
+        getSquadIndex: getSquadIndex,
         Spacecraft: Spacecraft
     };
 });

@@ -3110,24 +3110,15 @@ define([
                 baseType: BaseType.ENUM,
                 name: "Spacecraft",
                 getValues: function (parent, topParent) {
-                    var result = [], i, j, spacecraft;
+                    var result = [], i, spacecrafts, craft;
                     if (topParent.spacecrafts) {
-                        for (i = 0; i < topParent.spacecrafts.length; i++) {
-                            spacecraft = topParent.spacecrafts[i];
-                            if (spacecraft.name) {
-                                result.push(spacecraft.name);
-                            } else if (spacecraft.squad) {
-                                if (spacecraft.count) {
-                                    for (j = 0; j < spacecraft.count; j++) {
-                                        result.push(spacecraft.squad + " " + (j + 1));
-                                    }
-                                } else {
-                                    result.push(spacecraft.squad);
-                                }
-                            } else if (spacecraft.count && spacecraft.names) {
-                                for (j = 0; j < Math.min(spacecraft.count, spacecraft.names.length); j++) {
-                                    result.push(spacecraft.names[j]);
-                                }
+                        spacecrafts = missions.getIndividualSpacecraftDescriptors(topParent.spacecrafts);
+                        for (i = 0; i < spacecrafts.length; i++) {
+                            craft = spacecrafts[i];
+                            if (craft.name) {
+                                result.push(craft.name);
+                            } else if (craft.squad) {
+                                result.push(craft.squad);
                             }
                         }
                     }
@@ -3141,18 +3132,14 @@ define([
                 baseType: BaseType.ENUM,
                 name: "Squad",
                 getValues: function (parent, topParent) {
-                    var result = [], i, spacecraft, squad;
+                    var result = [], i, craft, squad;
                     if (topParent.spacecrafts) {
                         for (i = 0; i < topParent.spacecrafts.length; i++) {
-                            spacecraft = topParent.spacecrafts[i];
-                            if (spacecraft.squad) {
-                                if (spacecraft.squad.indexOf(" ") < 0) {
-                                    result.push(spacecraft.squad);
-                                } else {
-                                    squad = spacecraft.squad.split(" ")[0];
-                                    if (result.indexOf(squad) < 0) {
-                                        result.push(squad);
-                                    }
+                            craft = topParent.spacecrafts[i];
+                            if (craft.squad) {
+                                squad = spacecraft.getSquadName(craft.squad);
+                                if (result.indexOf(squad) < 0) {
+                                    result.push(squad);
                                 }
                             }
                         }

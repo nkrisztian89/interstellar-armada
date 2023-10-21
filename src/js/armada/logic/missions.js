@@ -194,14 +194,15 @@ define([
      * @param {Array} spacecrafts
      * @returns {Array}
      */
-    function _getIndividualSpacecraftDescriptors(spacecrafts) {
+    function getIndividualSpacecraftDescriptors(spacecrafts) {
         var i, j, squad, names, loadouts, pilotedIndex, positions, formation, orientation, initialBlinkTime, initialBlinkTimeDelta,
                 spacecraftDataTemplate, spacecraftData,
-                result = [];
+                result = [], squads = {}, index;
         for (i = 0; i < spacecrafts.length; i++) {
             if (spacecrafts[i].count) {
                 // extracting data used for generating differing spacecraft data properties
                 squad = spacecrafts[i].squad;
+                squads[squad] = squads[squad] || 0;
                 names = spacecrafts[i].names;
                 loadouts = spacecrafts[i].loadouts;
                 pilotedIndex = spacecrafts[i].pilotedIndex;
@@ -221,7 +222,7 @@ define([
                 for (j = 0; j < spacecrafts[i].count; j++) {
                     spacecraftData = utils.deepCopy(spacecraftDataTemplate);
                     if (squad) {
-                        spacecraftData.squad = squad + " " + (j + 1).toString();
+                        spacecraftData.squad = squad + " " + (squads[squad] + j + 1).toString();
                     }
                     if (names) {
                         spacecraftData.name = names[j];
@@ -247,8 +248,27 @@ define([
                     }
                     result.push(spacecraftData);
                 }
+                squads[squad] += spacecrafts[i].count;
             } else {
-                result.push(spacecrafts[i]);
+                if (spacecrafts[i].squad) {
+                    squad = spacecraft.getSquadName(spacecrafts[i].squad);
+                    index = spacecraft.getSquadIndex(spacecrafts[i].squad);
+                    if (index > 0) {
+                        if (index <= squads[squad]) {
+                            application.showError("Spacecraft " + spacecrafts[i].squad + " defined after squad " + squad + " already having " + squads[squad] + " defined members!", application.ErrorSeverity.MINOR);
+                        }
+                        squads[squad] = index;
+                        result.push(spacecrafts[i]);
+                    } else {
+                        squads[squad] = squads[squad] || 0;
+                        spacecraftData = utils.deepCopy(spacecrafts[i]);
+                        spacecraftData.squad = squad + " " + (squads[squad] + 1).toString();
+                        squads[squad] += 1;
+                        result.push(spacecraftData);
+                    }
+                } else {
+                    result.push(spacecrafts[i]);
+                }
             }
         }
         return result;
@@ -1211,7 +1231,7 @@ define([
         // if the subject is the piloted craft, so we need to be able to check for that
         if (!this._spacecrafts) {
             this._spacecrafts = [];
-            spacecrafts = _getIndividualSpacecraftDescriptors(dataJSON.spacecrafts);
+            spacecrafts = getIndividualSpacecraftDescriptors(dataJSON.spacecrafts);
             for (i = 0; i < spacecrafts.length; i++) {
                 if (spacecrafts[i].piloted) {
                     this._pilotedCraft = new spacecraft.Spacecraft();
@@ -1326,7 +1346,7 @@ define([
         this._hitObjects = [];
         ai.clearAIs();
         // expand squad entries in the spacecrafts array
-        spacecrafts = _getIndividualSpacecraftDescriptors(dataJSON.spacecrafts);
+        spacecrafts = getIndividualSpacecraftDescriptors(dataJSON.spacecrafts);
         // loading spacecrafts from expanded array
         for (i = 0; i < spacecrafts.length; i++) {
             craft = new spacecraft.Spacecraft();
@@ -2186,7 +2206,7 @@ define([
     MissionDescriptor.prototype.getPilotedSpacecraftDescriptor = function () {
         var i, spacecrafts;
         if (!this._pilotedSpacecraftDescriptor) {
-            spacecrafts = _getIndividualSpacecraftDescriptors(this._dataJSON.spacecrafts);
+            spacecrafts = getIndividualSpacecraftDescriptors(this._dataJSON.spacecrafts);
             for (i = 0; i < spacecrafts.length; i++) {
                 if (spacecrafts[i].piloted) {
                     this._pilotedSpacecraftDescriptor = spacecrafts[i];
@@ -2770,6 +2790,7 @@ define([
         loadSettingsFromLocalStorage: _context.loadSettingsFromLocalStorage.bind(_context),
         requestLoad: _context.requestLoad.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),
+        getIndividualSpacecraftDescriptors: getIndividualSpacecraftDescriptors,
         getDebugInfo: getDebugInfo,
         getDifficulty: _context.getDifficulty.bind(_context),
         setDifficulty: _context.setDifficulty.bind(_context),
