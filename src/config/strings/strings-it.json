@@ -160,6 +160,7 @@
         "submissionTitleColumn": "Titolo",
         "submissionDateColumn": "Inviato",
         "submissionStatusColumn": "Stato",
+        "submissionStatsColumn": "Stats",
         "submissionActionsColumn": "Azioni",
         "deleteSubmissionButton": "Rimuovi",
         "revokeSubmissionButton": "Revoca",
@@ -169,6 +170,11 @@
             "pending": "In attesa...",
             "approved": "Approvata!",
             "rejected": "Rifiutata:"
+        },
+        "submissionStats": {
+            "started": "Started: {count}",
+            "won": "Won: {count}",
+            "lost": "Lost: {count}"
         }
     },
     "missionHubError": {
@@ -207,7 +213,7 @@
         "308": "Titolo della missione non valido: Il titolo della missione deve essere lungo tra {minTitleLength} e {maxTitleLength} caratteri!",
         "309": "Descrizione missione non valida: La descrizione della missione deve essere lunga almeno {minDescriptionLength} caratteri!",
         "310": "La missione selezionata non sembra avere alcuna astronave al suo interno!",
-        "311": "La missione selezionata non sembra avere un set di astronavi pilotate!",
+        "311": "La missione selezionata non sembra avere un set di astronavi pilotate!"
     },
     "location": {
         "unknown": "Sconosciuta",
@@ -239,7 +245,7 @@
         "hostingPlayerColumn": "Giocatore ospitante",
         "playersColumn": " Giocatori",
         "startedColumn": " Avviato",
-        "iniziato": {
+        "started": {
             "yes": "sì",
             "no": "no"
         },
@@ -266,7 +272,7 @@
         "invalidTextError": "Errore: messaggio di testo non valido! Messaggio non inviato",
         "serverIsFullError": "Impossibile connettersi al server di gioco: il server è attualmente pieno!",
         "incompatibleApiVersionError": "Impossibile connettersi al server di gioco: versione ({serverVersion}) del server di gioco non compatibile con questo client ({clientVersion})!",
-        "noWelcomeError": "Impossibile connettersi al server di gioco: nessun messaggio di benvenuto ricevuto!",
+        "noWelcomeError": "Impossibile connettersi al server di gioco: nessun messaggio di benvenuto ricevuto!"
     },
     "multiLobby": {
         "leaveButton": "Lascia il gioco",
@@ -279,7 +285,7 @@
         "connectionColumn": "Connessione",
         "connection": {
             "server": "server",
-            "diretta": " diretto"
+            "direct": " diretto"
         },
         "pingColumn": "Ping",
         "readyColumn": "Pronto",
@@ -308,7 +314,7 @@
         "playerJoinedMessage": "{nome} si è unito alla partita!",
         "playerLeftMessage": "{nome} ha lasciato la partita!",
         "playerReadyMessage": "{nome} è pronto a giocare!",
-        "playerKickedMessage": "{nome} è stato espulso dalla partita dall'host!",
+        "playerKickedMessage": "{nome} è stato espulso dalla partita dall'host!"
     },
     "settings": {
         "general": "Impostazioni generali",
@@ -346,7 +352,7 @@
         "header": "Informazioni",
         "okButton": "OK"
     },
-    " loading": {
+    "loading": {
         "header": "Attendere prego!",
         "resourcesStart": "caricamento risorse grafiche...",
         "resourceReady": "caricata {risorsa}, progresso totale: {loaded} / {total}...",
@@ -738,7 +744,8 @@
         "title": "Impostazioni generali",
         "language": "Lingua:",
         "analytics": "Segnala statistiche anonime:",
-        "analyticsNote": "I rapporti non contengono informazioni personali, ma solo statistiche sull'uso delle funzioni e sulle prestazioni di gioco con un ID generato a caso. Si prega di aiutare lo sviluppo mantenendo questa opzione attiva."
+        "analyticsNote": "I rapporti non contengono informazioni personali, ma solo statistiche sull'uso delle funzioni e sulle prestazioni di gioco con un ID generato a caso. Si prega di aiutare lo sviluppo mantenendo questa opzione attiva.",
+        "showDemoButton": "Show 'Launch demo' button for missions:"
     },
     "graphics": {
         "backButton": "Torna al menu",
@@ -775,13 +782,17 @@
         "hudTitle": "HUD",
         "cameraTitle": "Visuale",
         "controlsTitle": "Controlli",
+        "otherTitle": "Other",
         "targetHealthAtCenter": "Barra di integrità del bersaglio sempre al centro:",
         "offsetImpactIndicators": "Sfoca indicatori di impatto:",
         "relativeTargetOrientation": "Mostra il bersaglio in orientamento relativo:",
+        "showVersionInfo": "Show game version:",
+        "showFpsCounter": "Show FPS counter:",
         "preferredFighterView": "Vista preferita del combattente:",
         "preferredShipView": "Vista dell'astronave preferita:",
         "demoViewSwitching": "Cambio automatico di visuale in modalità dimostrazione:",
-        "defaultSalvoMode": "Modalità missile in serie per impostazione predefinita:"
+        "defaultSalvoMode": "Modalità missile in serie per impostazione predefinita:",
+        "showReadyMessage": "Show ready message at the start of missions:"
     },
     "controller": {
         "general": "Generale",
