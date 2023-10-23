@@ -37,6 +37,10 @@
             "magyar": {
                 "filename": "strings-hu.json",
                 "folder": "strings"
+                            },
+            "italian": {
+                "filename": "strings-it.json",
+                "folder": "strings"
             }
         }
     },
