@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2022 Krisztián Nagy
+ * Copyright 2016-2023 Krisztián Nagy
  * @file Contains the common constants and functions accessible to all screens of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -221,11 +221,7 @@ define([
      * Call on the screen that has a fullscreen button to set up its event handlers
      */
     exports.setupFullscreenButton = function () {
-        if (game.usesElectron()) {
-            this.getElement(FULLSCREEN_BUTTON_ID).hidden = true;
-        } else {
-            this.getElement(FULLSCREEN_BUTTON_ID).onclick = _toggleFullscreen;
-        }
+        this.getElement(FULLSCREEN_BUTTON_ID).onclick = _toggleFullscreen;
     };
     // ------------------------------------------------------------------------------
     // Derived constants
