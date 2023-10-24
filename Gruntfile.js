@@ -500,10 +500,29 @@ module.exports = function (grunt) {
                 ["defaultBaseOrientation", "camera"],
                 ["defaultPointToFallback", "camera"]
             ],
+            getValueString = function (value) {
+                if (typeof value === "string") {
+                    return '"' + value + '"';
+                }
+                if (Array.isArray(value)) {
+                    return "\\[" + value.map(getValueString).join(", ") + "\\]";
+                }
+                if (typeof value === "object") {
+                    var result = "{\\s*", property;
+                    for (property in value) {
+                        if (value.hasOwnProperty(property)) {
+                            result += '"' + property + '": ' + getValueString(value[property]) + ",?\\s*";
+                        }
+                    }
+                    result += "}";
+                    return result;
+                }
+                return value.toString();
+            },
             settingConfigReplacements = settingsToReplace.map(
                     function (replacement) {
                         var value = settings.logic[replacement[1]][replacement[0]],
-                                setting = '"' + replacement[0] + '": ' + ((typeof value === "string") ? '"' + value + '"' : value);
+                                setting = '"' + replacement[0] + '": ' + getValueString(value);
                         return {
                             // either remove a comma from before or after the setting (if there is any)
                             match: new RegExp(",\\s*" + setting + "|" + setting + ",*", "g"),
@@ -517,6 +536,62 @@ module.exports = function (grunt) {
                         return [{
                                 // replacing usages of this setting
                                 match: new RegExp("(config|this).getSetting\\((config.|)" + replacement[1].toUpperCase() + "_SETTINGS." + constName + "\\)", "g"),
+                                replacement: (typeof value === "string") ? '"' + value + '"' : value
+                            }, {
+                                // removing the definition of this setting from configuration.js
+                                match: new RegExp("\\s" + constName + ": {\\s*name: \"" + replacement[0] + "\"(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*}[,\\s]", "g"),
+                                replacement: ""
+                            }];
+                    }),
+            databaseSettingsToReplace = [
+                ["showLoadingBoxFirstTime"],
+                ["showLoadingBoxOnItemChange"],
+                ["backgroundColor"],
+                ["itemViewDistance"],
+                ["itemViewFOV", "ITEM_VIEW_FOV"],
+                ["itemViewSpan"],
+                ["showWireframeModel"],
+                ["wireframeShaderName"],
+                ["wireframeColor"],
+                ["showSolidModel"],
+                ["solidShaderName"],
+                ["lightSources"],
+                ["startSizeFactor"],
+                ["minimumSizeFactor", "MIN_SIZE_FACTOR"],
+                ["maximumSizeFactor", "MAX_SIZE_FACTOR"],
+                ["modelAutoRotation"],
+                ["modelMouseRotation"],
+                ["rotationFPS", "ROTATION_FPS"],
+                ["rotationRevealStartAngle"],
+                ["rotationStartAngle"],
+                ["rotationViewAngle"],
+                ["rotationDuration"],
+                ["rotationMouseSensitivity"],
+                ["modelRevealAnimation"],
+                ["revealColor"],
+                ["revealFPS", "REVEAL_FPS"],
+                ["revealDuration"],
+                ["revealSolidDelayDuration"],
+                ["revealTransitionLengthFactor"],
+                ["databaseRenderFPS", "RENDER_FPS"]
+            ],
+            databaseSettingConfigReplacements = databaseSettingsToReplace.map(
+                    function (replacement) {
+                        var value = settings.logic.database[replacement[0]],
+                                setting = '"' + replacement[0] + '": ' + getValueString(value);
+                        return {
+                            // either remove a comma from before or after the setting (if there is any)
+                            match: new RegExp(",\\s*" + setting + "|" + setting + ",*", "g"),
+                            replacement: ""
+                        };
+                    }),
+            databaseSettingReplacements = databaseSettingsToReplace.map(
+                    function (replacement) {
+                        var constName = (replacement.length < 2) ? getConstName(replacement[0]) : replacement[1],
+                                value = settings.logic.database[replacement[0]];
+                        return [{
+                                // replacing usages of this setting
+                                match: new RegExp("_getSetting\\(SETTINGS." + constName + "\\)", "g"),
                                 replacement: (typeof value === "string") ? '"' + value + '"' : value
                             }, {
                                 // removing the definition of this setting from configuration.js
@@ -541,6 +616,9 @@ module.exports = function (grunt) {
         return acc.concat(val);
     }, []);
     settingReplacements.reduce(function (acc, val) {
+        return acc.concat(val);
+    }, []);
+    databaseSettingReplacements.reduce(function (acc, val) {
         return acc.concat(val);
     }, []);
     // Project configuration.
@@ -644,7 +722,7 @@ module.exports = function (grunt) {
             distConfig: {
                 // removes setting values that have been baked into the game source
                 options: {
-                    patterns: settingConfigReplacements,
+                    patterns: settingConfigReplacements.concat(databaseSettingConfigReplacements),
                     usePrefix: false
                 },
                 files: [
@@ -748,7 +826,7 @@ module.exports = function (grunt) {
             // these replacements should be applied to both the game and the editor
             optimizeCommon: {
                 options: {
-                    patterns: getterReplacementsCommon.concat(setterReplacements.concat(settingReplacements.concat([
+                    patterns: getterReplacementsCommon.concat(setterReplacements.concat(settingReplacements.concat(databaseSettingReplacements.concat([
                         {
                             match: '_scene.getLODContext()',
                             replacement: '_scene._lodContext'
@@ -771,7 +849,7 @@ module.exports = function (grunt) {
                             match: 'if (this._rightEye) {',
                             replacement: 'if (false) {'
                         }
-                    ]))),
+                    ])))),
                     usePrefix: false
                 },
                 files: [

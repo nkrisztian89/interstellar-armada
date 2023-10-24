@@ -131,21 +131,18 @@
             "wireframeShaderName": "oneColorReveal",
             "showSolidModel": true,
             "solidShaderName": "reveal",
-            "lightSources": [
-                {
-                    "color": [1.0, 1.0, 1.0],
-                    "direction": [0.0, 1.0, 1.0]
-                },
-                {
-                    "color": [1.0, 1.0, 1.0],
-                    "direction": [1.0, 0.0, 0.0]
-                }
-            ],
+            "lightSources": [{
+                    "color": [1, 1, 1],
+                    "direction": [0, 1, 1]
+                }, {
+                    "color": [1, 1, 1],
+                    "direction": [1, 0, 0]
+                }],
             "startSizeFactor": 1,
             "minimumSizeFactor": 0.9,
             "maximumSizeFactor": 1.6,
             "modelRevealAnimation": true,
-            "revealColor": [1.0, 1.0, 1.0, 1.0],
+            "revealColor": [1, 1, 1, 1],
             "revealFPS": 60,
             "revealDuration": 2000,
             "revealSolidDelayDuration": 2000,
@@ -157,7 +154,7 @@
             "rotationStartAngle": 180,
             "rotationViewAngle": 60,
             "rotationDuration": 4000,
-            "rotationMouseSensitivity": 1.0,
+            "rotationMouseSensitivity": 1,
             "databaseRenderFPS": 60
         },
         "battle": {
