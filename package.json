@@ -35,7 +35,8 @@
                 "audio-playback",
                 "opengl",
                 "hardware-observe",
-                "joystick"
+                "joystick",
+                "screen-inhibit-control"
             ]
         },
         "files": [
