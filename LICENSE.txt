@@ -1,5 +1,5 @@
 Interstellar Armada: Galactic Ace license information
-Copyright (C) 2014-2023 Krisztián Nagy
+Copyright (C) 2014-2024 Krisztián Nagy
 
 All files paths given here are relative to the root folder of the game.
 

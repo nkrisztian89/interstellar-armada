@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2024 Krisztián Nagy
  * @file Provides a capable camera class to use with scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -2635,8 +2635,14 @@ define([
             previousPositionVector = this.getCameraPositionVector();
             this._setPositionv(vec.sum3Aux(vec.scaled3Aux(startPositionVector, 1 - transitionProgress), vec.scaled3Aux(endPositionVector, transitionProgress)));
             // calculate the velocity vector
-            vec.setProdMat4Vec3(this._velocityVector, this.getCameraOrientationMatrix(), vec.diff3Aux(this.getCameraPositionVector(), previousPositionVector));
-            vec.scale3(this._velocityVector, 1000 / dt);
+            if (dt > 0) {
+                vec.setProdMat4Vec3(this._velocityVector, this.getCameraOrientationMatrix(), vec.diff3Aux(this.getCameraPositionVector(), previousPositionVector));
+                vec.scale3(this._velocityVector, 1000 / dt);
+            } else {
+                this._velocityVector[0] = 0;
+                this._velocityVector[1] = 0;
+                this._velocityVector[2] = 0;
+            }
             // calculate orientation
             // calculate the rotation matrix that describes the transformation that needs to be applied on the
             // starting orientation matrix to get the new oritentation matrix (relative to the original matrix)
@@ -2673,7 +2679,7 @@ define([
             this._setOrientationM4(this._currentConfiguration.getOrientationMatrix());
             // update the relative velocity vector
             if (this._currentConfiguration.positionFollowsObjects()) {
-                if (this._previousFollowedPositionVector) {
+                if (this._previousFollowedPositionVector && (dt > 0)) {
                     vec.setProdMat4Vec3(this._velocityVector,
                             this.getCameraOrientationMatrix(),
                             vec.diff3Aux(
@@ -2687,8 +2693,14 @@ define([
                 }
                 this._previousFollowedPositionVector = this._currentConfiguration.getFollowedPositionVector();
             } else {
-                vec.setProdMat4Vec3(this._velocityVector, this.getCameraOrientationMatrix(), vec.diff3Aux(this.getCameraPositionVector(), previousPositionVector));
-                vec.scale3(this._velocityVector, 1000 / dt);
+                if (dt > 0) {
+                    vec.setProdMat4Vec3(this._velocityVector, this.getCameraOrientationMatrix(), vec.diff3Aux(this.getCameraPositionVector(), previousPositionVector));
+                    vec.scale3(this._velocityVector, 1000 / dt);
+                } else {
+                    this._velocityVector[0] = 0;
+                    this._velocityVector[1] = 0;
+                    this._velocityVector[2] = 0;
+                }
             }
         }
     };
