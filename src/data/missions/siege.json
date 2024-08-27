@@ -618,8 +618,8 @@
                     }
                 }]
         }],
-    "anticipationTheme": "anticipation",
-    "combatTheme": "combat2",
+    "anticipationTheme": "anticipation3",
+    "combatTheme": "combat4",
     "views": [{
             "name": "tortuga",
             "movable": false,
