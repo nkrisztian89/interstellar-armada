@@ -1083,6 +1083,9 @@
         "heavyPlasmaGun": {
             "name": "Nehéz plazmavető"
         },
+        "lightRepeaterGun": {
+            "name": "Könnyű plazma sorozatvető"
+        },
         "smallPlasmaTurret": {
             "name": "Plazmavető löveg"
         },

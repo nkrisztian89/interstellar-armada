@@ -266,6 +266,19 @@
                 "high": ""
             }
         }, {
+            "name": "repeaterProjectile",
+            "basepath": "projectile/repeater",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_128",
+                "medium": "_256",
+                "high": ""
+            }
+        }, {
             "name": "proton",
             "basepath": "projectile/proton_full",
             "format": "png",
@@ -1225,6 +1238,26 @@
                     "maxLOD": 4
                 }]
         }, {
+            "name": "repeater",
+            "basepath": "weapons/repeater",
+            "format": "egm",
+            "files": [{
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }]
+        }, {
             "name": "turret",
             "basepath": "weapons/turret",
             "format": "egm",
@@ -1750,6 +1783,9 @@
         }, {
             "name": "piratePlasmaShot",
             "samples": ["weapon/weaponshot_pirate.ogg"]
+        }, {
+            "name": "repeaterShot",
+            "samples": ["weapon/weaponshot_repeater.ogg"]
         }, {
             "name": "protonShot",
             "samples": ["weapon/weaponshot-proton.ogg"]

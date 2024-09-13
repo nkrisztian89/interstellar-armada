@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2023 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file Provides functionality for loading the definitions for in-game classes from a JSON file and then accessing the loaded classes by
  * type and name. Also provides constructors for those classes of which custom instances can be created.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -238,7 +238,12 @@ define([
              * Used on the names of models generated for projectiles between the parameters.
              * @type String
              */
-            PROJECTILE_MODEL_NAME_INFIX = "-width-",
+            PROJECTILE_MODEL_NAME_WIDTH_INFIX = "-width-",
+            /**
+             * Used on the names of models generated for projectiles between the parameters.
+             * @type String
+             */
+            PROJECTILE_MODEL_NAME_THICKNESS_INFIX = "-thickness-",
             /**
              * The name (ID) of shader variants to be used (if available) for shaders when instancing is turned on
              * @type String
@@ -1355,7 +1360,9 @@ define([
         TexturedModelClass.prototype.acquireResources.call(this, {model:
                     this._hasProjectileModel ?
                     egomModel.turningBillboardModel(
-                            PROJECTILE_MODEL_NAME_PREFIX + this._projectileModelIntersection + PROJECTILE_MODEL_NAME_INFIX + this._projectileModelWidth,
+                            PROJECTILE_MODEL_NAME_PREFIX + this._projectileModelIntersection +
+                            PROJECTILE_MODEL_NAME_WIDTH_INFIX + this._projectileModelWidth +
+                            PROJECTILE_MODEL_NAME_THICKNESS_INFIX + this._projectileModelWidth,
                             [this._projectileModelIntersection], this._projectileModelWidth) :
                     egomModel.squareModel(PARTICLE_MODEL_NAME)});
     };
@@ -1693,6 +1700,11 @@ define([
          */
         this._width = dataJSON ? (dataJSON.width || 1) : 0;
         /**
+         * If given, the projectile model will be trimmed along the Z axis by this value instead of width. Should be between 0 and 1.
+         * @type Number
+         */
+        this._thickness = dataJSON ? (dataJSON.thickness || this._width) : 0;
+        /**
          * Mass of the projectile in kilograms. Determines how fast will it fly when 
          * shot from weapons.
          * @type Number
@@ -1762,8 +1774,10 @@ define([
     ProjectileClass.prototype.acquireResources = function (params) {
         TexturedModelClass.prototype.acquireResources.call(this, {
             model: egomModel.turningBillboardModel(
-                    PROJECTILE_MODEL_NAME_PREFIX + this._intersectionPositions.join(MODEL_NAME_SEPARATOR) + PROJECTILE_MODEL_NAME_INFIX + this._width,
-                    this._intersectionPositions, this._width)});
+                    PROJECTILE_MODEL_NAME_PREFIX + this._intersectionPositions.join(MODEL_NAME_SEPARATOR) +
+                    PROJECTILE_MODEL_NAME_WIDTH_INFIX + this._width +
+                    PROJECTILE_MODEL_NAME_THICKNESS_INFIX + this._thickness,
+                    this._intersectionPositions, this._width, this._thickness)});
         if (!params.projectileOnly) {
             this._muzzleFlash.acquireResources();
             this._explosionClass.acquireResources({sound: params.sound});

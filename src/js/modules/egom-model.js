@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2023 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2024 Krisztián Nagy
  * @file 
  * Provides a class representing a 3D model with several meshes storing the geometry of the model at different levels of detail. The model
  * can be edited directly, loaded from an EgomModel (egm) file, can provide its vertex data in a format suitable to be loaded to WebGL
@@ -1976,13 +1976,17 @@ define([
          * front view should be created along the side view square.
          * @param {Number} width On X and Z axes, the model will be "trimmed" using this ratio (should be between 0 and 1), by multiplying 
          * both its vertex and texture coordinates.
+         * @param {Number} [thickness] If given, on the Z axis the model will be "trimmed" using this ratio instead of width.
          * @returns {Model}
          */
-        turningBillboardModel: function (name, intersections, width) {
-            var i,
-                    tLeft = 0.5 - 0.5 * width, tRight = 0.5 + 0.5 * width,
-                    tTop = 0.75 - 0.25 * width, tBottom = 0.75 + 0.25 * width,
+        turningBillboardModel: function (name, intersections, width, thickness) {
+            var i, tLeft, tRight, tTop, tBottom,
                     result = new Model();
+            thickness = thickness || width;
+            tLeft = 0.5 - 0.5 * width;
+            tRight = 0.5 + 0.5 * width;
+            tTop = 0.75 - 0.25 * thickness;
+            tBottom = 0.75 + 0.25 * thickness;
             if (name) {
                 result.setName(name);
             }
@@ -1996,10 +2000,10 @@ define([
 
             if (intersections) {
                 for (i = 0; i < intersections.length; i++) {
-                    result.appendVertex([width, intersections[i], -width]);
-                    result.appendVertex([-width, intersections[i], -width]);
-                    result.appendVertex([-width, intersections[i], width]);
-                    result.appendVertex([width, intersections[i], width]);
+                    result.appendVertex([width, intersections[i], -thickness]);
+                    result.appendVertex([-width, intersections[i], -thickness]);
+                    result.appendVertex([-width, intersections[i], thickness]);
+                    result.appendVertex([width, intersections[i], thickness]);
 
                     result.addQuad(((i + 1) * 4), ((i + 1) * 4) + 1, ((i + 1) * 4) + 2, ((i + 1) * 4) + 3,
                             {
