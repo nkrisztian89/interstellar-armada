@@ -107,7 +107,7 @@
         "playerSpacecraftTitle": "Astronave:",
         "playerSpacecraftData": "<strong>Classe:</strong> {class}",
         "playerSpacecraftWeapons": "<strong>Armi:</strong> {weapons}<br/><strong>Potenza di fuoco:</strong> {firepower}, <strong>Portata:</strong> {range}",
-        "playerSpacecraftMissiles": "<strong>Missili:</strong> {missiles}<br/><strong>Total firepower:</strong> {firepower}, <strong>Portata ideale:</strong> {range}",
+        "playerSpacecraftMissiles": "<strong>Missili:</strong> {missiles}<br/><strong>Potenza di fuoco totale:</strong> {firepower}, <strong>Portata ideale:</strong> {range}",
         "playerSpacecraftShield": "<strong>Scudo:</strong> {shield}<br/><strong>Capienza:</strong> {shieldCapacity}, <strong>Frequenza di ricarica:</strong> {shieldRechargeRate}",
         "playerSpacecraftPropulsion": "<strong>Propulsione:</strong> {propulsion}<br/><strong>Velocità di combattimento:</strong> {speed}, <strong>Frequenza di rotazione:</strong> {turnRate}",
         "objectiveSubjects": {
