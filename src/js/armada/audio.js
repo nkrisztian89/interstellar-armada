@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2016-2018, 2020-2024 Krisztián Nagy
  * @file Provides functionality to parse and load the audio settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -392,17 +392,20 @@ define([
      * (with the same crossfade applied)
      * @param {Number} [fadeDuration] If greater than zero, the a linear crossfade will happen from the current theme to the new one, 
      * lasting the given duration. In seconds! If not given, a default fade in / fade out / crossfade duration is chosen from the settings
+     * @param {Boolean} [crossfade=true] Pass false to disable the default crossfading, and fade out the current theme before fading in the new one.
      */
-    function playMusic(theme, followupTheme, fadeDuration) {
-        if (fadeDuration === undefined) {
-            fadeDuration = _currentTheme ?
-                    (theme ? _themeCrossfadeDuration : _musicFadeOutDuration) :
-                    (theme ? _musicFadeInDuration : 0);
-        }
+    function playMusic(theme, followupTheme, fadeDuration, crossfade) {
+        var callback, fadeOutDuration, fadeInDuration;
         if (theme !== _currentTheme) {
+            fadeOutDuration = _currentTheme ? (
+                    (fadeDuration === undefined) ? ((theme && (crossfade !== false)) ? _themeCrossfadeDuration : _musicFadeOutDuration) : fadeDuration
+                    ) : 0;
+            fadeInDuration = theme ? (
+                    (fadeDuration === undefined) ? ((_currentTheme && (crossfade !== false)) ? _themeCrossfadeDuration : _musicFadeInDuration) : fadeDuration
+                    ) : 0;
             if (_currentTheme && _music[_currentTheme]) {
-                if (fadeDuration > 0) {
-                    _music[_currentTheme].clip.rampVolume(0, fadeDuration);
+                if (fadeOutDuration > 0) {
+                    _music[_currentTheme].clip.rampVolume(0, fadeOutDuration);
                 } else {
                     _music[_currentTheme].clip.stopPlaying();
                 }
@@ -411,16 +414,28 @@ define([
                 if (!_music[theme]) {
                     application.log_DEBUG("Warning: music associated with theme '" + theme + "' cannot be played, because it is not loaded!");
                 } else {
-                    _music[theme].clip.play(true, followupTheme ? function () {
+                    callback = followupTheme ? function () {
                         // start the followup music only if we are still playing the same theme it is followup for
                         if (_currentTheme === theme) {
-                            playMusic(followupTheme, null, fadeDuration);
+                            playMusic(followupTheme, null, fadeDuration, crossfade);
                         }
-                    } : null);
-                    if (fadeDuration > 0) {
-                        _music[theme].clip.setVolume(0);
-                        _music[theme].clip.rampVolume(1, fadeDuration);
+                    } : null;
+                    if (fadeInDuration > 0) {
+                        if (crossfade !== false) {
+                            _music[theme].clip.play(true, callback);
+                            _music[theme].clip.setVolume(0);
+                            _music[theme].clip.rampVolume(1, fadeInDuration);
+                        } else {
+                            setTimeout(function () {
+                                if (_currentTheme === theme) {
+                                    _music[theme].clip.play(true, callback);
+                                    _music[theme].clip.setVolume(0);
+                                    _music[theme].clip.rampVolume(1, fadeInDuration);
+                                }
+                            }, fadeOutDuration * 1000);
+                        }
                     } else {
+                        _music[theme].clip.play(true, callback);
                         _music[theme].clip.setVolume(1);
                     }
                 }

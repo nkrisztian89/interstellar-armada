@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2023 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file Stores the current game configuration and settings and provides functions to load and access them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -387,6 +387,13 @@ define([
          */
         MENU_MUSIC: {
             name: "menuMusic",
+            type: "string"
+        },
+        /**
+         * The ID (resource name) of the song (MusicResource) that should play on the mission briefing (mission choice) screen.
+         */
+        BRIEFING_MUSIC: {
+            name: "briefingMusic",
             type: "string"
         },
         /**

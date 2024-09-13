@@ -1878,6 +1878,9 @@
             "name": "menu",
             "sample": "menu.ogg"
         }, {
+            "name": "briefing",
+            "sample": "briefing.ogg"
+        }, {
             "name": "ambient",
             "sample": "ambient.ogg"
         }, {

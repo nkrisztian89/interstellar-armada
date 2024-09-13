@@ -98,6 +98,7 @@
             "luminosityFactorsArrayName": "luminosityFactors",
             "useVerticalCameraValues": true,
             "menuMusic": "menu",
+            "briefingMusic": "briefing",
             "musicFadeInDuration": 0.1,
             "themeCrossfadeDuration": 1.5,
             "musicFadeOutDuration": 0.1,

@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2023 Krisztián Nagy
+ * Copyright 2016-2024 Krisztián Nagy
  * @file Contains the common constants and functions accessible to all screens of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -27,6 +27,7 @@ define([
                 GAME_VERSION_LABEL_ID: "gameVersion",
                 // music
                 MENU_THEME: "menu",
+                BRIEFING_THEME: "briefing",
                 DEBRIEFING_VICTORY_THEME: "debriefing_victory",
                 DEBRIEFING_DEFEAT_THEME: "debriefing_defeat",
                 // components
@@ -168,6 +169,7 @@ define([
         s1 = resources.getSoundEffect(config.getSetting(config.GENERAL_SETTINGS.BUTTON_SELECT_SOUND).name);
         s2 = resources.getSoundEffect(config.getSetting(config.GENERAL_SETTINGS.BUTTON_CLICK_SOUND).name);
         audio.initMusic(config.getSetting(config.GENERAL_SETTINGS.MENU_MUSIC), exports.MENU_THEME, true);
+        audio.initMusic(config.getSetting(config.GENERAL_SETTINGS.BRIEFING_MUSIC), exports.BRIEFING_THEME, true);
         if ((s1 && !s1.isLoaded() && !s1.hasError()) || (s2 && !s2.isLoaded() && !s2.hasError())) {
             resources.executeWhenReady(function () {
                 _buttonSelectSound = s1 && s1.createSoundClip(
@@ -246,7 +248,12 @@ define([
      * @type Object.<String, Function>
      */
     exports.MENU_EVENT_HANDLERS = {
-        show: exports.setupFullscreenButton,
+        show: function () {
+            exports.setupFullscreenButton.call(this);
+            if (!this.isSuperimposed()) {
+                audio.playMusic(exports.MENU_THEME);
+            }
+        },
         optionselect: exports.playButtonSelectSound,
         optionclick: exports.playButtonClickSound
     };
