@@ -304,7 +304,7 @@ define([
             }
         }
         game.getScreen().queueHUDMessage({
-            text: (this._params.source ? ("{spacecrafts/" + this._params.source + "}: ") : "") + strings.get(
+            text: strings.get(
                     strings.MISSION.PREFIX,
                     utils.getFilenameWithoutExtension(mission.getName()) + strings.MISSION.MESSAGES_SUFFIX.name + this._params.textID,
                     (typeof this._params.text === "object") ? this._params.text[strings.getLanguage()] : this._params.text),
@@ -314,7 +314,8 @@ define([
             color: this._params.color,
             silent: this._params.silent,
             noBackground: this._params.noBackground,
-            source: source
+            source: source,
+            id: this._params.textID
         }, this._params.urgent);
     };
     /**

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2023 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file This module manages and provides the Battle screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -454,6 +454,7 @@ define([
             // HUD messages
             /**
              * @typedef {Object} Battle~HUDMessage The properties of a message that can be displayed for the player on the HUD
+             * @property {String} [id] The string ID of the message that can be used as translation key and for choosing the appropriate sound sample file
              * @property {String} [text] The text of the message (formatted, translated, can contain '\n'-s)
              * @property {Number} [duration] The duration to display the message for, in milliseconds. If not given, an automatic
              * duration will be set based on the length of the text
@@ -3128,7 +3129,7 @@ define([
      */
     BattleScreen.prototype.queueHUDMessage = function (message, urgent) {
         var text, start, end, i, length, replacementID, replacementText, modifier, /**@type Spacecraft*/ craft;
-        text = message.text;
+        text = (message.source ? ("{spacecrafts/" + message.source.getID() + "}: ") : "") + message.text;
         // replacing references in the text
         for (start = text.indexOf("{"); start >= 0; start = text.indexOf("{")) {
             end = text.indexOf("}");
