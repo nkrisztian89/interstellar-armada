@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file Implementation of mission events - a list of actions that can be triggered by conditions
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -442,6 +442,22 @@ define([
      */
     MissionEvent.prototype.getActions = function () {
         return this._actions;
+    };
+    /**
+     * Returns the list of all the text IDs belonging to message actions that are part of this event.
+     * @returns {String[]}
+     */
+    MissionEvent.prototype.getMessageIds = function () {
+        var i, result = [], id;
+        for (i = 0; i < this._actions.length; i++) {
+            if (this._actions[i].getType() === eventActions.ActionType.MESSAGE) {
+                id = this._actions[i].getMessageId();
+                if (id) {
+                    result.push(id);
+                }
+            }
+        }
+        return result;
     };
     /**
      * Checks the triggers and executes the actions if needed for the current mission simulation step.

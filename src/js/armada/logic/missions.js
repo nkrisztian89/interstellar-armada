@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2023 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file Implementation of loading and managing missions - including the main game simulation loop
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -964,6 +964,17 @@ define([
      */
     Mission.prototype.getDifficultyLevel = function () {
         return this._difficultyLevel;
+    };
+    /**
+     * Returns the list of all the message event text IDs (the ones used as translation keys) used in this mission.
+     * @returns {String[]}
+     */
+    Mission.prototype.getMessageIds = function () {
+        var result = [], i;
+        for (i = 0; i < this._events.length; i++) {
+            result = result.concat(this._events[i].getMessageIds());
+        }
+        return result;
     };
     /**
      * Marks the mission as completed (by achieving its objectives)

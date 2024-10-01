@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2023 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file The classes defining actions which can be executed during mission events
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -316,6 +316,13 @@ define([
             noBackground: this._params.noBackground,
             source: source
         }, this._params.urgent);
+    };
+    /**
+     * Returns the string ID of the message that can be used as a translation key or for choosing the appropriate sound sample to play.
+     * @returns {String}
+     */
+    MessageAction.prototype.getMessageId = function () {
+        return this._params.textID;
     };
     // #########################################################################
     /**
