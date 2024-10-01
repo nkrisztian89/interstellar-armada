@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2017, 2020-2024 Krisztián Nagy
  * @file Augments the functionality of ResourceManager to provide a customized resource manager class storing various media resources,
  * for which the respective classes are also provided. These classes are based on the classes of ManagedGL and EgomModel.
  * The provided resource manager is ready to use, can load media resource descriptions from a specified JSON file, then mark the 
@@ -144,6 +144,11 @@ define([
              * @type Object.<String, Image>
              */
             _cubemapImageCache = {},
+            /**
+             * A reusable object to use for passing params when requesting resources.
+             * @type Object
+             */
+            _resourceParams = {allowNullResult: false},
             /**
              * This media resource manager will be used to load and access the media resources.
              * @type MediaResourceManager
@@ -1249,21 +1254,26 @@ define([
     /**
      * Plays back one of the samples (randomly chosen) corresponding to this effect, without saving a reference to it. The samples must be
      * loaded.
+     * @param {Number} [soundCategory=SoundCategory.SOUND_EFFECT] The volume will be affected by the master volume set for this category
      * @param {Number} [volume=1]
      * @param {Number[3]} [position]
      * @param {Number} [rolloff]
+     * @returns {Number} The index of the sample that got played (-1 if no sample could be played)
      */
-    SoundEffectResource.prototype.play = function (volume, position, rolloff) {
-        var sample;
+    SoundEffectResource.prototype.play = function (soundCategory, volume, position, rolloff) {
+        var sample, index;
         if (this.isReadyToUse() === false) {
             application.showError("Cannot play sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
-            return;
+            return -1;
         }
-        sample = this._samples[Math.floor(Math.random() * this._samples.length)];
+        index = Math.floor(Math.random() * this._samples.length);
+        sample = this._samples[index];
         if (sample) {
-            audio.playSound(sample, volume, position, rolloff);
+            audio.playSound(sample, soundCategory, volume, position, rolloff);
+            return index;
         } else {
             application.log_DEBUG("WARNING: cannot play sound sample '" + sample + "', as there was a problem while loading it.", 1);
+            return -1;
         }
     };
     /**
@@ -1408,7 +1418,8 @@ define([
      * @returns {ShaderResource}
      */
     MediaResourceManager.prototype.getVariantShader = function (name, variantName) {
-        return this.getResource(SHADER_ARRAY_NAME, this.getResource(SHADER_ARRAY_NAME, name, {doNotLoad: true}).getVariantShaderName(variantName), {allowNullResult: true}) || this.getShader(name);
+        _resourceParams.allowNullResult = true;
+        return this.getResource(SHADER_ARRAY_NAME, this.getResource(SHADER_ARRAY_NAME, name, {doNotLoad: true}).getVariantShaderName(variantName), _resourceParams) || this.getShader(name);
     };
     /**
      * @param {String} name
@@ -1423,7 +1434,9 @@ define([
      * @returns {ModelResource}
      */
     MediaResourceManager.prototype.getOrAddModel = function (model) {
-        var result = this.getResource(MODEL_ARRAY_NAME, model.getName(), {allowNullResult: true});
+        var result;
+        _resourceParams.allowNullResult = true;
+        result = this.getResource(MODEL_ARRAY_NAME, model.getName(), _resourceParams);
         if (!result) {
             result = this.addResource(MODEL_ARRAY_NAME, new ModelResource({
                 "name": model.getName(),
@@ -1434,10 +1447,12 @@ define([
     };
     /**
      * @param {String} name
+     * @param {Boolean} [allowNullResult]
      * @returns {SoundEffectResource}
      */
-    MediaResourceManager.prototype.getSoundEffect = function (name) {
-        return this.getResource(SOUND_EFFECT_ARRAY_NAME, name);
+    MediaResourceManager.prototype.getSoundEffect = function (name, allowNullResult) {
+        _resourceParams.allowNullResult = allowNullResult || false;
+        return this.getResource(SOUND_EFFECT_ARRAY_NAME, name, _resourceParams);
     };
     /**
      * @param {String} name

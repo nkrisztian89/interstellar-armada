@@ -516,7 +516,7 @@ define([
      * @param {Number[3]} [position] The camera-space position in case of spatialized 3D sounds
      */
     function _playSoundEffect(soundEffectDescriptor, position) {
-        soundEffectDescriptor.resource.play(soundEffectDescriptor.volume, position);
+        soundEffectDescriptor.resource.play(resources.SoundCategory.SOUND_EFFECT, soundEffectDescriptor.volume, position);
     }
     /**
      * Creates a sound clip for a (randomly chosen) sound sample corresponding to the sound effect described by the passed descriptor 

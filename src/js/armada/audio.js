@@ -63,6 +63,13 @@ define([
              */
             SFX_VOLUME_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "sfxVolume",
             // ............................................................................................
+            // Voice volume
+            /**
+             * The key identifying the location where the voice volume setting is stored in local storage.
+             * @type String
+             */
+            VOICE_VOLUME_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "voiceVolume",
+            // ............................................................................................
             // UI volume
             /**
              * The key identifying the location where the UI volume setting is stored in local storage.
@@ -134,6 +141,11 @@ define([
          * @type Number
          */
         this._sfxVolume = 1;
+        /**
+         * The current voice volume setting.
+         * @type Number
+         */
+        this._voiceVolume = 1;
         /**
          * The current UI volume setting.
          * @type Number
@@ -318,6 +330,37 @@ define([
         this.setSFXVolume((localStorage[SFX_VOLUME_LOCAL_STORAGE_ID] !== undefined) ? localStorage[SFX_VOLUME_LOCAL_STORAGE_ID] : this._dataJSON.sfxVolume);
     };
     /**
+     * Returns the current voice volume setting.
+     * @returns {Number}
+     */
+    AudioSettingsContext.prototype.getVoiceVolume = function () {
+        return this._voiceVolume;
+    };
+    /**
+     * Sets a new voice volume setting.
+     * @param {Number} value
+     * @param {Boolean} [saveToLocalStorage=true]
+     * @returns {Boolean} Whether the setting was successfully set to the passed value.
+     */
+    AudioSettingsContext.prototype.setVoiceVolume = function (value, saveToLocalStorage) {
+        if (saveToLocalStorage === undefined) {
+            saveToLocalStorage = true;
+        }
+        this._voiceVolume = value;
+        audio.setVoiceVolume(this._voiceVolume);
+        // saving the original preference
+        if (saveToLocalStorage) {
+            localStorage[VOICE_VOLUME_LOCAL_STORAGE_ID] = value.toString();
+        }
+        return this._voiceVolume === value;
+    };
+    /**
+     * Resets the voice volume to its value stored in local storage / JSON.
+     */
+    AudioSettingsContext.prototype.resetVoiceVolume = function () {
+        this.setVoiceVolume((localStorage[VOICE_VOLUME_LOCAL_STORAGE_ID] !== undefined) ? localStorage[VOICE_VOLUME_LOCAL_STORAGE_ID] : this._dataJSON.voiceVolume);
+    };
+    /**
      * Returns the current UI volume setting.
      * @returns {Number}
      */
@@ -491,6 +534,9 @@ define([
         getSFXVolume: _context.getSFXVolume.bind(_context),
         setSFXVolume: _context.setSFXVolume.bind(_context),
         resetSFXVolume: _context.resetSFXVolume.bind(_context),
+        getVoiceVolume: _context.getVoiceVolume.bind(_context),
+        setVoiceVolume: _context.setVoiceVolume.bind(_context),
+        resetVoiceVolume: _context.resetVoiceVolume.bind(_context),
         getUIVolume: _context.getUIVolume.bind(_context),
         setUIVolume: _context.setUIVolume.bind(_context),
         resetUIVolume: _context.resetUIVolume.bind(_context),

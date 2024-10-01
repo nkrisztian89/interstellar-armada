@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2016-2018, 2020-2024 Krisztián Nagy
  * @file This module provides some wrappers for Web Audio API functions for easier use.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -115,7 +115,7 @@ define([
                  * Attempting to play a sound in this category will result in an error - this is to prevent playing sounds with undefined
                  * category
                  */
-                NOME: 0,
+                NONE: 0,
                 /**
                  * A category for sound effects - typically short, possibly spatialized
                  */
@@ -127,7 +127,11 @@ define([
                 /**
                  * A category for sounds of the UI - typically short, not spatialized
                  */
-                UI: 3
+                UI: 3,
+                /**
+                 * A category for voice sounds - short or long, typically not spatialized
+                 */
+                VOICE: 4
             },
             /**
              * @enum {String}
@@ -179,6 +183,11 @@ define([
              * @type GainNode
              */
             _musicGain,
+            /**
+             * Used for setting the master volume for voice - all voice nodes are going through this.
+             * @type GainNode
+             */
+            _voiceGain,
             /**
              * Used for setting the master volume for UI - all UI nodes are going through this.
              * @type GainNode
@@ -604,6 +613,9 @@ define([
                 case SoundCategory.UI:
                     currentNode.connect(_uiGain);
                     break;
+                case SoundCategory.VOICE:
+                    currentNode.connect(_voiceGain);
+                    break;
                 default:
                     application.showError("Cannot play sound '" + this._sampleName + "', because it has an unkown category: " + this._soundCategory);
             }
@@ -710,13 +722,14 @@ define([
     /**
      * Plays back a loaded sound sample without creating a persistent sound source (or any reference) for it.
      * @param {String} sampleName The name of the sample to be played
+     * @param {Number} [soundCategory=SoundCategory.SOUND_EFFECT] The volume will be affected by the master volume set for this category
      * @param {Number} [volume=1] The volume at which to play back the sample
      * @param {Number[3]} [position] The camera-space position of the sound source, in case the sound should be spatialized
      * @param {Number} [rolloffFactor=1] The rolloff factor of the sound in case it is spatialized. See SoundSource for how the volume is
      * calculated based on it
      */
-    function playSound(sampleName, volume, position, rolloffFactor) {
-        SoundClip.call(_clip, SoundCategory.SOUND_EFFECT, sampleName, volume, false);
+    function playSound(sampleName, soundCategory, volume, position, rolloffFactor) {
+        SoundClip.call(_clip, soundCategory || SoundCategory.SOUND_EFFECT, sampleName, volume, false);
         if (position) {
             SoundSource.call(_source, position[0], position[1], position[2], DEFAULT_PANNING_MODEL, rolloffFactor);
             _clip.setSource(_source);
@@ -738,6 +751,14 @@ define([
      */
     function setMusicVolume(value, duration) {
         _rampVolume(_musicGain, value, duration);
+    }
+    /**
+     * Sets a master volume applied to voice.
+     * @param {Number} value
+     * @param {Number} [duration=DEFAULT_RAMP_DURATION] The volume will be ramped for this duration, in seconds
+     */
+    function setVoiceVolume(value, duration) {
+        _rampVolume(_voiceGain, value, duration);
     }
     /**
      * Sets a master volume applied to UI sounds.
@@ -773,6 +794,8 @@ define([
     _effectGain.connect(_compressor);
     _musicGain = _context.createGain();
     _musicGain.connect(_compressor);
+    _voiceGain = _context.createGain();
+    _voiceGain.connect(_compressor);
     _uiGain = _context.createGain();
     _uiGain.connect(_masterGain);
     _clip = new SoundClip();
@@ -791,6 +814,7 @@ define([
         playSound: playSound,
         setEffectVolume: setEffectVolume,
         setMusicVolume: setMusicVolume,
+        setVoiceVolume: setVoiceVolume,
         setUIVolume: setUIVolume,
         setMasterVolume: setMasterVolume,
         resume: resume
