@@ -614,6 +614,40 @@
                 "high": "_2048"
             }
         }, {
+            "name": "planet_medium",
+            "basepath": "background/",
+            "format": "png",
+            "imageNames": {
+                "posX": "stars_4000",
+                "negX": "stars_4000",
+                "posY": "planet_4000",
+                "negY": "stars_4000",
+                "posZ": "stars_4000",
+                "negZ": "stars_4000"
+            },
+            "qualitySuffixes": {
+                "low": "_512",
+                "medium": "_1024",
+                "high": "_2048"
+            }
+        }, {
+            "name": "volcanicPlanet_medium",
+            "basepath": "background/",
+            "format": "png",
+            "imageNames": {
+                "posX": "volcanicPlanet_right_4000",
+                "negX": "volcanicPlanet_left_4000",
+                "posY": "volcanicPlanet_top_4000",
+                "negY": "volcanicPlanet_bottom_4000",
+                "posZ": "stars_4000",
+                "negZ": "volcanicPlanet_front"
+            },
+            "qualitySuffixes": {
+                "low": "_512",
+                "medium": "_1024",
+                "high": "_2048"
+            }
+        }, {
             "name": "crescentNebula_veryDense",
             "basepath": "background/",
             "format": "png",

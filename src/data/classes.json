@@ -31,6 +31,14 @@
             "shader": "skybox",
             "cubemap": "redNebula_medium"
         }, {
+            "name": "planet_medium",
+            "shader": "skybox",
+            "cubemap": "planet_medium"
+        }, {
+            "name": "volcanicPlanet_medium",
+            "shader": "skybox",
+            "cubemap": "volcanicPlanet_medium"
+        }, {
             "name": "crescentNebula_veryDense",
             "shader": "skybox",
             "cubemap": "crescentNebula_veryDense"
@@ -107,6 +115,18 @@
                     "texture": "flare"
                 }]
         }, {
+            "name": "orangeSun",
+            "lightColor": [1, 0.9, 0.75],
+            "layers": [{
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [1, 0.705, 0.225, 1]
+                }, {
+                    "size": 0.8,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare"
+                }]
+        }, {
             "name": "brownPlanet",
             "layers": [{
                     "shader": "backgroundFixBillboard",
@@ -167,6 +187,14 @@
             "layers": [{
                     "shader": "backgroundNebula",
                     "texture": "paleRedNebula"
+                }]
+        }, {
+            "name": "volcanicPlanetLightSource",
+            "lightColor": [0.4, 0.2, 0.05],
+            "layers": [{
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [0, 0, 0, 0]
                 }]
         }],
     "dustCloudClasses": [{
@@ -4393,6 +4421,15 @@
                 }, {
                     "name": "player-tier4",
                     "basedOn": "player-tier3",
+                    "weapons": [{
+                            "class": "lightRepeaterGun"
+                        }, {
+                            "class": "lightRepeaterGun"
+                        }, {
+                            "class": "lightRepeaterGun"
+                        }, {
+                            "class": "lightRepeaterGun"
+                        }],
                     "shield": {
                         "class": "imperialFighterMk4"
                     }
