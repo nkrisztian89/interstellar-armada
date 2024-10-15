@@ -773,6 +773,7 @@
         "masterVolume": "Volume principale:",
         "musicVolume": "Volume delle musiche:",
         "sfxVolume": "Volume degli effetti sonori:",
+        "voiceVolume": "Volume della voce:",
         "uiVolume": "Volume dell'interfaccia utente:"
     },
     "gameplaySettings": {

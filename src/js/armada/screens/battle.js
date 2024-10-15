@@ -2698,6 +2698,8 @@ define([
         if (dimSFX !== false) {
             audio.resetSFXVolume();
             audio.setSFXVolume(config.getSetting(config.BATTLE_SETTINGS.SFX_VOLUME_IN_MENUS) * audio.getSFXVolume(), false);
+            audio.resetVoiceVolume();
+            audio.setVoiceVolume(config.getSetting(config.BATTLE_SETTINGS.VOICE_VOLUME_IN_MENUS) * audio.getVoiceVolume(), false);
         }
         if (_messageTypeSound) {
             _messageTypeSound.stopPlaying(HUD_MESSAGE_APPEAR_SOUND_STOP_RAMP_DURATION);
@@ -2744,6 +2746,7 @@ define([
         }
         audio.resetMusicVolume();
         audio.resetSFXVolume();
+        audio.resetVoiceVolume();
         if (control.getInputInterpreter(control.MOUSE_NAME).isEnabled()) {
             this.requestPointerLock(true);
         }

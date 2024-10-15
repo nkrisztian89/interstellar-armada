@@ -1,5 +1,5 @@
 /**
- * Copyright 2016, 2020-2021 Krisztián Nagy
+ * Copyright 2016, 2020-2024 Krisztián Nagy
  * @file This module manages and provides the audio settings screen of the application
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -31,6 +31,7 @@ define([
             MASTER_VOLUME_SLIDER_ID = "masterVolumeSlider",
             MUSIC_VOLUME_SLIDER_ID = "musicVolumeSlider",
             SFX_VOLUME_SLIDER_ID = "sfxVolumeSlider",
+            VOICE_VOLUME_SLIDER_ID = "voiceVolumeSlider",
             UI_VOLUME_SLIDER_ID = "uiVolumeSlider",
             OPTION_PARENT_ID = "settingsDiv";
     // ##############################################################################
@@ -80,6 +81,12 @@ define([
         /**
          * @type ExternalComponent
          */
+        this._voiceVolumeSlider = this._registerSlider(VOICE_VOLUME_SLIDER_ID,
+                strings.AUDIO.VOICE_VOLUME.name,
+                audio.setVoiceVolume);
+        /**
+         * @type ExternalComponent
+         */
         this._uiVolumeSlider = this._registerSlider(UI_VOLUME_SLIDER_ID,
                 strings.AUDIO.UI_VOLUME.name,
                 audio.setUIVolume);
@@ -93,6 +100,7 @@ define([
         audio.setMasterVolume(this._masterVolumeSlider.getValue());
         audio.setMusicVolume(this._musicVolumeSlider.getValue());
         audio.setSFXVolume(this._sfxVolumeSlider.getValue());
+        audio.setVoiceVolume(this._voiceVolumeSlider.getValue());
         audio.setUIVolume(this._uiVolumeSlider.getValue());
         game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
     };
@@ -150,6 +158,7 @@ define([
         this._masterVolumeSlider.setNumericValue(audio.getMasterVolume());
         this._musicVolumeSlider.setNumericValue(audio.getMusicVolume());
         this._sfxVolumeSlider.setNumericValue(audio.getSFXVolume());
+        this._voiceVolumeSlider.setNumericValue(audio.getVoiceVolume());
         this._uiVolumeSlider.setNumericValue(audio.getUIVolume());
     };
     /**
@@ -161,6 +170,7 @@ define([
             audio.resetMasterVolume();
             audio.resetMusicVolume();
             audio.resetSFXVolume();
+            audio.resetVoiceVolume();
             audio.resetUIVolume();
             this._updateValues();
             return true;

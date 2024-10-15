@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2023 Krisztián Nagy
+ * Copyright 2016-2024 Krisztián Nagy
  * @file Augments the general strings module with constants and functions to conveniently access strings in the game and to verify their 
  * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -434,6 +434,7 @@ define([
         MASTER_VOLUME: {name: "audio.masterVolume"},
         MUSIC_VOLUME: {name: "audio.musicVolume"},
         SFX_VOLUME: {name: "audio.sfxVolume"},
+        VOICE_VOLUME: {name: "audio.voiceVolume"},
         UI_VOLUME: {name: "audio.uiVolume"}
     };
     strings.CONTOLLER = {

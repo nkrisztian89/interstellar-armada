@@ -795,6 +795,7 @@
         "masterVolume": "Master volume:",
         "musicVolume": "Music volume:",
         "sfxVolume": "Sound effect volume:",
+        "voiceVolume": "Voice volume:",
         "uiVolume": "User interface volume:"
     },
     "gameplaySettings": {

@@ -843,6 +843,7 @@
         "masterVolume": "Fő hangerő:",
         "musicVolume": "Zene hangereje:",
         "sfxVolume": "Effektek hangereje:",
+        "voiceVolume": "Beszéd hangereje:",
         "uiVolume": "Vezérlőelemek hangereje:"
     },
     "gameplaySettings": {
