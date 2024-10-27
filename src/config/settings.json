@@ -994,6 +994,33 @@
                 "newHostilesAlertDuration": 3250,
                 "newHostilesAlertBlinkInterval": 500
             },
+            "pilotVoices": [
+                "wingman1",
+                "wingman2",
+                "wingman3",
+                "wingman4"
+            ],
+            "voiceMessages": [
+                "attacking",
+                "approaching",
+                "clear",
+                "compliment",
+                "evading",
+                "hit",
+                "damaged",
+                "incoming",
+                "kill",
+                "leaving",
+                "missiles",
+                "standdown",
+                "die",
+                "wingmanlost",
+                "shiplost"
+            ],
+            "minVoiceMessageDelayForSameType": 500,
+            "minVoiceMessageDelayForDifferentType": 250,
+            "minVoiceMessageDelayForSameSourceSameType": 5000,
+            "minVoiceMessageDelayForSameSourceDifferentType": 1500,
             "weaponFireSoundStackMinimumDistance": 100,
             "hitSoundStackingTimeThreshold": 0.1,
             "hitSoundStackingVolumeFactor": 0.5,

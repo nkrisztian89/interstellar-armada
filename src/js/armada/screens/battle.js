@@ -169,8 +169,12 @@ define([
             JUMP_QUEUE = "system",
             /** ID for the HUD message queue for messages about multiplayer network connection status @type String */
             CONNECTION_QUEUE = "connection",
+            /** ID for the HUD message queue for messages coming from AI pilots with voice-over @type String */
+            RADIO_QUEUE = "radio",
             /** In descending priority order @type Array */
-            MESSAGE_QUEUES = [CONNECTION_QUEUE, JUMP_QUEUE, MISSION_QUEUE, INFO_QUEUE, HOSTILE_ALERT_QUEUE],
+            MESSAGE_QUEUES = [CONNECTION_QUEUE, JUMP_QUEUE, MISSION_QUEUE, INFO_QUEUE, RADIO_QUEUE, HOSTILE_ALERT_QUEUE],
+            /** The count of maximum how many of the last radio queue messages are displayed together @type Number */
+            MAX_RADIO_QUEUE_MESSAGES_DISPLAYED = 5,
             // target info section names
             /** @type String */
             TARGET_INFO_NAME = "name",
@@ -454,7 +458,7 @@ define([
             // HUD messages
             /**
              * @typedef {Object} Battle~HUDMessage The properties of a message that can be displayed for the player on the HUD
-             * @property {String} [id] The string ID of the message that can be used as translation key and for choosing the appropriate sound sample file
+             * @property {String} [id] The string ID of the message used as translation key and for choosing the appropriate sound sample file
              * @property {String} [text] The text of the message (formatted, translated, can contain '\n'-s)
              * @property {Number} [duration] The duration to display the message for, in milliseconds. If not given, an automatic
              * duration will be set based on the length of the text
@@ -554,6 +558,50 @@ define([
              * @type SoundClip
              */
             _connectionWarningSound,
+            /**
+             * The voice-over sound effect resources for each generic voice message (second index, see settings.json/logic.battle.voiceMessages)
+             * of each voice (first index, see settings.json/logic.battle.pilotVoices)
+             * @type Array.<Array.<SoundEffectResource>>
+             */
+            _genericVoiceSounds,
+            /**
+             * The voice-over sound effect resources corresponding to the messages of the current mission (organized by message ID inside the objects)
+             * spoken by AI pilots, for each pilot voice (array index, see settings.json/logic.battle.pilotVoices)
+             * @type Array.<Object.<String, SoundEffectResource>>
+             */
+            _missionPilotVoiceSounds,
+            /**
+             * The voice-over sound effect resources corresponding to the messages of the current mission (organized by message ID inside the object)
+             * (not spoken by AI pilots, having separate dedicated sound files)
+             * @type Object.<String, SoundEffectResource>
+             */
+            _missionVoiceSounds,
+            /**
+             * The cached value of the list of possible generic AI radio messages loaded from settings.json/logic.battle.voiceMessages
+             * @type String[]
+             */
+            _voiceMessages,
+            /**
+             * Whether a voice-over sound effect corresponding to a message of the current mission is currently being played
+             * (so that we don't interrupt it with a generic message voice-over)
+             * @type Boolean
+             */
+            _playingMissionVoiceSound,
+            /**
+             * The timestamp for when the last generic AI radio message began to be transmitted
+             * @type DOMHighResTimeStamp
+             */
+            _lastRadioTime,
+            /**
+             * The type of the last transmitted generic AI radio message (its index within settings.json/logic.battle.voiceMessages)
+             * @type Number
+             */
+            _lastRadioType,
+            /**
+             * Whether the radio message queue has been updated since its message text has been assembled (we display multiple messages in a merged string)
+             * @type Boolean
+             */
+            _radioQueueChanged,
             /**
              * An array holding references to the hostile spacecrafts that should be highlighted as newly arrived
              * @type Spacecraft[]
@@ -1574,6 +1622,55 @@ define([
             }
             _newHostilesAlertTimeLeft = _newHostilesMessage.duration;
         }
+        ai.broadcastSpacecraftEvent(SpacecraftEvents.ARRIVED, this);
+    }
+    /**
+     * Broadcasts a spacecraft destructed message to all the AI pilots (so they can e.g. transmit
+     * a reaction radio message to it)
+     */
+    function _handleSpacecraftDestructed() {
+        ai.broadcastSpacecraftEvent(SpacecraftEvents.DESTRUCTED, this);
+    }
+    /**
+     * Informs all the AI pilots that the player has gained a kill (so they can e.g. transmit
+     * a reaction radio message to it)
+     */
+    function _handlePlayerGainKill() {
+        ai.handlePlayerGainKill();
+    }
+    /**
+     * Plays and displays the radio message transmitted by an AI piloted spacecraft
+     * @param {SpacecraftEvents~RadioData} data The radio event data
+     */
+    function _handleSpacecraftRadio(data) {
+        var
+                /**@type Spacecraft */
+                craft = _mission.getPilotedSpacecraft(),
+                /** @type Battle~HUDMessage */
+                message,
+                /** @type DOMHighResTimeStamp */
+                now,
+                /** @type Number */
+                index = -1;
+        if (_spacecraft && craft && craft.isAlive() && !craft.isAway() && !craft.isHostile(this)) {
+            now = performance.now();
+            if ((_messageSource !== this) && ((now - _lastRadioTime > config.getBattleSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_SAME_TYPE)) ||
+                    ((data.messageType !== _lastRadioType) && (now - _lastRadioTime > config.getBattleSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_DIFFERENT_TYPE))))) {
+                if (!_playingMissionVoiceSound) {
+                    // play the voice sample immediately, regardless of whether or not the text is shown
+                    index = _genericVoiceSounds[data.voice][data.messageType].play(resources.SoundCategory.VOICE) + 1;
+                    message = {
+                        text: strings.get(strings.RADIO.PREFIX, _voiceMessages[data.messageType] + index),
+                        source: this,
+                        silent: true,
+                        queue: RADIO_QUEUE
+                    };
+                    _battleScreen.queueHUDMessage(message, true);
+                    _lastRadioTime = now;
+                    _lastRadioType = data.messageType;
+                }
+            }
+        }
     }
     /**
      * Updates the HUD state according to the passed HUD event data
@@ -2062,11 +2159,41 @@ define([
                 "center");
     }
     /**
+     * Returns (and marks for loading) the sound effect resource corresponding to the voice-over of one of the generic AI radio messages
+     * @param {String} voice One of settings.json/logic.battle.pilotVoices
+     * @param {String} message One of settings.json/logic.battle.voiceMessages
+     * @returns {SoundEffectResouce}
+     */
+    function _getGenericVoiceSoundEffect(voice, message) {
+        return resources.getSoundEffect(voice + "_" + message);
+    }
+    /**
+     * Returns (and marks for loading) the sound effect resource corresponding to the voice-over of one of the mission's messages by an AI pilot
+     * @param {String} voice One of settings.json/logic.battle.pilotVoices
+     * @param {Mission} mission The current mission
+     * @param {String} message The ID of one of the mission's messages
+     * @returns {SoundEffectResouce}
+     */
+    function _getMissionPilotVoiceSoundEffect(voice, mission, message) {
+        return resources.getSoundEffect(voice + "_mission_" + utils.getFilenameWithoutExtension(mission.getName()) + "_" + message, true);
+    }
+    /**
+     * Returns (and marks for loading) the sound effect resource corresponding to the voice-over of one of the mission's messages (not spoken
+     * by an AI pilot, but having a separate dedicated sound file)
+     * @param {Mission} mission The current mission
+     * @param {String} message The ID of one of the mission's messages
+     * @returns {SoundEffectResouce}
+     */
+    function _getMissionVoiceSoundEffect(mission, message) {
+        return resources.getSoundEffect("mission_" + utils.getFilenameWithoutExtension(mission.getName()) + "_" + message, true);
+    }
+    /**
      * Creates all HUD elements, marks their resources for loading if they are not loaded yet, and adds their visual models to the scene if
      * they are. If they are not loaded, sets callbacks to add them after the loading has finished.
+     * @param {Mission} mission The current mission, used to select the available sound samples for the mission's messages to be loaded
      */
-    function _addHUDToScene() {
-        var i, n, layout, mappings, indicator, layoutDescriptor, element;
+    function _addHUDToScene(mission) {
+        var i, j, n, layout, mappings, indicator, layoutDescriptor, element, voices, missionVoiceMessages;
         // keep the ons with the same shader together for faster rendering
         // ---------------------------------------------------------
         // UI 2D SHADER
@@ -2406,6 +2533,23 @@ define([
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).name);
+        voices = config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES);
+        _voiceMessages = config.getBattleSetting(config.BATTLE_SETTINGS.VOICE_MESSAGES);
+        missionVoiceMessages = mission.getMessageIds();
+        for (i = 0; i < voices.length; i++) {
+            // loading generic voice message samples
+            for (j = 0; j < _voiceMessages.length; j++) {
+                _getGenericVoiceSoundEffect(voices[i], _voiceMessages[j]);
+            }
+            // loading mission specific voice message samples for AI pilots
+            for (j = 0; j < missionVoiceMessages.length; j++) {
+                _getMissionPilotVoiceSoundEffect(voices[i], mission, missionVoiceMessages[j]);
+            }
+        }
+        // loading mission specific voice message samples
+        for (i = 0; i < missionVoiceMessages.length; i++) {
+            _getMissionVoiceSoundEffect(mission, missionVoiceMessages[i]);
+        }
     }
     /**
      * Returns the HTML string to insert to messages that contains the key to open the menu in a highlighted style.
@@ -3188,6 +3332,9 @@ define([
         } else {
             _messageQueues[message.queue].push(message);
         }
+        if (message.queue === RADIO_QUEUE) {
+            _radioQueueChanged = true;
+        }
     };
     /**
      * Clears all HUD messages from the given queue.
@@ -3692,15 +3839,48 @@ define([
             // if such a queue has been found, display the first message in the queue
             if ((control.isInPilotMode()) && (i < MESSAGE_QUEUES.length)) {
                 messageQueue = _messageQueues[MESSAGE_QUEUES[i]];
-                // playing sound for messages which appear instantly (without animation)
+                // playing single sound effect for messages
                 if (messageQueue[0].new) {
+                    _playingMissionVoiceSound = false;
+                    // playing the voice-over for this message if it exists
+                    if (_missionVoiceSounds[messageQueue[0].id]) {
+                        _missionVoiceSounds[messageQueue[0].id].play(resources.SoundCategory.VOICE);
+                        _playingMissionVoiceSound = true;
+                        messageQueue[0].silent = true;
+                    } else if (messageQueue[0].source) {
+                        j = ai.getVoiceOfSpacecraft(messageQueue[0].source);
+                        if ((j >= 0) && _missionPilotVoiceSounds[j][messageQueue[0].id]) {
+                            _missionPilotVoiceSounds[j][messageQueue[0].id].play(resources.SoundCategory.VOICE);
+                            _playingMissionVoiceSound = true;
+                            messageQueue[0].silent = true;
+                        }
+                    }
+                    // playing the generic short message sound
                     if (!messageQueue[0].silent && !messageQueue[0].appearTimeLeft) {
                         _messageSound.play();
                     }
                     messageQueue[0].new = false;
                 }
                 // setting text
-                _messageText.setText(messageQueue[0].text);
+                if (MESSAGE_QUEUES[i] === RADIO_QUEUE) {
+                    // for the radio queue, multiple messages are displayed together
+                    // we only update the text when the messages have changed
+                    if (_radioQueueChanged) {
+                        text = messageQueue[0].text;
+                        for (j = 1; (j < messageQueue.length) && (j < MAX_RADIO_QUEUE_MESSAGES_DISPLAYED); j++) {
+                            if (messageQueue[j].timeLeft > 0) {
+                                text += '\n' + messageQueue[j].text;
+                            } else {
+                                messageQueue.splice(j, 1);
+                                j--;
+                            }
+                        }
+                        _messageText.setText(text);
+                        _radioQueueChanged = false;
+                    }
+                } else {
+                    _messageText.setText(messageQueue[0].text);
+                }
                 // setting reveal state based on appear animation for "typewriter" effect
                 if (messageQueue[0].appearTimeLeft > 0) {
                     _messageText.setRevealState(1 - messageQueue[0].appearTimeLeft / messageQueue[0].appearDuration);
@@ -3735,7 +3915,8 @@ define([
                         if (_newHostilesAlertTimeLeft <= 0) {
                             skip = true;
                         }
-                    } else {
+                    } else if (MESSAGE_QUEUES[i] !== RADIO_QUEUE) {
+                        // for the radio queue, we decrease the remaining time of all messages separately (independently of them being displayed)
                         messageQueue[0].timeLeft -= dt;
                     }
                 }
@@ -3762,9 +3943,20 @@ define([
                 _messageBackground.hide();
                 _messageTypeSound.stopPlaying(HUD_MESSAGE_APPEAR_SOUND_STOP_RAMP_DURATION);
                 _messageSource = null;
+                _playingMissionVoiceSound = false;
             }
             if (_newHostilesAlertTimeLeft > 0) {
                 _newHostilesAlertTimeLeft -= dt;
+            }
+            // decrease the remining time of all the radio queue messages regardless of them being displayed or not
+            messageQueue = _messageQueues[RADIO_QUEUE];
+            for (i = 0; i < messageQueue.length; i++) {
+                if (messageQueue[i].timeLeft > 0) {
+                    messageQueue[i].timeLeft -= dt;
+                    if (messageQueue[i].timeLeft <= 0) {
+                        _radioQueueChanged = true;
+                    }
+                }
             }
             // .....................................................................................................
             // target related information
@@ -4766,7 +4958,7 @@ define([
                 false);
         _targetScene.getCamera().moveToPosition([0, 0, config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_CAMERA_DISTANCE)], 0);
         _mission.addToScene(_battleScene, _targetScene);
-        _addHUDToScene();
+        _addHUDToScene(mission);
         _hudSectionStates = new Array(Object.keys(HUDSection).length);
         for (i = 0; i < _hudSectionStates.length; i++) {
             _hudSectionStates[i] = HUDSectionState.VISIBLE;
@@ -4776,6 +4968,10 @@ define([
         this._addUITexts();
         _messageQueues = _messageQueues || {};
         this.clearHUDMessageQueues();
+        _lastRadioTime = 0;
+        _lastRadioType = -1;
+        _playingMissionVoiceSound = false;
+        _radioQueueChanged = false;
         _mission.onTeamsChanged(_refreshWingmanStatusPanel);
         // initializing music
         audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.AMBIENT_MUSIC), AMBIENT_THEME, true);
@@ -4832,6 +5028,7 @@ define([
             }
             this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
             utils.executeAsync(function () {
+                var i, j, voices, missionVoiceMessages;
                 this.setAntialiasing(graphics.getAntialiasing());
                 this.setFiltering(graphics.getFiltering());
                 this.clearSceneCanvasBindings();
@@ -4866,9 +5063,12 @@ define([
                         craft.addEventHandler(SpacecraftEvents.JUMP_CANCELLED, _handlePilotedSpacecraftJumpCancelled.bind(craft));
                         craft.addEventHandler(SpacecraftEvents.PREPARING_JUMP, _handlePilotedSpacecraftPreparingJump.bind(craft));
                         craft.addEventHandler(SpacecraftEvents.HUD, _handleHUDEvent.bind(craft));
+                        craft.addEventHandler(SpacecraftEvents.GAIN_KILL, _handlePlayerGainKill);
                     } else {
                         craft.addEventHandler(SpacecraftEvents.JUMP_OUT_STARTED, _handleSpacecraftJumpOutStarted.bind(craft));
                         craft.addEventHandler(SpacecraftEvents.ARRIVED, _handleSpacecraftArrived.bind(craft));
+                        craft.addEventHandler(SpacecraftEvents.DESTRUCTED, _handleSpacecraftDestructed.bind(craft));
+                        craft.addEventHandler(SpacecraftEvents.RADIO, _handleSpacecraftRadio.bind(craft));
                     }
                 });
                 _missileLoadedSound = resources.getSoundEffect(
@@ -4901,6 +5101,28 @@ define([
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).name).createSoundClip(
                         resources.SoundCategory.SOUND_EFFECT,
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).volume);
+                voices = config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES);
+                missionVoiceMessages = mission.getMessageIds();
+                if (!_genericVoiceSounds) {
+                    _genericVoiceSounds = [];
+                    for (i = 0; i < voices.length; i++) {
+                        _genericVoiceSounds.push([]);
+                        for (j = 0; j < _voiceMessages.length; j++) {
+                            _genericVoiceSounds[i].push(_getGenericVoiceSoundEffect(voices[i], _voiceMessages[j]));
+                        }
+                    }
+                }
+                _missionPilotVoiceSounds = [];
+                for (i = 0; i < voices.length; i++) {
+                    _missionPilotVoiceSounds.push({});
+                    for (j = 0; j < missionVoiceMessages.length; j++) {
+                        _missionPilotVoiceSounds[i][missionVoiceMessages[j]] = _getMissionPilotVoiceSoundEffect(voices[i], mission, missionVoiceMessages[j]);
+                    }
+                }
+                _missionVoiceSounds = {};
+                for (i = 0; i < missionVoiceMessages.length; i++) {
+                    _missionVoiceSounds[missionVoiceMessages[i]] = _getMissionVoiceSoundEffect(mission, missionVoiceMessages[i]);
+                }
                 if (!_multi) {
                     this._loadingBox.hide();
                 } else {

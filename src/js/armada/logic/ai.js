@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2023 Krisztián Nagy
+ * Copyright 2016-2024 Krisztián Nagy
  * @file A stateful module providing a collection to which AIs of different types (at the moment only one type, an AI for fighters) can be
  * added which control their respective spacecraft when the control function of the module is called.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -283,8 +283,141 @@ define([
              * @type Number
              */
             SHIP_MAX_DISTANCE_FACTOR = 0.9,
+            /**
+             * When hit, AI pilots transmit a different radio message depending on whether they are considered (heavily) damaged or not. This
+             * is the threshold for being considered damaged (relative hull integrity, 0 to 1)
+             * @type Number
+             */
+            DAMAGED_HULL_INTEGRITY_THRESHOLD = 0.25,
+            // the delay (in milliseconds) and priority (see _sendRadio()) for each type of radio message when scheduled
+            RADIO_MESSAGE_CLEAR_DELAY = 2000,
+            RADIO_MESSAGE_CLEAR_PRIORITY = 2,
+            RADIO_MESSAGE_DIE_DELAY = 0,
+            RADIO_MESSAGE_DIE_PRIORITY = 3,
+            RADIO_MESSAGE_HIT_DELAY = 0,
+            RADIO_MESSAGE_HIT_PRIORITY = 0.9,
+            RADIO_MESSAGE_KILL_DELAY = 0,
+            RADIO_MESSAGE_KILL_PRIORITY = 1.1,
+            RADIO_MESSAGE_LEAVING_DELAY = 0,
+            RADIO_MESSAGE_LEAVING_PRIORITY = 1.2,
+            RADIO_MESSAGE_STAND_DOWN_DELAY = 0,
+            RADIO_MESSAGE_STAND_DOWN_PRIORITY = 1,
+            RADIO_MESSAGE_INCOMING_DELAY = 500,
+            RADIO_MESSAGE_INCOMING_PRIORITY = 2,
+            RADIO_MESSAGE_WINGMAN_LOST_DELAY = 1500,
+            RADIO_MESSAGE_WINGMAN_LOST_PRIORITY = 0.5,
+            RADIO_MESSAGE_SHIP_LOST_DELAY = 1500,
+            RADIO_MESSAGE_SHIP_LOST_PRIORITY = 0.5,
+            RADIO_MESSAGE_COMPLIMENT_DELAY = 1000,
+            RADIO_MESSAGE_COMPLIMENT_PRIORITY = 0.5,
+            RADIO_MESSAGE_EVADING_DELAY = 0,
+            RADIO_MESSAGE_EVADING_PRIORITY = 1,
+            RADIO_MESSAGE_ATTACKING_DELAY = 0,
+            RADIO_MESSAGE_ATTACKING_PRIORITY = 0.7,
+            RADIO_MESSAGE_APPROACHING_DELAY = 0,
+            RADIO_MESSAGE_APPROACHING_PRIORITY = 0.7,
+            RADIO_MESSAGE_MISSILES_DELAY = 0,
+            RADIO_MESSAGE_MISSILES_PRIORITY = 1,
             // ------------------------------------------------------------------------------
             // private variables
+            /**
+             * The cached value of the number of available AI pilot voices.
+             * @type Number
+             */
+            _radioVoiceCount = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot starts firing primary weapons at an enemy.
+             * @type Number
+             */
+            _radioMessageAttacking = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot start approaching a new enemy target.
+             * @type Number
+             */
+            _radioMessageApproaching = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot notes that there are no enemies left.
+             * @type Number
+             */
+            _radioMessageClear = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot comments on the player destroying an enemy.
+             * @type Number
+             */
+            _radioMessageCompliment = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot is hit, and its hull integrity is below DAMAGED_HULL_INTEGRITY_THRESHOLD.
+             * @type Number
+             */
+            _radioMessageDamaged = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot is destroyed.
+             * @type Number
+             */
+            _radioMessageDie = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot starts an evasive maneuver.
+             * @type Number
+             */
+            _radioMessageEvading = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot is hit, and its hull integrity is above DAMAGED_HULL_INTEGRITY_THRESHOLD.
+             * @type Number
+             */
+            _radioMessageHit = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot comments on new enemies having arrived.
+             * @type Number
+             */
+            _radioMessageIncoming = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot destroys an enemy.
+             * @type Number
+             */
+            _radioMessageKill = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot activates its jump engines.
+             * @type Number
+             */
+            _radioMessageLeaving = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot launches missiles at its target.
+             * @type Number
+             */
+            _radioMessageMissiles = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot obeys a stand down order.
+             * @type Number
+             */
+            _radioMessageStandDown = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot comments on a friendly fighter having been destroyed.
+             * @type Number
+             */
+            _radioMessageWingmanLost = -1,
+            /**
+             * Index corresponding to the radio message type played when the AI pilot comments on a friendly ship having been destroyed.
+             * @type Number
+             */
+            _radioMessageShipLost = -1,
+            /**
+             * An array keeping track of the indices belonging to pilot voices that have not yet been randomly assigned to AI pilots
+             * (once all the voices have been assigned once and the array is empty, it is refilled with all the voices again)
+             * @type Number[]
+             */
+            _availableVoices = [],
+            /**
+             * Cached value of the configuration setting of the minimum time that needs to pass between two transmissions of the same
+             * type of radio message by the same pilot (within this time, same type messages are ignored and not transmitted)
+             * @type Number
+             */
+            _sameRadioMessageDelay = 0,
+            /**
+             * Cached value of the configuration setting of the minimum time that needs to pass between two transmissions of different
+             * types of radio messages by the same pilot (within this time, messages are ignored and not transmitted)
+             * @type Number
+             */
+            _differentRadioMessageDelay = 0,
             /**
              * Cached value of the configuration setting determining for maximum how long should spacecrafts accelerate their turning, in
              * seconds.
@@ -438,6 +571,24 @@ define([
         }
         return true;
     }
+    /**
+     * Returns an index (within the array settings.json/logic.battle.pilotVoices) corresponding to an AI pilot
+     * voice that has not yet been randomly assigned to a pilot (and also marks it as assigned). Once all the
+     * different voices have been assigned (returned), starts a new round of assignments.
+     * @returns {Number}
+     */
+    function getAvailableVoice() {
+        var i, result, index;
+        if (_availableVoices.length === 0) {
+            for (i = 0; i < _radioVoiceCount; i++) {
+                _availableVoices.push(i);
+            }
+        }
+        index = Math.trunc(Math.random() * _availableVoices.length);
+        result = _availableVoices[index];
+        _availableVoices.splice(index, 1);
+        return result;
+    }
     // ##############################################################################
     /**
      * @class
@@ -462,8 +613,18 @@ define([
          */
         this._standingDown = false;
         /**
-         * The list of targets this spacecraft should destroy, in order of priority
+         * The current target of the AI.
          * @type Spacecraft
+         */
+        this._target = null;
+        /**
+         * The target that the AI has last engaged (opened fire on)
+         * @type Spacecraft
+         */
+        this._engagedTarget = null;
+        /**
+         * The list of targets this spacecraft should destroy, in order of priority
+         * @type Spacecraft[]
          */
         this._targetList = null;
         /**
@@ -509,13 +670,110 @@ define([
          * @type Number
          */
         this._moveCommandMaxDistance = 0;
+        /**
+         * The timestamp for when the last radio message was transmitted by this AI pilot
+         * @type DOMHighResTimeStamp
+         */
+        this._lastRadioTime = 0;
+        /**
+         * The type of the last radio message transmitted by this AI pilot (index within settings.json/logic.battle.voiceMessages array)
+         * @type Number
+         */
+        this._lastRadioType = -1;
+        /**
+         * When the delayed transmission of a radio message is scheduled, this tracks the time remaining until the message needs to be
+         * transmitted, in milliseconds.
+         * @type Number
+         */
+        this._radioTimeLeft = 0;
+        /**
+         * The priority to be set for the scheduled radio message when it is transmitted.
+         * @type Number
+         */
+        this._radioPriority = 0;
+        /**
+         * The data to be passed to the event system (via a SpacecraftEvents.RADIO event sent to the controlled spacecraft) when a
+         * radio message is transmitted by this AI pilot. This data data is also set when the delayed transmission of a radio message
+         * is scheduled.
+         * @type SpacecraftEvents~RadioData
+         */
+        this._radioData = {
+            voice: 0,
+            messageType: -1
+        };
         // attaching handlers to the spacecraft events
         if (this._spacecraft) {
             this._spacecraft.setSpeedHolding(true);
             this._spacecraft.addEventHandler(SpacecraftEvents.BEING_HIT, this._handleBeingHit.bind(this));
             this._spacecraft.addEventHandler(SpacecraftEvents.COMMAND_RECEIVED, this._handleCommand.bind(this));
+            this._spacecraft.addEventHandler(SpacecraftEvents.GAIN_KILL, this._handleGainKill.bind(this));
+            this._radioData.voice = getAvailableVoice();
         }
     }
+    /**
+     * The spacecraft this AI controls.
+     * @returns {Spacecraft}
+     */
+    SpacecraftAI.prototype.getSpacecraft = function () {
+        return this._spacecraft;
+    };
+    /**
+     * The index of the pilot voice to use for this AI (from the settings.json/logic.battle.pilotVoices array)
+     * @returns {Number}
+     */
+    SpacecraftAI.prototype.getVoice = function () {
+        return this._radioData.voice;
+    };
+    /**
+     * Transmit or schedule a generic radio message by this AI pilot (that can be played and displayed to the player)
+     * @param {Number} messageType The index of the generic radio message to use (from the settings.json/logic.battle.voiceMessages array)
+     * @param {Number} delay If the message is to be scheduled instead of played immediately, the amount of time to play it after, in milliseconds.
+     * @param {Number} priority The priority of the message. Has different meaning in different ranges:
+     * 0-1: send the radio message with 0-100% probability if the given priority is greater to or equals the priority of
+     * the scheduled radio message (if any) and if the minimum delay has already elapsed since the last radio message;
+     * 1-2: send the radio message with 100% probability, even if the minimum delay has not been reached yet, in which
+     * case queue the message to be sent after the delay is reached;
+     * 2 or greater: send the radio message with 100% probability, ignore delay requirements
+     * @returns {Boolean} Whether the message was sent / scheduled
+     */
+    SpacecraftAI.prototype._sendRadio = function (messageType, delay, priority) {
+        var now = performance.now(), elapsed = now - this._lastRadioTime;
+        if ((this._spacecraft && this._spacecraft.isAlive() && !this._spacecraft.isAway()) && (
+                (messageType !== this._lastRadioType) && (elapsed >= _differentRadioMessageDelay) ||
+                (elapsed > _sameRadioMessageDelay) ||
+                (delay > 0) ||
+                (priority > 1))) {
+            if ((this._radioTimeLeft <= 0) || (priority >= this._radioPriority)) {
+                if (Math.random() <= priority) {
+                    this._radioData.messageType = messageType;
+                    if ((elapsed < _differentRadioMessageDelay) && (priority < 2)) {
+                        delay = _differentRadioMessageDelay - elapsed;
+                    }
+                    this._radioTimeLeft = delay;
+                    this._radioPriority = priority;
+                    if (delay === 0) {
+                        this._spacecraft.handleEvent(SpacecraftEvents.RADIO, this._radioData);
+                        this._lastRadioType = messageType;
+                        this._lastRadioTime = now;
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+    /**
+     * Send the scheduled delayed radio message, if the scheduled time is reached.
+     * @param {Number} dt The time elapsed since the last control step, in milliseconds.
+     */
+    SpacecraftAI.prototype._handleDelayedRadio = function (dt) {
+        if (this._radioTimeLeft > 0) {
+            this._radioTimeLeft -= dt;
+            if (this._radioTimeLeft <= 0) {
+                this._sendRadio(this._radioData.messageType, 0, 1);
+            }
+        }
+    };
     /**
      * Controls the spacecraft to turn (yaw and pitch) in the desired direction specified by two angles.
      * @param {Number} yaw The yaw angle of the direction to turn towards, with a positive number meaning a direction to the left, in radians.
@@ -764,8 +1022,12 @@ define([
             }
         }
         // call the appropriate handler if the target changed
-        if (this._spacecraft.getTarget() !== oldTarget) {
+        if (this._spacecraft.getTarget() !== this._target) {
             this._handleTargetSwitch();
+            this._target = this._spacecraft.getTarget();
+            if (!this._target) {
+                this._sendRadio(_radioMessageClear, RADIO_MESSAGE_CLEAR_DELAY, RADIO_MESSAGE_CLEAR_PRIORITY);
+            }
         }
     };
     /**
@@ -774,17 +1036,30 @@ define([
      */
     SpacecraftAI.prototype._handleBeingHit = function (data) {
         var spacecraft = data.spacecraft;
-        // if being hit by a (still alive and present) hostile ship while having different target
-        if (
-                this._spacecraft && this._spacecraft.isAlive() &&
-                spacecraft.isAlive() && !spacecraft.isAway() && spacecraft.isHostile(this._spacecraft) &&
-                this._spacecraft.getTarget() && (this._spacecraft.getTarget() !== spacecraft)) {
-            // switch target in case the current target is not targeting us anyway or is out of range
-            if ((this._spacecraft.getTarget().getTarget() !== this._spacecraft) || !this._attackingTarget) {
-                this._updateTarget(spacecraft);
+        if (this._spacecraft && this._spacecraft.isAlive()) {
+            if (this._spacecraft.getHitpoints() <= 0) {
+                this._sendRadio(_radioMessageDie, RADIO_MESSAGE_DIE_DELAY, RADIO_MESSAGE_DIE_PRIORITY);
+            } else if (spacecraft.isAlive() && !spacecraft.isAway() && spacecraft.isHostile(this._spacecraft)) {
+                // if being hit by a (still alive and present) hostile ship
+                this._sendRadio((this._spacecraft.getHullIntegrity() < DAMAGED_HULL_INTEGRITY_THRESHOLD) ?
+                        _radioMessageDamaged : _radioMessageHit,
+                        RADIO_MESSAGE_HIT_DELAY, RADIO_MESSAGE_HIT_PRIORITY);
+                // if having different target
+                if (this._spacecraft.getTarget() && (this._spacecraft.getTarget() !== spacecraft)) {
+                    // switch target in case the current target is not targeting us anyway or is out of range
+                    if ((this._spacecraft.getTarget().getTarget() !== this._spacecraft) || !this._attackingTarget) {
+                        this._updateTarget(spacecraft);
+                    }
+                    this._hitCountByNonTarget++;
+                }
             }
-            this._hitCountByNonTarget++;
         }
+    };
+    /**
+     * Executes the AI's reaction to it(s controlled spacecraft) destroying an enemy.
+     */
+    SpacecraftAI.prototype._handleGainKill = function () {
+        this._sendRadio(_radioMessageKill, RADIO_MESSAGE_KILL_DELAY, RADIO_MESSAGE_KILL_PRIORITY);
     };
     /**
      * Executes the command that the spacecraft received
@@ -815,7 +1090,9 @@ define([
                         this._spacecraft.jumpIn();
                     }
                 } else {
-                    this._spacecraft.jumpOut(false);
+                    if (this._spacecraft.jumpOut(false)) {
+                        this._sendRadio(_radioMessageLeaving, RADIO_MESSAGE_LEAVING_DELAY, RADIO_MESSAGE_LEAVING_PRIORITY);
+                    }
                 }
                 break;
             case SpacecraftCommand.TARGET:
@@ -879,6 +1156,7 @@ define([
                 // handling stand down command
                 this._standingDown = true;
                 this._cancelMoveCommand();
+                this._sendRadio(_radioMessageStandDown, RADIO_MESSAGE_STAND_DOWN_DELAY, RADIO_MESSAGE_STAND_DOWN_PRIORITY);
                 break;
             case SpacecraftCommand.REACH_DISTANCE:
                 // handling reach distance command
@@ -966,6 +1244,41 @@ define([
                     this._cancelMoveCommand();
                 }
                 break;
+        }
+    };
+    /**
+     * Executes the AI's reaction to general spacecraft events (events happening to
+     * spacecrafts that are not the one controlled by this AI)
+     * @param {String} eventID (enum SpacecraftEvents) The type of event that happened
+     * @param {Spacecraft} craft The spacecraft the event happened to / with
+     * @returns {Boolean} Whether the event has been handled exclusively (shouldn't be propagated
+     * to any more AIs)
+     */
+    SpacecraftAI.prototype.handleSpacecraftEvent = function (eventID, craft) {
+        switch (eventID) {
+            case SpacecraftEvents.ARRIVED:
+                if (this._spacecraft && this._spacecraft.isHostile(craft)) {
+                    return this._sendRadio(_radioMessageIncoming, RADIO_MESSAGE_INCOMING_DELAY, RADIO_MESSAGE_INCOMING_PRIORITY);
+                }
+                break;
+            case SpacecraftEvents.DESTRUCTED:
+                if (this._spacecraft && this._spacecraft.isFriendly(craft)) {
+                    if (craft.isFighter()) {
+                        return this._sendRadio(_radioMessageWingmanLost, RADIO_MESSAGE_WINGMAN_LOST_DELAY, RADIO_MESSAGE_WINGMAN_LOST_PRIORITY);
+                    } else {
+                        return this._sendRadio(_radioMessageShipLost, RADIO_MESSAGE_SHIP_LOST_DELAY, RADIO_MESSAGE_SHIP_LOST_PRIORITY);
+                    }
+                }
+                break;
+        }
+        return false;
+    };
+    /**
+     * Executes the AI's reaction to the player destroying an enemy.
+     */
+    SpacecraftAI.prototype.handlePlayerGainKill = function () {
+        if (this._spacecraft) {
+            this._sendRadio(_radioMessageCompliment, RADIO_MESSAGE_COMPLIMENT_DELAY, RADIO_MESSAGE_COMPLIMENT_PRIORITY);
         }
     };
     // ##############################################################################
@@ -1206,6 +1519,7 @@ define([
                 this._evasiveVelocityVector[0] = 1;
                 this._evasiveVelocityVector[1] = 0;
                 vec.rotate2(this._evasiveVelocityVector, angle);
+                this._sendRadio(_radioMessageEvading, RADIO_MESSAGE_EVADING_DELAY, RADIO_MESSAGE_EVADING_PRIORITY);
             }
         }
     };
@@ -1260,6 +1574,7 @@ define([
             if (this._spacecraft.isAway()) {
                 return;
             }
+            this._handleDelayedRadio(dt);
             // .................................................................................................
             // state setup
             strafingHandled = false;
@@ -1407,6 +1722,10 @@ define([
                                     this._fireDelayLeft -= dt;
                                 } else {
                                     this._spacecraft.fire();
+                                    if (this._engagedTarget !== target) {
+                                        this._sendRadio(_radioMessageAttacking, RADIO_MESSAGE_ATTACKING_DELAY, RADIO_MESSAGE_ATTACKING_PRIORITY);
+                                        this._engagedTarget = target;
+                                    }
                                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                                     // if we are not hitting the target despite not being blocked and firing in the right direction, roll the spacecraft
                                     if (!this._isBlockedBy) {
@@ -1443,6 +1762,10 @@ define([
                         } else {
                             this._timeSinceLastRoll = 0;
                             this._fireDelayLeft = this._fireDelay;
+                            if (this._approachedTarget !== target) {
+                                this._sendRadio(_radioMessageApproaching, RADIO_MESSAGE_APPROACHING_DELAY, RADIO_MESSAGE_APPROACHING_PRIORITY);
+                                this._approachedTarget = target;
+                            }
                         }
                         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                         // launching missiles
@@ -1460,6 +1783,7 @@ define([
                                     missile = this._spacecraft.launchMissile();
                                     if (missile) {
                                         this._missilesOnTarget.push(missile);
+                                        this._sendRadio(_radioMessageMissiles, RADIO_MESSAGE_MISSILES_DELAY, RADIO_MESSAGE_MISSILES_PRIORITY);
                                     }
                                 }
                             }
@@ -1628,6 +1952,7 @@ define([
             if (this._spacecraft.isAway()) {
                 return;
             }
+            this._handleDelayedRadio(dt);
             // .................................................................................................
             // targeting
             this._updateTarget();
@@ -1765,6 +2090,7 @@ define([
             if (this._spacecraft.isAway()) {
                 return;
             }
+            this._handleDelayedRadio(dt);
             // .................................................................................................
             // targeting
             this._updateTarget();
@@ -1851,6 +2177,7 @@ define([
      */
     AIContext.prototype.clearAIs = function () {
         this._ais = [];
+        _availableVoices = [];
     };
     /**
      * Adds a new AI of the type associated with the passed type name and sets it up to control the passed spacecraft.
@@ -1862,6 +2189,21 @@ define([
         this._ais.push(new _aiConstructors[aiTypeName](spacecraft, mission));
     };
     /**
+     * Returns the index of the voice (within the array settings.json/logic.battle.pilotVoices) corresponding to the AI
+     * that controls the passed spacecraft. If no AI controls the craft, returns -1.
+     * @param {Spacecraft} spacecraft
+     * @returns {Number}
+     */
+    AIContext.prototype.getVoiceOfSpacecraft = function (spacecraft) {
+        var i;
+        for (i = 0; i < this._ais.length; i++) {
+            if (this._ais[i].getSpacecraft() === spacecraft) {
+                return this._ais[i].getVoice();
+            }
+        }
+        return -1;
+    };
+    /**
      * Performs the control step for all the stored AIs.
      * @param {Number} dt the time elapsed since the last control step, in milliseconds.
      */
@@ -1869,6 +2211,29 @@ define([
         var i;
         for (i = 0; i < this._ais.length; i++) {
             this._ais[i].control(dt);
+        }
+    };
+    /**
+     * Executes the reactions of the AIs to general spacecraft events (e.g. transmitting radio
+     * message to the player when a new enemy arrives or a friendly ship is destroyed)
+     * @param {String} eventID (enum SpacecraftEvents) The type of event that happened
+     * @param {Spacecraft} craft The spacecraft the event happened to / with
+     */
+    AIContext.prototype.broadcastSpacecraftEvent = function (eventID, craft) {
+        var i;
+        for (i = 0; i < this._ais.length; i++) {
+            if (this._ais[i].handleSpacecraftEvent(eventID, craft)) {
+                return;
+            }
+        }
+    };
+    /**
+     * Executes the reactions of the AIs to the player destroying an enemy.
+     */
+    AIContext.prototype.handlePlayerGainKill = function () {
+        var i;
+        for (i = 0; i < this._ais.length; i++) {
+            this._ais[i].handlePlayerGainKill();
         }
     };
     /**
@@ -1892,12 +2257,31 @@ define([
     _context = new AIContext(_aiConstructors);
     // caching frequently used configuration values
     config.executeWhenReady(function () {
+        var voiceMessages = config.getBattleSetting(config.BATTLE_SETTINGS.VOICE_MESSAGES);
         _turnAccelerationDuration = config.getSetting(config.BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S);
         _turnIntensityBaseFactor = 1000 / _turnAccelerationDuration;
         _jumpInPositionSeed = Math.seed(Math.random());
         _aimErrorSeed = Math.seed(Math.random());
         _evasionSeed = Math.seed(Math.random());
         _chargeSeed = Math.seed(Math.random());
+        _radioVoiceCount = config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES).length;
+        _radioMessageAttacking = voiceMessages.indexOf("attacking");
+        _radioMessageApproaching = voiceMessages.indexOf("approaching");
+        _radioMessageClear = voiceMessages.indexOf("clear");
+        _radioMessageCompliment = voiceMessages.indexOf("compliment");
+        _radioMessageDamaged = voiceMessages.indexOf("damaged");
+        _radioMessageDie = voiceMessages.indexOf("die");
+        _radioMessageEvading = voiceMessages.indexOf("evading");
+        _radioMessageHit = voiceMessages.indexOf("hit");
+        _radioMessageIncoming = voiceMessages.indexOf("incoming");
+        _radioMessageKill = voiceMessages.indexOf("kill");
+        _radioMessageLeaving = voiceMessages.indexOf("leaving");
+        _radioMessageMissiles = voiceMessages.indexOf("missiles");
+        _radioMessageStandDown = voiceMessages.indexOf("standdown");
+        _radioMessageWingmanLost = voiceMessages.indexOf("wingmanlost");
+        _radioMessageShipLost = voiceMessages.indexOf("shiplost");
+        _sameRadioMessageDelay = config.getBattleSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_SAME_SOURCE_SAME_TYPE);
+        _differentRadioMessageDelay = config.getBattleSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_SAME_SOURCE_DIFFERENT_TYPE);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module
@@ -1910,7 +2294,10 @@ define([
         positionForInwardJump: positionForInwardJump,
         clearAIs: _context.clearAIs.bind(_context),
         addAI: _context.addAI.bind(_context),
+        getVoiceOfSpacecraft: _context.getVoiceOfSpacecraft.bind(_context),
         control: _context.control.bind(_context),
+        broadcastSpacecraftEvent: _context.broadcastSpacecraftEvent.bind(_context),
+        handlePlayerGainKill: _context.handlePlayerGainKill.bind(_context),
         handleSceneMoved: _context.handleSceneMoved.bind(_context)
     };
 });

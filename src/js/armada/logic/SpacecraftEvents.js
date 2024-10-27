@@ -1,5 +1,5 @@
 /**
- * Copyright 2017, 2020-2022 Krisztián Nagy
+ * Copyright 2017, 2020-2024 Krisztián Nagy
  * @file Event identifiers for spacecraft related events
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -83,6 +83,11 @@ define(function () {
      * @property {String} [section] (enum HUDSection - key in camelCase) The id of the section of the HUD to change. No value means the whole HUD
      * @property {String} state (enum HUDSectionState - key in camelCase) The state to change to
      */
+    /**
+     * @typedef {Object} SpacecraftEvents~RadioData
+     * @property {Number} voice The index of the pilot voice to use (from the logic.battle.pilotVoices array in settings.json)
+     * @property {Number} messageType The index of the generic radio message to use (from the logic.battle.voiceMessages array in settings.json)
+     */
     return {
         /** Another spacecraft targets the spacecraft. */
         BEING_TARGETED: "beingTargeted",
@@ -119,6 +124,10 @@ define(function () {
         /** The spacecraft received a command (to be handled by the AI) */
         COMMAND_RECEIVED: "commandReceived",
         /** The HUD of the spacecraft should be updated */
-        HUD: "hud"
+        HUD: "hud",
+        /** The spacecraft broadcasts a radio message */
+        RADIO: "radio",
+        /** The spacecraft gained a kill - it destroyed another spacecraft */
+        GAIN_KILL: "gainKill"
     };
 });

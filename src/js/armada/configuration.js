@@ -1551,6 +1551,54 @@ define([
                 type: "number"
             }
         },
+        /**
+         * The list of identifiers for the different voices that can be used for playing radio messages transmitted by AI pilots (e.g. wingman1)
+         */
+        PILOT_VOICES: {
+            name: "pilotVoices",
+            type: _customTypes.STRING_ARRAY
+        },
+        /**
+         * The list of identifiers for the different radio chatter messages that the AI ships can broadcast (such as when starting
+         * an attack or taking damage). Used to load the sound samples based on the ID to a list and play them when the corresponding
+         * event happens.
+         */
+        VOICE_MESSAGES: {
+            name: "voiceMessages",
+            type: _customTypes.STRING_ARRAY
+        },
+        /**
+         * Generic radio voice messages transmitted by the AI pilots will not be played / displayed if less than this time has passed
+         * since the last time a message of the same type was played / displayed, in milliseconds.
+         */
+        MIN_VOICE_MESSAGE_DELAY_FOR_SAME_TYPE: {
+            name: "minVoiceMessageDelayForSameType",
+            type: "number"
+        },
+        /**
+         * Generic radio voice messages transmitted by the AI pilots will not be played / displayed if less than this time has passed
+         * since the last time a message of a different type was played / displayed, in milliseconds.
+         */
+        MIN_VOICE_MESSAGE_DELAY_FOR_DIFFERENT_TYPE: {
+            name: "minVoiceMessageDelayForDifferentType",
+            type: "number"
+        },
+        /**
+         * Generic radio voice messages transmitted by the same AI pilot will not be played / displayed if less than this time has passed
+         * since the last time a message of the same type was played / displayed, in milliseconds.
+         */
+        MIN_VOICE_MESSAGE_DELAY_FOR_SAME_SOURCE_SAME_TYPE: {
+            name: "minVoiceMessageDelayForSameSourceSameType",
+            type: "number"
+        },
+        /**
+         * Generic radio voice messages transmitted by the same AI pilot will not be played / displayed if less than this time has passed
+         * since the last time a message of a different type was played / displayed, in milliseconds.
+         */
+        MIN_VOICE_MESSAGE_DELAY_FOR_SAME_SOURCE_DIFFERENT_TYPE: {
+            name: "minVoiceMessageDelayForSameSourceDifferentType",
+            type: "number"
+        },
         WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE: {
             name: "weaponFireSoundStackMinimumDistance",
             type: "number"

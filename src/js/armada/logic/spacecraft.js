@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2023 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file Implementation of the Spacecraft game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -2750,6 +2750,7 @@ define([
                     if (networking.isInGame()) {
                         networking.registerPlayerKill(hitBy.getID(), this.getID());
                     }
+                    hitBy.handleEvent(SpacecraftEvents.GAIN_KILL, this._anySpacecraftHitData);
                 }
             }
             this._hitpoints = 0;
@@ -2859,13 +2860,15 @@ define([
     /**
      * Engages jump engines to leave the scene of the mission
      * @param {Boolean} toggle If true, calling the method while the jump out sequence is under way will cancel the jump
+     * @returns {Boolean} Whether a jump out was initiated / toggled
      */
     Spacecraft.prototype.jumpOut = function (toggle) {
         if (!this._away && this._jumpEngine) {
-            this._jumpEngine.jumpOut(toggle);
+            return this._jumpEngine.jumpOut(toggle);
         } else {
             application.log_DEBUG("Warning! Spacecraft '" + this.getDisplayName() + "' cannot jump out because it is already away or has no jump engines!");
         }
+        return false;
     };
     /**
      * Engages jump engines to enter the scene of the mission

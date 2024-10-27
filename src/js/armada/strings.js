@@ -520,6 +520,9 @@ define([
     strings.TIP = {
         PREFIX: {name: "tip.", optional: true}
     };
+    strings.RADIO = {
+        PREFIX: {name: "radio.", optional: true}
+    };
     /**
      * Returns whether the passed word start with a vowel (one that is recognized)
      * @param {String} word
