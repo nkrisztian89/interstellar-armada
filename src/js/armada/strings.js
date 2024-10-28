@@ -358,6 +358,7 @@ define([
         LICENSE_PARAGRAPH: {name: "about.licenseParagraph"},
         REQUIRE_JS_LICENSE: {name: "about.requireJSLicense"},
         ELECTRON_LICENSE: {name: "about.electronLicense"},
+        ELEVENLABS_TERMS: {name: "about.elevenlabsTerms"},
         HERE: {name: "about.here"}
     };
     strings.SETTING = {

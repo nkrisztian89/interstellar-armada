@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2023 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2024 Krisztián Nagy
  * @file This module manages and provides the About screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -112,7 +112,8 @@ define([
             firefox: _link("https://www.mozilla.org/firefox", "Firefox"),
             ubuntu: _link("https://ubuntu.com/desktop", "Ubuntu"),
             eslint: _link("https://github.com/joakim-eriksson/nb-eslint", "ESLint"),
-            python: _link("https://github.com/albilu/netbeansPython", "Python")
+            python: _link("https://github.com/albilu/netbeansPython", "Python"),
+            elevenlabs: _link("https://elevenlabs.io", "ElevenLabs")
         });
         this._aboutLicenseParagraph.customizeContent({
             license: _link("https://www.gnu.org/licenses/gpl-3.0-standalone.html", "GNU GPLv3"),
@@ -123,7 +124,9 @@ define([
             requireJS: _link("https://requirejs.org", "RequireJS"),
             requireJSLicense: _link("license/RequireJS-License.txt", strings.get(strings.ABOUT.REQUIRE_JS_LICENSE)),
             assetLicense: _link("https://creativecommons.org/licenses/by/4.0/", "CC BY 4.0"),
-            soundLicense: _link("license/sfx-license.txt", strings.get(strings.ABOUT.HERE))
+            soundLicense: _link("license/sfx-license.txt", strings.get(strings.ABOUT.HERE)),
+            elevenlabs: _link("https://elevenlabs.io", "ElevenLabs"),
+            elevenlabsTerms: _link("https://elevenlabs.io/terms-of-use-eu", strings.get(strings.ABOUT.ELEVENLABS_TERMS))
         });
         if (game.usesElectron()) {
             this._aboutLicenseElectronParagraph.customizeContent({

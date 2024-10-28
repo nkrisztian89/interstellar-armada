@@ -29,5 +29,5 @@ The voice-overs (all files in the assets/sfx/voice folder) were generated using 
 and some under a paid license by Krisztián Nagy and subsequently edited using Audacity (2023-2024). You may not use these files for any
 commercial purpose and must retain the attribution to ElevenLabs (in the form of having 11.ai in the filename and an accompanying license
 note referencing ElevenLabs and their terms of service, such as this one) if you are to republish them (such as by forking the repository)
-as well as comply with the terms of service and Prohibited Use Policy of ElevenLabs (https://elevenlabs.io/terms-of-use), as if you have had
+as well as comply with the terms of service and Prohibited Use Policy of ElevenLabs (https://elevenlabs.io/terms-of-use-eu), as if you have had
 created the files yourself as a free user of the service.
