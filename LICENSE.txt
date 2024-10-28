@@ -7,7 +7,7 @@ The source code of the game (HTML, Javascript, CSS and SCSS (Sass) source files,
 exceptions mentioned in this file) is created by Krisztián Nagy and released under the GNU GPL v3 license: see the full text of the license 
 in license/GPL.txt or at http://www.gnu.org/licenses/gpl-3.0-standalone.html.
 
-The included source code of the RequireJS library (found within the js/libs folder) is created by a 3rd party and its license is located at 
+The included source code of the RequireJS library (found within the assets/libs folder) is created by a 3rd party and its license is located at
 license/RequireJS-License.txt.
 
 The authorship and license information of the included Sansation font can be found at license/Sansation-License.txt or at 
@@ -16,7 +16,7 @@ http://www.dafont.com/sansation.font.
 The authorship and license information of the included Aldrich font can be found at https://fonts.google.com/specimen/Aldrich.
 The logo of the game features the Audiowide font, the information about which can be found at https://fonts.google.com/specimen/Audiowide. 
 The text of the Open Font License (the license of the above two fonts) is included at license/OFL.txt for convenience.
-Some minor modifications to the Aldrich font were made by Krisztián Nagy, detailed in fonts/FONTLOG.txt file.
+Some minor modifications to the Aldrich font were made by Krisztián Nagy, detailed in assets/fonts/FONTLOG.txt file.
 
 The images, 3D models, textures and music files were all created by Krisztián Nagy (Copyright (C) 2014-2023) and are released under the 
 CC BY 4.0 license found at license/CC-BY-4.0.txt or at https://creativecommons.org/licenses/by/4.0. 
