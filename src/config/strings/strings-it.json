@@ -797,9 +797,9 @@
         "showReadyMessage": "Mostra messaggio 'pronto' all'inizio delle missioni:"
     },
     "controller": {
-        "general": "Generale",
-        "fighter": "Combattente",
-        "camera": "Visuale"
+        "general": "generale",
+        "fighter": "combattente",
+        "camera": "visuale"
     },
     "inputDevice": {
         "keyboard": "Tastiera",
@@ -837,7 +837,7 @@
         "controllerDisabled": "disabilitato",
         "controllerProfile": "Profilo:",
         "vibrationEnabled": "Vibra quando vieni colpito:",
-        "controllerHeading": "controlli {controllerType}",
+        "controllerHeading": "Controlli {controllerType}",
         "action": "Azione"
     },
     "actionDescriptions": {
