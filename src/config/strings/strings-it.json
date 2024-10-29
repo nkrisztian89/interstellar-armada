@@ -2,7 +2,7 @@
     "locale": "it-IT",
     "grammar": {
         "definiteArticle": {
-            "beforeVowel": "il",
+            "beforeVowel": "l'",
             "beforeConsonant": "il"
         }, 
         "and": "e"
@@ -50,6 +50,7 @@
         "0.5.1": "<ul><li>Aggiunto il rilevamento delle collisioni tra navicelle spaziali</li><li>Molte ottimizzazioni per garantire che le prestazioni siano almeno le stesse di prima che il rilevamento delle collisioni fosse aggiunto</li><li>Può gestire un numero maggiore di effetti sonori</li><li>Risolto il profilo errato applicato quando un gamepad viene rilevato</li><li>Risolto il problema dei colpi non rilevati a distanza ravvicinata</li><li>Nuovo effetto sonoro unico per il relè di comunicazione</li><li>Diverse correzioni importanti e piccoli miglioramenti all'editor di Interstellar Armada</li></ul>",
         "0.5.2": "<ul><li>Aggiunta la missione <strong>\"Resistere\"</strong> presentando il nuovo bombardiere pirata <strong>Stingray</strong></li><li>Aggiunto un tutorial di base per l'Editor di Interstellar Armada</li><li>Risolto il problema delle condizioni degli eventi delle missioni opzionali non funzionanti</li><li>Gli obiettivi di missione basati sulla distanza possono ora riferirsi a più navicelle spaziali</li><li>L'Editor ora suggerisce i nomi delle squadre traducibili</li></ul>",
         "0.5.3": "<ul><li>Aggiunta una <strong>modalità di gioco cooperativa</strong> alle partite multigiocatore</li><li>Piccole regolazioni di bilanciamento per rendere alcune missioni (in particolare \"La Corvette ribelle\" e \"Nascondino\") un po' più facili</li><li>Importanti miglioramenti all'usabilità dell'editor di missioni: le navicelle spaziali possono essere selezionate per la modifica cliccandole nell'anteprima; le navicelle spaziali che saltano in base alle ancore ora vengono visualizzate anche nell'anteprima; nuove icone dei pulsanti e migliori tooltip; i popup possono essere spostati trascinandoli con il mouse</li></ul>",
+        "0.5.4": "<ul><li>Nuova missione: \"L'assedio\"</li><li>Nuove astronavi: Stazione centrale e piattaforma della torretta Sentinel</li><li>Le torrette non sparano se sono ostacolate dalla loro stessa nave</li><li>Le armi ora ruotano nella visuale del bersaglio</li><li>Tracciamento delle statistiche per le missioni della community (il mittente può vederle)</li><li>Aggiunta una schermata di riepilogo del controllo touch per dispositivi con touchscreen</li><li>La visualizzazione della versione del gioco, del contatore FPS e del popup all'inizio della missione può essere disattivata nelle impostazioni</li><li>Pulsante di avvio della dimostrazione nascosto per impostazione predefinita, può essere riattivato nelle impostazioni</li><li>File di modello più piccoli e ottimizzazione delle prestazioni</li><li>Diverse correzioni, soprattutto per i dispositivi mobili</li><li>Numerosi miglioramenti e correzioni all'usabilità per l'editor di Interstellar Armada</li><li>3 nuovi capitoli aggiunti al tutorial dell'editor di Interstellar Armada</li></ul>",
         "button": "Start"
     },
     "firstMultiRunNote": {
@@ -160,7 +161,7 @@
         "submissionTitleColumn": "Titolo",
         "submissionDateColumn": "Inviato",
         "submissionStatusColumn": "Stato",
-        "submissionStatsColumn": "Stats",
+        "submissionStatsColumn": "Statistiche",
         "submissionActionsColumn": "Azioni",
         "deleteSubmissionButton": "Rimuovi",
         "revokeSubmissionButton": "Revoca",
@@ -172,9 +173,9 @@
             "rejected": "Rifiutata:"
         },
         "submissionStats": {
-            "started": "Started: {count}",
-            "won": "Won: {count}",
-            "lost": "Lost: {count}"
+            "started": "Iniziata: {count}",
+            "won": "Vinta: {count}",
+            "lost": "Persa: {count}"
         }
     },
     "missionHubError": {
@@ -745,7 +746,7 @@
         "language": "Lingua:",
         "analytics": "Segnala statistiche anonime:",
         "analyticsNote": "I rapporti non contengono informazioni personali, ma solo statistiche sull'uso delle funzioni e sulle prestazioni di gioco con un ID generato a caso. Si prega di aiutare lo sviluppo mantenendo questa opzione attiva.",
-        "showDemoButton": "Show 'Launch demo' button for missions:"
+        "showDemoButton": "Mostra il pulsante 'Avvia dimostrazione' per le missioni:"
     },
     "graphics": {
         "backButton": "Torna al menu",
@@ -783,17 +784,17 @@
         "hudTitle": "HUD",
         "cameraTitle": "Visuale",
         "controlsTitle": "Controlli",
-        "otherTitle": "Other",
+        "otherTitle": "Altre",
         "targetHealthAtCenter": "Barra di integrità del bersaglio sempre al centro:",
         "offsetImpactIndicators": "Sfoca indicatori di impatto:",
         "relativeTargetOrientation": "Mostra il bersaglio in orientamento relativo:",
-        "showVersionInfo": "Show game version:",
-        "showFpsCounter": "Show FPS counter:",
+        "showVersionInfo": "Mostra la versione del gioco:",
+        "showFpsCounter": "Mostra contatore FPS:",
         "preferredFighterView": "Vista preferita del combattente:",
         "preferredShipView": "Vista dell'astronave preferita:",
         "demoViewSwitching": "Cambio automatico di visuale in modalità dimostrazione:",
         "defaultSalvoMode": "Modalità missile in serie per impostazione predefinita:",
-        "showReadyMessage": "Show ready message at the start of missions:"
+        "showReadyMessage": "Mostra messaggio 'pronto' all'inizio delle missioni:"
     },
     "controller": {
         "general": "Generale",
