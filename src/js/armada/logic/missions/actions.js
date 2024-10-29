@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2023 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file The classes defining actions which can be executed during mission events
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -304,7 +304,7 @@ define([
             }
         }
         game.getScreen().queueHUDMessage({
-            text: (this._params.source ? ("{spacecrafts/" + this._params.source + "}: ") : "") + strings.get(
+            text: strings.get(
                     strings.MISSION.PREFIX,
                     utils.getFilenameWithoutExtension(mission.getName()) + strings.MISSION.MESSAGES_SUFFIX.name + this._params.textID,
                     (typeof this._params.text === "object") ? this._params.text[strings.getLanguage()] : this._params.text),
@@ -314,8 +314,16 @@ define([
             color: this._params.color,
             silent: this._params.silent,
             noBackground: this._params.noBackground,
-            source: source
+            source: source,
+            id: this._params.textID
         }, this._params.urgent);
+    };
+    /**
+     * Returns the string ID of the message that can be used as a translation key or for choosing the appropriate sound sample to play.
+     * @returns {String}
+     */
+    MessageAction.prototype.getMessageId = function () {
+        return this._params.textID;
     };
     // #########################################################################
     /**

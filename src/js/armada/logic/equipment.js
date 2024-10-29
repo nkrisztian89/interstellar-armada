@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2023 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file Implementations of the various classes that represent all the different types of equipment to be added to spacecrafts
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -4836,6 +4836,7 @@ define([
     /**
      * Initiates the jump out sequence
      * @param {Boolean} toggle If true, calling the method while the jump out sequence is under way will cancel the jump
+     * @returns {Boolean} Whether the jump out sequence was initiated / toggled.
      */
     JumpEngine.prototype.jumpOut = function (toggle) {
         var wasPreparing;
@@ -4857,7 +4858,7 @@ define([
                         this._soundClip.play();
                     }
                 }
-                break;
+                return true;
                 // cancelling jump out sequence
             case JumpEngine.JumpState.ALIGNING_VELOCITY:
             case JumpEngine.JumpState.PREPARING:
@@ -4887,9 +4888,11 @@ define([
                             this._soundClip.play();
                         }
                     }
+                    return true;
                 }
                 break;
         }
+        return false;
     };
     /**
      * Initiates the jump in sequence

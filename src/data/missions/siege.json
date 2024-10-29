@@ -1,6 +1,6 @@
 {
     "description": "[p]The time has finally come to strike the pirate base! We expect that this major blow will put an end to their large scale operations in the sector once and for all![p]We have no time to waste. Due to the successful ambush we pulled off thanks to you, it is likely they figured out that we are aware of their base's coordinates and will prepare for the attack or relocate soon. However, if we act quicky, we should still be able to catch them off guard, as they will be unable to muster a heavy defense after the losses they have just incurred.[p]Under normal circumstances, a full strike force would be mobilized for such an important anti-criminal operation. But fleet command has just recently recalled almost all of our ships without an explanation. Thankfully, the [s]Elba[] frigate is still available and its cannons greatly outrange any turrets and sentries that would be protecting the station based on the data you recovered.[p]You will fly [s]Alpha[] squad, get within visual range of the station, designated as [s:h]Tortuga[], and confirm there are no threats present that could jeopardize the mission. Then we will send in the [s]Elba[], and you will escort it into firing range, screening it from any potential fighter patrols that could interfere. [b]Do NOT engage the station yourself![] If all goes according to plan, you should not have to contend with much opposition, just watch as the [s]Elba[] obliterates the station and its sentry guns. However, stay cautious as we do not have detailed information about the exact nature of their defenses. Good luck!",
-    "environment": "mera",
+    "environment": "tulvor",
     "teams": [{
             "faction": "empire"
         }, {
@@ -618,16 +618,16 @@
                     }
                 }]
         }],
-    "anticipationTheme": "anticipation",
-    "combatTheme": "combat2",
+    "anticipationTheme": "anticipation3",
+    "combatTheme": "combat4",
     "views": [{
             "name": "tortuga",
             "movable": false,
             "turnable": false,
-            "position": [-600, -450, 75],
+            "position": [-600, -450, 275],
             "rotations": [{
                     "axis": "X",
-                    "degrees": -85
+                    "degrees": -65
                 }, {
                     "axis": "Z",
                     "degrees": 65

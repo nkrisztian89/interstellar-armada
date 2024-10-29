@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2023 Krisztián Nagy
+ * Copyright 2016-2024 Krisztián Nagy
  * @file Augments the general strings module with constants and functions to conveniently access strings in the game and to verify their 
  * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -346,9 +346,7 @@ define([
         CREDITS_PROGRAMMING: {name: "about.creditsProgramming"},
         CREDITS_REQUIREJS_NOTE: {name: "about.creditsRequireJSNote"},
         CREDITS_FONTS: {name: "about.creditsFonts"},
-        CREDITS_MODELS: {name: "about.credits3DModels"},
-        CREDITS_TEXTURES: {name: "about.creditsTextures"},
-        CREDITS_MUSIC: {name: "about.creditsMusic"},
+        CREDITS_MODELS_TEXTURES_MUSIC: {name: "about.credits3DModelsTexturesMusic"},
         CREDITS_SFX: {name: "about.creditsSoundEffects"},
         CREDITS_FREESOUND_NOTE: {name: "about.creditsFreesoundNote"},
         CREDITS_OTHER_SOUNDS_NOTE: {name: "about.creditsOtherSoundsNote"},
@@ -360,6 +358,7 @@ define([
         LICENSE_PARAGRAPH: {name: "about.licenseParagraph"},
         REQUIRE_JS_LICENSE: {name: "about.requireJSLicense"},
         ELECTRON_LICENSE: {name: "about.electronLicense"},
+        ELEVENLABS_TERMS: {name: "about.elevenlabsTerms"},
         HERE: {name: "about.here"}
     };
     strings.SETTING = {
@@ -436,6 +435,7 @@ define([
         MASTER_VOLUME: {name: "audio.masterVolume"},
         MUSIC_VOLUME: {name: "audio.musicVolume"},
         SFX_VOLUME: {name: "audio.sfxVolume"},
+        VOICE_VOLUME: {name: "audio.voiceVolume"},
         UI_VOLUME: {name: "audio.uiVolume"}
     };
     strings.CONTOLLER = {
@@ -520,6 +520,9 @@ define([
     };
     strings.TIP = {
         PREFIX: {name: "tip.", optional: true}
+    };
+    strings.RADIO = {
+        PREFIX: {name: "radio.", optional: true}
     };
     /**
      * Returns whether the passed word start with a vowel (one that is recognized)

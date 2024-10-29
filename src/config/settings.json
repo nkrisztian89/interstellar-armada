@@ -89,6 +89,7 @@
         "masterVolume": 1,
         "musicVolume": 1,
         "sfxVolume": 1,
+        "voiceVolume": 1,
         "uiVolume": 1
     },
     "logic": {
@@ -98,6 +99,7 @@
             "luminosityFactorsArrayName": "luminosityFactors",
             "useVerticalCameraValues": true,
             "menuMusic": "menu",
+            "briefingMusic": "briefing",
             "musicFadeInDuration": 0.1,
             "themeCrossfadeDuration": 1.5,
             "musicFadeOutDuration": 0.1,
@@ -131,21 +133,18 @@
             "wireframeShaderName": "oneColorReveal",
             "showSolidModel": true,
             "solidShaderName": "reveal",
-            "lightSources": [
-                {
-                    "color": [1.0, 1.0, 1.0],
-                    "direction": [0.0, 1.0, 1.0]
-                },
-                {
-                    "color": [1.0, 1.0, 1.0],
-                    "direction": [1.0, 0.0, 0.0]
-                }
-            ],
+            "lightSources": [{
+                    "color": [1, 1, 1],
+                    "direction": [0, 1, 1]
+                }, {
+                    "color": [1, 1, 1],
+                    "direction": [1, 0, 0]
+                }],
             "startSizeFactor": 1,
             "minimumSizeFactor": 0.9,
             "maximumSizeFactor": 1.6,
             "modelRevealAnimation": true,
-            "revealColor": [1.0, 1.0, 1.0, 1.0],
+            "revealColor": [1, 1, 1, 1],
             "revealFPS": 60,
             "revealDuration": 2000,
             "revealSolidDelayDuration": 2000,
@@ -157,7 +156,7 @@
             "rotationStartAngle": 180,
             "rotationViewAngle": 60,
             "rotationDuration": 4000,
-            "rotationMouseSensitivity": 1.0,
+            "rotationMouseSensitivity": 1,
             "databaseRenderFPS": 60
         },
         "battle": {
@@ -995,6 +994,33 @@
                 "newHostilesAlertDuration": 3250,
                 "newHostilesAlertBlinkInterval": 500
             },
+            "pilotVoices": [
+                "wingman1",
+                "wingman2",
+                "wingman3",
+                "wingman4"
+            ],
+            "voiceMessages": [
+                "attacking",
+                "approaching",
+                "clear",
+                "compliment",
+                "evading",
+                "hit",
+                "damaged",
+                "incoming",
+                "kill",
+                "leaving",
+                "missiles",
+                "standdown",
+                "die",
+                "wingmanlost",
+                "shiplost"
+            ],
+            "minVoiceMessageDelayForSameType": 500,
+            "minVoiceMessageDelayForDifferentType": 250,
+            "minVoiceMessageDelayForSameSourceSameType": 5000,
+            "minVoiceMessageDelayForSameSourceDifferentType": 1500,
             "weaponFireSoundStackMinimumDistance": 100,
             "hitSoundStackingTimeThreshold": 0.1,
             "hitSoundStackingVolumeFactor": 0.5,
@@ -1007,9 +1033,10 @@
             "demoDoubleViewSwitchChance": 0.5,
             "musicVolumeInMenus": 0.5,
             "sfxVolumeInMenus": 0.1,
+            "voiceVolumeInMenus": 0.1,
             "ambientMusic": "ambient",
-            "anticipationMusic": ["anticipation", "anticipation2"],
-            "combatMusic": ["combat", "combat2", "combat3"],
+            "anticipationMusic": ["anticipation", "anticipation2", "anticipation3"],
+            "combatMusic": ["combat", "combat2", "combat3", "combat4"],
             "victoryMusic": "victory",
             "defeatMusic": "defeat",
             "debriefingVictoryMusic": "debriefing_victory",

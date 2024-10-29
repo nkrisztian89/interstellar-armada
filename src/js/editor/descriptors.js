@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2019-2023 Krisztián Nagy
+ * Copyright 2016-2017, 2019-2024 Krisztián Nagy
  * @file Provides the descriptor objects that outline the structure of properties for the various resource / class categories of 
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -1243,6 +1243,12 @@ define([
                     name: "width",
                     type: POSITIVE_RATIO,
                     defaultValue: 1
+                },
+                THICKNESS: {
+                    name: "thickness",
+                    type: POSITIVE_RATIO,
+                    optional: true,
+                    defaultText: "same as width"
                 },
                 MUZZLE_FLASH: {
                     name: "muzzleFlash",

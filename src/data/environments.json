@@ -3,8 +3,8 @@
         "name": "environments",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.6-dev:893 (2020.05.10.)",
-        "creationTime": "Mon May 11 2020 20:36:15 GMT+0200 (közép-európai nyári idő)"
+        "version": "0.5.5-dev:1205 (2024.10.02.)",
+        "creationTime": "Sun Oct 13 2024 15:29:45 GMT+0200 (Central European Summer Time)"
     },
     "environments": [{
             "name": "cathagan",
@@ -293,5 +293,48 @@
             "angularDrag": 0.025,
             "sensorRangeFactor": 0.33,
             "lockingTimeFactor": 3
+        }, {
+            "name": "caevas",
+            "location": "Caevas",
+            "skyboxes": [{
+                    "class": "planet_medium"
+                }],
+            "backgroundObjects": [{
+                    "class": "standardSun",
+                    "position": {
+                        "angleAlpha": -124,
+                        "angleBeta": 72
+                    },
+                    "size": 300
+                }],
+            "dustClouds": [{
+                    "class": "standard"
+                }],
+            "ambientColor": [0.1, 0.1, 0.1]
+        }, {
+            "name": "tulvor",
+            "location": "Tulvor",
+            "skyboxes": [{
+                    "class": "volcanicPlanet_medium"
+                }],
+            "backgroundObjects": [{
+                    "class": "orangeSun",
+                    "position": {
+                        "angleAlpha": 104.76,
+                        "angleBeta": 9.99
+                    },
+                    "size": 400
+                }, {
+                    "class": "volcanicPlanetLightSource",
+                    "size": 1,
+                    "position": {
+                        "angleAlpha": 104.76,
+                        "angleBeta": -60
+                    }
+                }],
+            "dustClouds": [{
+                    "class": "standard"
+                }],
+            "ambientColor": [0.2, 0.1, 0.1]
         }]
 }

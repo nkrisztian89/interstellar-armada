@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2023 Krisztián Nagy
+ * Copyright 2016-2024 Krisztián Nagy
  * @file This module manages and provides the Missions screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -163,7 +163,7 @@ define([
                     show: function () {
                         audio.resetMasterVolume();
                         audio.resetMusicVolume();
-                        audio.playMusic(armadaScreens.MENU_THEME);
+                        audio.playMusic(armadaScreens.BRIEFING_THEME, undefined, undefined, false);
                     }
                 },
                 this._getKeyCommands(),

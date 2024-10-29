@@ -266,6 +266,19 @@
                 "high": ""
             }
         }, {
+            "name": "repeaterProjectile",
+            "basepath": "projectile/repeater",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_128",
+                "medium": "_256",
+                "high": ""
+            }
+        }, {
             "name": "proton",
             "basepath": "projectile/proton_full",
             "format": "png",
@@ -594,6 +607,40 @@
                 "negY": "stars_4000",
                 "posZ": "stars_4000",
                 "negZ": "stars_4000"
+            },
+            "qualitySuffixes": {
+                "low": "_512",
+                "medium": "_1024",
+                "high": "_2048"
+            }
+        }, {
+            "name": "planet_medium",
+            "basepath": "background/",
+            "format": "png",
+            "imageNames": {
+                "posX": "stars_4000",
+                "negX": "stars_4000",
+                "posY": "planet_4000",
+                "negY": "stars_4000",
+                "posZ": "stars_4000",
+                "negZ": "stars_4000"
+            },
+            "qualitySuffixes": {
+                "low": "_512",
+                "medium": "_1024",
+                "high": "_2048"
+            }
+        }, {
+            "name": "volcanicPlanet_medium",
+            "basepath": "background/",
+            "format": "png",
+            "imageNames": {
+                "posX": "volcanicPlanet_right_4000",
+                "negX": "volcanicPlanet_left_4000",
+                "posY": "volcanicPlanet_top_4000",
+                "negY": "volcanicPlanet_bottom_4000",
+                "posZ": "stars_4000",
+                "negZ": "volcanicPlanet_front"
             },
             "qualitySuffixes": {
                 "low": "_512",
@@ -1225,6 +1272,26 @@
                     "maxLOD": 4
                 }]
         }, {
+            "name": "repeater",
+            "basepath": "weapons/repeater",
+            "format": "egm",
+            "files": [{
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }]
+        }, {
             "name": "turret",
             "basepath": "weapons/turret",
             "format": "egm",
@@ -1751,6 +1818,9 @@
             "name": "piratePlasmaShot",
             "samples": ["weapon/weaponshot_pirate.ogg"]
         }, {
+            "name": "repeaterShot",
+            "samples": ["weapon/weaponshot_repeater.ogg"]
+        }, {
             "name": "protonShot",
             "samples": ["weapon/weaponshot-proton.ogg"]
         }, {
@@ -1837,10 +1907,376 @@
         }, {
             "name": "buttonClick",
             "samples": ["ui/button_click.ogg"]
+        }, {
+            "name": "wingman1_attacking",
+            "samples": ["voice/wingman1/attacking1_11.ai.ogg", "voice/wingman1/attacking3_11.ai.ogg", "voice/wingman1/attacking4_11.ai.ogg", "voice/wingman1/attacking5_11.ai.ogg", "voice/wingman1/attacking6_11.ai.ogg", "voice/wingman1/attacking7_11.ai.ogg", "voice/wingman1/attacking8_11.ai.ogg"]
+        }, {
+            "name": "wingman1_approaching",
+            "samples": ["voice/wingman1/approaching1_11.ai.ogg", "voice/wingman1/approaching2_11.ai.ogg", "voice/wingman1/approaching3_11.ai.ogg", "voice/wingman1/approaching4_11.ai.ogg", "voice/wingman1/approaching5_11.ai.ogg"]
+        }, {
+            "name": "wingman1_clear",
+            "samples": ["voice/wingman1/clear1_11.ai.ogg", "voice/wingman1/clear2_11.ai.ogg", "voice/wingman1/clear3_11.ai.ogg"]
+        }, {
+            "name": "wingman1_compliment",
+            "samples": ["voice/wingman1/compliment1_11.ai.ogg", "voice/wingman1/compliment2_11.ai.ogg", "voice/wingman1/compliment3_11.ai.ogg"]
+        }, {
+            "name": "wingman1_damaged",
+            "samples": ["voice/wingman1/damaged1_11.ai.ogg", "voice/wingman1/damaged2_11.ai.ogg", "voice/wingman1/damaged3_11.ai.ogg"]
+        }, {
+            "name": "wingman1_evading",
+            "samples": ["voice/wingman1/evading1_11.ai.ogg", "voice/wingman1/evading2_11.ai.ogg", "voice/wingman1/evading3_11.ai.ogg"]
+        }, {
+            "name": "wingman1_hit",
+            "samples": ["voice/wingman1/hit1_11.ai.ogg", "voice/wingman1/hit2_11.ai.ogg", "voice/wingman1/hit3_11.ai.ogg", "voice/wingman1/hit4_11.ai.ogg", "voice/wingman1/hit5_11.ai.ogg"]
+        }, {
+            "name": "wingman1_incoming",
+            "samples": ["voice/wingman1/incoming1_11.ai.ogg", "voice/wingman1/incoming2_11.ai.ogg", "voice/wingman1/incoming3_11.ai.ogg", "voice/wingman1/incoming4_11.ai.ogg"]
+        }, {
+            "name": "wingman1_kill",
+            "samples": ["voice/wingman1/kill1_11.ai.ogg", "voice/wingman1/kill2_11.ai.ogg", "voice/wingman1/kill3_11.ai.ogg", "voice/wingman1/kill4_11.ai.ogg", "voice/wingman1/kill5_11.ai.ogg", "voice/wingman1/kill6_11.ai.ogg"]
+        }, {
+            "name": "wingman1_leaving",
+            "samples": ["voice/wingman1/leaving1_11.ai.ogg", "voice/wingman1/leaving2_11.ai.ogg", "voice/wingman1/leaving3_11.ai.ogg", "voice/wingman1/leaving4_11.ai.ogg"]
+        }, {
+            "name": "wingman1_missiles",
+            "samples": ["voice/wingman1/missiles1_11.ai.ogg", "voice/wingman1/missiles2_11.ai.ogg", "voice/wingman1/missiles3_11.ai.ogg", "voice/wingman1/missiles4_11.ai.ogg"]
+        }, {
+            "name": "wingman1_standdown",
+            "samples": ["voice/wingman1/standdown1_11.ai.ogg", "voice/wingman1/standdown2_11.ai.ogg", "voice/wingman1/standdown3_11.ai.ogg"]
+        }, {
+            "name": "wingman1_die",
+            "samples": ["voice/wingman1/die1_11.ai.ogg", "voice/wingman1/die2_11.ai.ogg", "voice/wingman1/die3_11.ai.ogg"]
+        }, {
+            "name": "wingman1_wingmanlost",
+            "samples": ["voice/wingman1/wingmanlost1_11.ai.ogg", "voice/wingman1/wingmanlost2_11.ai.ogg", "voice/wingman1/wingmanlost3_11.ai.ogg", "voice/wingman1/wingmanlost4_11.ai.ogg"]
+        }, {
+            "name": "wingman1_shiplost",
+            "samples": ["voice/wingman1/shiplost1_11.ai.ogg", "voice/wingman1/shiplost2_11.ai.ogg", "voice/wingman1/shiplost3_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_headhunt_rubyBladeArrived",
+            "samples": ["voice/wingman1/mission/headhunt/rubyBladeArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_destroyCorvette_start",
+            "samples": ["voice/wingman1/mission/destroyCorvette/start_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_destroyCorvette_deltaArrived",
+            "samples": ["voice/wingman1/mission/destroyCorvette/deltaArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_destroyCorvette_hostileFightersArrived",
+            "samples": ["voice/wingman1/mission/destroyCorvette/hostileFightersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_siege_start",
+            "samples": ["voice/wingman1/mission/siege/start_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_siege_elba",
+            "samples": ["voice/wingman1/mission/siege/elba_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_siege_bombers",
+            "samples": ["voice/wingman1/mission/siege/bombers_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_siege_bombersDown",
+            "samples": ["voice/wingman1/mission/siege/bombersDown_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_siege_fightersApproach",
+            "samples": ["voice/wingman1/mission/siege/fightersApproach_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_siege_moreFighters",
+            "samples": ["voice/wingman1/mission/siege/moreFighters_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_siege_tooClose",
+            "samples": ["voice/wingman1/mission/siege/tooClose_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_siege_engagingSentries",
+            "samples": ["voice/wingman1/mission/siege/engagingSentries_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_siege_dontFlyStraight",
+            "samples": ["voice/wingman1/mission/siege/dontFlyStraight_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_siege_epsilon",
+            "samples": ["voice/wingman1/mission/siege/epsilon_11.ai.ogg"]
+        }, {
+            "name": "wingman2_attacking",
+            "samples": ["voice/wingman2/attacking1_11.ai.ogg", "voice/wingman2/attacking3_11.ai.ogg", "voice/wingman2/attacking4_11.ai.ogg", "voice/wingman2/attacking5_11.ai.ogg", "voice/wingman2/attacking6_11.ai.ogg", "voice/wingman2/attacking7_11.ai.ogg", "voice/wingman2/attacking8_11.ai.ogg"]
+        }, {
+            "name": "wingman2_approaching",
+            "samples": ["voice/wingman2/approaching1_11.ai.ogg", "voice/wingman2/approaching2_11.ai.ogg", "voice/wingman2/approaching3_11.ai.ogg", "voice/wingman2/approaching4_11.ai.ogg", "voice/wingman2/approaching5_11.ai.ogg"]
+        }, {
+            "name": "wingman2_clear",
+            "samples": ["voice/wingman2/clear1_11.ai.ogg", "voice/wingman2/clear2_11.ai.ogg", "voice/wingman2/clear3_11.ai.ogg"]
+        }, {
+            "name": "wingman2_compliment",
+            "samples": ["voice/wingman2/compliment1_11.ai.ogg", "voice/wingman2/compliment2_11.ai.ogg", "voice/wingman2/compliment3_11.ai.ogg"]
+        }, {
+            "name": "wingman2_damaged",
+            "samples": ["voice/wingman2/damaged1_11.ai.ogg", "voice/wingman2/damaged2_11.ai.ogg", "voice/wingman2/damaged3_11.ai.ogg"]
+        }, {
+            "name": "wingman2_evading",
+            "samples": ["voice/wingman2/evading1_11.ai.ogg", "voice/wingman2/evading2_11.ai.ogg", "voice/wingman2/evading3_11.ai.ogg"]
+        }, {
+            "name": "wingman2_hit",
+            "samples": ["voice/wingman2/hit1_11.ai.ogg", "voice/wingman2/hit2_11.ai.ogg", "voice/wingman2/hit3_11.ai.ogg", "voice/wingman2/hit4_11.ai.ogg", "voice/wingman2/hit5_11.ai.ogg"]
+        }, {
+            "name": "wingman2_incoming",
+            "samples": ["voice/wingman2/incoming1_11.ai.ogg", "voice/wingman2/incoming2_11.ai.ogg", "voice/wingman2/incoming3_11.ai.ogg", "voice/wingman2/incoming4_11.ai.ogg"]
+        }, {
+            "name": "wingman2_kill",
+            "samples": ["voice/wingman2/kill1_11.ai.ogg", "voice/wingman2/kill2_11.ai.ogg", "voice/wingman2/kill3_11.ai.ogg", "voice/wingman2/kill4_11.ai.ogg", "voice/wingman2/kill5_11.ai.ogg", "voice/wingman2/kill6_11.ai.ogg"]
+        }, {
+            "name": "wingman2_leaving",
+            "samples": ["voice/wingman2/leaving1_11.ai.ogg", "voice/wingman2/leaving2_11.ai.ogg", "voice/wingman2/leaving3_11.ai.ogg", "voice/wingman2/leaving4_11.ai.ogg"]
+        }, {
+            "name": "wingman2_missiles",
+            "samples": ["voice/wingman2/missiles1_11.ai.ogg", "voice/wingman2/missiles2_11.ai.ogg", "voice/wingman2/missiles3_11.ai.ogg", "voice/wingman2/missiles4_11.ai.ogg"]
+        }, {
+            "name": "wingman2_standdown",
+            "samples": ["voice/wingman2/standdown1_11.ai.ogg", "voice/wingman2/standdown2_11.ai.ogg", "voice/wingman2/standdown3_11.ai.ogg"]
+        }, {
+            "name": "wingman2_die",
+            "samples": ["voice/wingman2/die1_11.ai.ogg", "voice/wingman2/die2_11.ai.ogg", "voice/wingman2/die3_11.ai.ogg"]
+        }, {
+            "name": "wingman2_wingmanlost",
+            "samples": ["voice/wingman2/wingmanlost1_11.ai.ogg", "voice/wingman2/wingmanlost2_11.ai.ogg", "voice/wingman2/wingmanlost3_11.ai.ogg", "voice/wingman2/wingmanlost4_11.ai.ogg"]
+        }, {
+            "name": "wingman2_shiplost",
+            "samples": ["voice/wingman2/shiplost1_11.ai.ogg", "voice/wingman2/shiplost2_11.ai.ogg", "voice/wingman2/shiplost3_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_headhunt_rubyBladeArrived",
+            "samples": ["voice/wingman2/mission/headhunt/rubyBladeArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_destroyCorvette_start",
+            "samples": ["voice/wingman2/mission/destroyCorvette/start_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_destroyCorvette_deltaArrived",
+            "samples": ["voice/wingman2/mission/destroyCorvette/deltaArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_destroyCorvette_hostileFightersArrived",
+            "samples": ["voice/wingman2/mission/destroyCorvette/hostileFightersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_siege_start",
+            "samples": ["voice/wingman2/mission/siege/start_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_siege_elba",
+            "samples": ["voice/wingman2/mission/siege/elba_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_siege_bombers",
+            "samples": ["voice/wingman2/mission/siege/bombers_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_siege_bombersDown",
+            "samples": ["voice/wingman2/mission/siege/bombersDown_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_siege_fightersApproach",
+            "samples": ["voice/wingman2/mission/siege/fightersApproach_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_siege_moreFighters",
+            "samples": ["voice/wingman2/mission/siege/moreFighters_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_siege_tooClose",
+            "samples": ["voice/wingman2/mission/siege/tooClose_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_siege_engagingSentries",
+            "samples": ["voice/wingman2/mission/siege/engagingSentries_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_siege_dontFlyStraight",
+            "samples": ["voice/wingman2/mission/siege/dontFlyStraight_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_siege_epsilon",
+            "samples": ["voice/wingman2/mission/siege/epsilon_11.ai.ogg"]
+        }, {
+            "name": "wingman3_attacking",
+            "samples": ["voice/wingman3/attacking1_11.ai.ogg", "voice/wingman3/attacking3_11.ai.ogg", "voice/wingman3/attacking4_11.ai.ogg", "voice/wingman3/attacking5_11.ai.ogg", "voice/wingman3/attacking6_11.ai.ogg", "voice/wingman3/attacking7_11.ai.ogg", "voice/wingman3/attacking8_11.ai.ogg"]
+        }, {
+            "name": "wingman3_approaching",
+            "samples": ["voice/wingman3/approaching1_11.ai.ogg", "voice/wingman3/approaching2_11.ai.ogg", "voice/wingman3/approaching3_11.ai.ogg", "voice/wingman3/approaching4_11.ai.ogg", "voice/wingman3/approaching5_11.ai.ogg"]
+        }, {
+            "name": "wingman3_clear",
+            "samples": ["voice/wingman3/clear1_11.ai.ogg", "voice/wingman3/clear2_11.ai.ogg", "voice/wingman3/clear3_11.ai.ogg"]
+        }, {
+            "name": "wingman3_compliment",
+            "samples": ["voice/wingman3/compliment1_11.ai.ogg", "voice/wingman3/compliment2_11.ai.ogg", "voice/wingman3/compliment3_11.ai.ogg"]
+        }, {
+            "name": "wingman3_damaged",
+            "samples": ["voice/wingman3/damaged1_11.ai.ogg", "voice/wingman3/damaged2_11.ai.ogg", "voice/wingman3/damaged3_11.ai.ogg"]
+        }, {
+            "name": "wingman3_evading",
+            "samples": ["voice/wingman3/evading1_11.ai.ogg", "voice/wingman3/evading2_11.ai.ogg", "voice/wingman3/evading3_11.ai.ogg"]
+        }, {
+            "name": "wingman3_hit",
+            "samples": ["voice/wingman3/hit1_11.ai.ogg", "voice/wingman3/hit2_11.ai.ogg", "voice/wingman3/hit3_11.ai.ogg", "voice/wingman3/hit4_11.ai.ogg", "voice/wingman3/hit5_11.ai.ogg"]
+        }, {
+            "name": "wingman3_incoming",
+            "samples": ["voice/wingman3/incoming1_11.ai.ogg", "voice/wingman3/incoming2_11.ai.ogg", "voice/wingman3/incoming3_11.ai.ogg", "voice/wingman3/incoming4_11.ai.ogg"]
+        }, {
+            "name": "wingman3_kill",
+            "samples": ["voice/wingman3/kill1_11.ai.ogg", "voice/wingman3/kill2_11.ai.ogg", "voice/wingman3/kill3_11.ai.ogg", "voice/wingman3/kill4_11.ai.ogg", "voice/wingman3/kill5_11.ai.ogg", "voice/wingman3/kill6_11.ai.ogg"]
+        }, {
+            "name": "wingman3_leaving",
+            "samples": ["voice/wingman3/leaving1_11.ai.ogg", "voice/wingman3/leaving2_11.ai.ogg", "voice/wingman3/leaving3_11.ai.ogg", "voice/wingman3/leaving4_11.ai.ogg"]
+        }, {
+            "name": "wingman3_missiles",
+            "samples": ["voice/wingman3/missiles1_11.ai.ogg", "voice/wingman3/missiles2_11.ai.ogg", "voice/wingman3/missiles3_11.ai.ogg", "voice/wingman3/missiles4_11.ai.ogg"]
+        }, {
+            "name": "wingman3_standdown",
+            "samples": ["voice/wingman3/standdown1_11.ai.ogg", "voice/wingman3/standdown2_11.ai.ogg", "voice/wingman3/standdown3_11.ai.ogg"]
+        }, {
+            "name": "wingman3_die",
+            "samples": ["voice/wingman3/die1_11.ai.ogg", "voice/wingman3/die2_11.ai.ogg", "voice/wingman3/die3_11.ai.ogg"]
+        }, {
+            "name": "wingman3_wingmanlost",
+            "samples": ["voice/wingman3/wingmanlost1_11.ai.ogg", "voice/wingman3/wingmanlost2_11.ai.ogg", "voice/wingman3/wingmanlost3_11.ai.ogg", "voice/wingman3/wingmanlost4_11.ai.ogg"]
+        }, {
+            "name": "wingman3_shiplost",
+            "samples": ["voice/wingman3/shiplost1_11.ai.ogg", "voice/wingman3/shiplost2_11.ai.ogg", "voice/wingman3/shiplost3_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_headhunt_rubyBladeArrived",
+            "samples": ["voice/wingman3/mission/headhunt/rubyBladeArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_destroyCorvette_start",
+            "samples": ["voice/wingman3/mission/destroyCorvette/start_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_destroyCorvette_deltaArrived",
+            "samples": ["voice/wingman3/mission/destroyCorvette/deltaArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_destroyCorvette_hostileFightersArrived",
+            "samples": ["voice/wingman3/mission/destroyCorvette/hostileFightersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_siege_start",
+            "samples": ["voice/wingman3/mission/siege/start_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_siege_elba",
+            "samples": ["voice/wingman3/mission/siege/elba_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_siege_bombers",
+            "samples": ["voice/wingman3/mission/siege/bombers_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_siege_bombersDown",
+            "samples": ["voice/wingman3/mission/siege/bombersDown_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_siege_fightersApproach",
+            "samples": ["voice/wingman3/mission/siege/fightersApproach_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_siege_moreFighters",
+            "samples": ["voice/wingman3/mission/siege/moreFighters_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_siege_tooClose",
+            "samples": ["voice/wingman3/mission/siege/tooClose_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_siege_engagingSentries",
+            "samples": ["voice/wingman3/mission/siege/engagingSentries_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_siege_dontFlyStraight",
+            "samples": ["voice/wingman3/mission/siege/dontFlyStraight_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_siege_epsilon",
+            "samples": ["voice/wingman3/mission/siege/epsilon_11.ai.ogg"]
+        }, {
+            "name": "wingman4_attacking",
+            "samples": ["voice/wingman4/attacking1_11.ai.ogg", "voice/wingman4/attacking3_11.ai.ogg", "voice/wingman4/attacking4_11.ai.ogg", "voice/wingman4/attacking5_11.ai.ogg", "voice/wingman4/attacking6_11.ai.ogg", "voice/wingman4/attacking7_11.ai.ogg", "voice/wingman4/attacking8_11.ai.ogg"]
+        }, {
+            "name": "wingman4_approaching",
+            "samples": ["voice/wingman4/approaching1_11.ai.ogg", "voice/wingman4/approaching2_11.ai.ogg", "voice/wingman4/approaching3_11.ai.ogg", "voice/wingman4/approaching4_11.ai.ogg", "voice/wingman4/approaching5_11.ai.ogg"]
+        }, {
+            "name": "wingman4_clear",
+            "samples": ["voice/wingman4/clear1_11.ai.ogg", "voice/wingman4/clear2_11.ai.ogg", "voice/wingman4/clear3_11.ai.ogg"]
+        }, {
+            "name": "wingman4_compliment",
+            "samples": ["voice/wingman4/compliment1_11.ai.ogg", "voice/wingman4/compliment2_11.ai.ogg", "voice/wingman4/compliment3_11.ai.ogg"]
+        }, {
+            "name": "wingman4_damaged",
+            "samples": ["voice/wingman4/damaged1_11.ai.ogg", "voice/wingman4/damaged2_11.ai.ogg", "voice/wingman4/damaged3_11.ai.ogg"]
+        }, {
+            "name": "wingman4_evading",
+            "samples": ["voice/wingman4/evading1_11.ai.ogg", "voice/wingman4/evading2_11.ai.ogg", "voice/wingman4/evading3_11.ai.ogg"]
+        }, {
+            "name": "wingman4_hit",
+            "samples": ["voice/wingman4/hit1_11.ai.ogg", "voice/wingman4/hit2_11.ai.ogg", "voice/wingman4/hit3_11.ai.ogg", "voice/wingman4/hit4_11.ai.ogg", "voice/wingman4/hit5_11.ai.ogg"]
+        }, {
+            "name": "wingman4_incoming",
+            "samples": ["voice/wingman4/incoming1_11.ai.ogg", "voice/wingman4/incoming2_11.ai.ogg", "voice/wingman4/incoming3_11.ai.ogg", "voice/wingman4/incoming4_11.ai.ogg"]
+        }, {
+            "name": "wingman4_kill",
+            "samples": ["voice/wingman4/kill1_11.ai.ogg", "voice/wingman4/kill2_11.ai.ogg", "voice/wingman4/kill3_11.ai.ogg", "voice/wingman4/kill4_11.ai.ogg", "voice/wingman4/kill5_11.ai.ogg", "voice/wingman4/kill6_11.ai.ogg"]
+        }, {
+            "name": "wingman4_leaving",
+            "samples": ["voice/wingman4/leaving1_11.ai.ogg", "voice/wingman4/leaving2_11.ai.ogg", "voice/wingman4/leaving3_11.ai.ogg", "voice/wingman4/leaving4_11.ai.ogg"]
+        }, {
+            "name": "wingman4_missiles",
+            "samples": ["voice/wingman4/missiles1_11.ai.ogg", "voice/wingman4/missiles2_11.ai.ogg", "voice/wingman4/missiles3_11.ai.ogg", "voice/wingman4/missiles4_11.ai.ogg"]
+        }, {
+            "name": "wingman4_standdown",
+            "samples": ["voice/wingman4/standdown1_11.ai.ogg", "voice/wingman4/standdown2_11.ai.ogg", "voice/wingman4/standdown3_11.ai.ogg"]
+        }, {
+            "name": "wingman4_die",
+            "samples": ["voice/wingman4/die1_11.ai.ogg", "voice/wingman4/die2_11.ai.ogg", "voice/wingman4/die3_11.ai.ogg"]
+        }, {
+            "name": "wingman4_wingmanlost",
+            "samples": ["voice/wingman4/wingmanlost1_11.ai.ogg", "voice/wingman4/wingmanlost2_11.ai.ogg", "voice/wingman4/wingmanlost3_11.ai.ogg", "voice/wingman4/wingmanlost4_11.ai.ogg"]
+        }, {
+            "name": "wingman4_shiplost",
+            "samples": ["voice/wingman4/shiplost1_11.ai.ogg", "voice/wingman4/shiplost2_11.ai.ogg", "voice/wingman4/shiplost3_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_headhunt_rubyBladeArrived",
+            "samples": ["voice/wingman4/mission/headhunt/rubyBladeArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_destroyCorvette_start",
+            "samples": ["voice/wingman4/mission/destroyCorvette/start_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_destroyCorvette_deltaArrived",
+            "samples": ["voice/wingman4/mission/destroyCorvette/deltaArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_destroyCorvette_hostileFightersArrived",
+            "samples": ["voice/wingman4/mission/destroyCorvette/hostileFightersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_siege_start",
+            "samples": ["voice/wingman4/mission/siege/start_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_siege_elba",
+            "samples": ["voice/wingman4/mission/siege/elba_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_siege_bombers",
+            "samples": ["voice/wingman4/mission/siege/bombers_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_siege_bombersDown",
+            "samples": ["voice/wingman4/mission/siege/bombersDown_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_siege_fightersApproach",
+            "samples": ["voice/wingman4/mission/siege/fightersApproach_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_siege_moreFighters",
+            "samples": ["voice/wingman4/mission/siege/moreFighters_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_siege_tooClose",
+            "samples": ["voice/wingman4/mission/siege/tooClose_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_siege_engagingSentries",
+            "samples": ["voice/wingman4/mission/siege/engagingSentries_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_siege_dontFlyStraight",
+            "samples": ["voice/wingman4/mission/siege/dontFlyStraight_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_siege_epsilon",
+            "samples": ["voice/wingman4/mission/siege/epsilon_11.ai.ogg"]
+        }, {
+            "name": "mission_siege_elbaDown",
+            "samples": ["voice/mission/siege/elbaDown_11.ai.ogg"]
+        }, {
+            "name": "mission_siege_fightersDown1",
+            "samples": ["voice/mission/siege/fightersDown1_11.ai.ogg"]
+        }, {
+            "name": "mission_siege_fightersDown2",
+            "samples": ["voice/mission/siege/fightersDown2_11.ai.ogg"]
+        }, {
+            "name": "mission_siege_fightersDown3",
+            "samples": ["voice/mission/siege/fightersDown3_11.ai.ogg"]
+        }, {
+            "name": "mission_siege_sentriesDown",
+            "samples": ["voice/mission/siege/sentriesDown_11.ai.ogg"]
         }],
     "music": [{
             "name": "menu",
             "sample": "menu.ogg"
+        }, {
+            "name": "briefing",
+            "sample": "briefing.ogg"
         }, {
             "name": "ambient",
             "sample": "ambient.ogg"
@@ -1851,6 +2287,9 @@
             "name": "anticipation2",
             "sample": "anticipation2.ogg"
         }, {
+            "name": "anticipation3",
+            "sample": "anticipation3.ogg"
+        }, {
             "name": "combat",
             "sample": "combat.ogg"
         }, {
@@ -1859,6 +2298,9 @@
         }, {
             "name": "combat3",
             "sample": "combat3.ogg"
+        }, {
+            "name": "combat4",
+            "sample": "combat4.ogg"
         }, {
             "name": "victory",
             "sample": "victory.ogg"

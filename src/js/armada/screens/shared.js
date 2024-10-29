@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2022 Krisztián Nagy
+ * Copyright 2016-2024 Krisztián Nagy
  * @file Contains the common constants and functions accessible to all screens of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -27,6 +27,7 @@ define([
                 GAME_VERSION_LABEL_ID: "gameVersion",
                 // music
                 MENU_THEME: "menu",
+                BRIEFING_THEME: "briefing",
                 DEBRIEFING_VICTORY_THEME: "debriefing_victory",
                 DEBRIEFING_DEFEAT_THEME: "debriefing_defeat",
                 // components
@@ -39,6 +40,7 @@ define([
                 INFO_BOX_SOURCE: "infobox.html",
                 INFO_BOX_CSS: "infobox.css",
                 MENU_COMPONENT_SOURCE: "menucomponent.html",
+                MENU_COMPONENT_CSS: "menucomponent.css",
                 CHECK_GROUP_SOURCE: "checkgroup.html",
                 CHECK_GROUP_CSS: "checkgroup.css",
                 LIST_COMPONENT_SOURCE: "listcomponent.html",
@@ -168,6 +170,7 @@ define([
         s1 = resources.getSoundEffect(config.getSetting(config.GENERAL_SETTINGS.BUTTON_SELECT_SOUND).name);
         s2 = resources.getSoundEffect(config.getSetting(config.GENERAL_SETTINGS.BUTTON_CLICK_SOUND).name);
         audio.initMusic(config.getSetting(config.GENERAL_SETTINGS.MENU_MUSIC), exports.MENU_THEME, true);
+        audio.initMusic(config.getSetting(config.GENERAL_SETTINGS.BRIEFING_MUSIC), exports.BRIEFING_THEME, true);
         if ((s1 && !s1.isLoaded() && !s1.hasError()) || (s2 && !s2.isLoaded() && !s2.hasError())) {
             resources.executeWhenReady(function () {
                 _buttonSelectSound = s1 && s1.createSoundClip(
@@ -221,11 +224,7 @@ define([
      * Call on the screen that has a fullscreen button to set up its event handlers
      */
     exports.setupFullscreenButton = function () {
-        if (game.usesElectron()) {
-            this.getElement(FULLSCREEN_BUTTON_ID).hidden = true;
-        } else {
-            this.getElement(FULLSCREEN_BUTTON_ID).onclick = _toggleFullscreen;
-        }
+        this.getElement(FULLSCREEN_BUTTON_ID).onclick = _toggleFullscreen;
     };
     // ------------------------------------------------------------------------------
     // Derived constants
@@ -250,7 +249,12 @@ define([
      * @type Object.<String, Function>
      */
     exports.MENU_EVENT_HANDLERS = {
-        show: exports.setupFullscreenButton,
+        show: function () {
+            exports.setupFullscreenButton.call(this);
+            if (!this.isSuperimposed()) {
+                audio.playMusic(exports.MENU_THEME);
+            }
+        },
         optionselect: exports.playButtonSelectSound,
         optionclick: exports.playButtonClickSound
     };
@@ -259,6 +263,7 @@ define([
      * @type MenuComponent~Style
      */
     exports.MENU_STYLE = {
+        cssFilename: exports.MENU_COMPONENT_CSS,
         menuClassName: exports.MENU_CLASS_NAME,
         buttonContainerClassName: exports.MENU_BUTTON_CONTAINER_CLASS_NAME,
         selectedButtonClassName: components.SELECTED_CLASS_NAME,

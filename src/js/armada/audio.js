@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2016-2018, 2020-2024 Krisztián Nagy
  * @file Provides functionality to parse and load the audio settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -62,6 +62,13 @@ define([
              * @type String
              */
             SFX_VOLUME_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "sfxVolume",
+            // ............................................................................................
+            // Voice volume
+            /**
+             * The key identifying the location where the voice volume setting is stored in local storage.
+             * @type String
+             */
+            VOICE_VOLUME_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "voiceVolume",
             // ............................................................................................
             // UI volume
             /**
@@ -134,6 +141,11 @@ define([
          * @type Number
          */
         this._sfxVolume = 1;
+        /**
+         * The current voice volume setting.
+         * @type Number
+         */
+        this._voiceVolume = 1;
         /**
          * The current UI volume setting.
          * @type Number
@@ -318,6 +330,37 @@ define([
         this.setSFXVolume((localStorage[SFX_VOLUME_LOCAL_STORAGE_ID] !== undefined) ? localStorage[SFX_VOLUME_LOCAL_STORAGE_ID] : this._dataJSON.sfxVolume);
     };
     /**
+     * Returns the current voice volume setting.
+     * @returns {Number}
+     */
+    AudioSettingsContext.prototype.getVoiceVolume = function () {
+        return this._voiceVolume;
+    };
+    /**
+     * Sets a new voice volume setting.
+     * @param {Number} value
+     * @param {Boolean} [saveToLocalStorage=true]
+     * @returns {Boolean} Whether the setting was successfully set to the passed value.
+     */
+    AudioSettingsContext.prototype.setVoiceVolume = function (value, saveToLocalStorage) {
+        if (saveToLocalStorage === undefined) {
+            saveToLocalStorage = true;
+        }
+        this._voiceVolume = value;
+        audio.setVoiceVolume(this._voiceVolume);
+        // saving the original preference
+        if (saveToLocalStorage) {
+            localStorage[VOICE_VOLUME_LOCAL_STORAGE_ID] = value.toString();
+        }
+        return this._voiceVolume === value;
+    };
+    /**
+     * Resets the voice volume to its value stored in local storage / JSON.
+     */
+    AudioSettingsContext.prototype.resetVoiceVolume = function () {
+        this.setVoiceVolume((localStorage[VOICE_VOLUME_LOCAL_STORAGE_ID] !== undefined) ? localStorage[VOICE_VOLUME_LOCAL_STORAGE_ID] : this._dataJSON.voiceVolume);
+    };
+    /**
      * Returns the current UI volume setting.
      * @returns {Number}
      */
@@ -392,17 +435,20 @@ define([
      * (with the same crossfade applied)
      * @param {Number} [fadeDuration] If greater than zero, the a linear crossfade will happen from the current theme to the new one, 
      * lasting the given duration. In seconds! If not given, a default fade in / fade out / crossfade duration is chosen from the settings
+     * @param {Boolean} [crossfade=true] Pass false to disable the default crossfading, and fade out the current theme before fading in the new one.
      */
-    function playMusic(theme, followupTheme, fadeDuration) {
-        if (fadeDuration === undefined) {
-            fadeDuration = _currentTheme ?
-                    (theme ? _themeCrossfadeDuration : _musicFadeOutDuration) :
-                    (theme ? _musicFadeInDuration : 0);
-        }
+    function playMusic(theme, followupTheme, fadeDuration, crossfade) {
+        var callback, fadeOutDuration, fadeInDuration;
         if (theme !== _currentTheme) {
+            fadeOutDuration = _currentTheme ? (
+                    (fadeDuration === undefined) ? ((theme && (crossfade !== false)) ? _themeCrossfadeDuration : _musicFadeOutDuration) : fadeDuration
+                    ) : 0;
+            fadeInDuration = theme ? (
+                    (fadeDuration === undefined) ? ((_currentTheme && (crossfade !== false)) ? _themeCrossfadeDuration : _musicFadeInDuration) : fadeDuration
+                    ) : 0;
             if (_currentTheme && _music[_currentTheme]) {
-                if (fadeDuration > 0) {
-                    _music[_currentTheme].clip.rampVolume(0, fadeDuration);
+                if (fadeOutDuration > 0) {
+                    _music[_currentTheme].clip.rampVolume(0, fadeOutDuration);
                 } else {
                     _music[_currentTheme].clip.stopPlaying();
                 }
@@ -411,16 +457,28 @@ define([
                 if (!_music[theme]) {
                     application.log_DEBUG("Warning: music associated with theme '" + theme + "' cannot be played, because it is not loaded!");
                 } else {
-                    _music[theme].clip.play(true, followupTheme ? function () {
+                    callback = followupTheme ? function () {
                         // start the followup music only if we are still playing the same theme it is followup for
                         if (_currentTheme === theme) {
-                            playMusic(followupTheme, null, fadeDuration);
+                            playMusic(followupTheme, null, fadeDuration, crossfade);
                         }
-                    } : null);
-                    if (fadeDuration > 0) {
-                        _music[theme].clip.setVolume(0);
-                        _music[theme].clip.rampVolume(1, fadeDuration);
+                    } : null;
+                    if (fadeInDuration > 0) {
+                        if (crossfade !== false) {
+                            _music[theme].clip.play(true, callback);
+                            _music[theme].clip.setVolume(0);
+                            _music[theme].clip.rampVolume(1, fadeInDuration);
+                        } else {
+                            setTimeout(function () {
+                                if (_currentTheme === theme) {
+                                    _music[theme].clip.play(true, callback);
+                                    _music[theme].clip.setVolume(0);
+                                    _music[theme].clip.rampVolume(1, fadeInDuration);
+                                }
+                            }, fadeOutDuration * 1000);
+                        }
                     } else {
+                        _music[theme].clip.play(true, callback);
                         _music[theme].clip.setVolume(1);
                     }
                 }
@@ -476,6 +534,9 @@ define([
         getSFXVolume: _context.getSFXVolume.bind(_context),
         setSFXVolume: _context.setSFXVolume.bind(_context),
         resetSFXVolume: _context.resetSFXVolume.bind(_context),
+        getVoiceVolume: _context.getVoiceVolume.bind(_context),
+        setVoiceVolume: _context.setVoiceVolume.bind(_context),
+        resetVoiceVolume: _context.resetVoiceVolume.bind(_context),
         getUIVolume: _context.getUIVolume.bind(_context),
         setUIVolume: _context.setUIVolume.bind(_context),
         resetUIVolume: _context.resetUIVolume.bind(_context),

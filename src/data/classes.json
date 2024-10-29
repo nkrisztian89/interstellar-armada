@@ -31,6 +31,14 @@
             "shader": "skybox",
             "cubemap": "redNebula_medium"
         }, {
+            "name": "planet_medium",
+            "shader": "skybox",
+            "cubemap": "planet_medium"
+        }, {
+            "name": "volcanicPlanet_medium",
+            "shader": "skybox",
+            "cubemap": "volcanicPlanet_medium"
+        }, {
             "name": "crescentNebula_veryDense",
             "shader": "skybox",
             "cubemap": "crescentNebula_veryDense"
@@ -107,6 +115,18 @@
                     "texture": "flare"
                 }]
         }, {
+            "name": "orangeSun",
+            "lightColor": [1, 0.9, 0.75],
+            "layers": [{
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [1, 0.705, 0.225, 1]
+                }, {
+                    "size": 0.8,
+                    "shader": "backgroundBillboard",
+                    "texture": "flare"
+                }]
+        }, {
             "name": "brownPlanet",
             "layers": [{
                     "shader": "backgroundFixBillboard",
@@ -167,6 +187,14 @@
             "layers": [{
                     "shader": "backgroundNebula",
                     "texture": "paleRedNebula"
+                }]
+        }, {
+            "name": "volcanicPlanetLightSource",
+            "lightColor": [0.4, 0.2, 0.05],
+            "layers": [{
+                    "shader": "backgroundBillboard",
+                    "texture": "flare",
+                    "color": [0, 0, 0, 0]
                 }]
         }],
     "dustCloudClasses": [{
@@ -2320,7 +2348,7 @@
                 "shader": "particle",
                 "texture": "flare",
                 "color": [0, 1, 0, 1],
-                "size": 2.5,
+                "size": 2.25,
                 "duration": 250
             },
             "lightColor": [0, 1, 0],
@@ -2369,6 +2397,29 @@
             },
             "lightColor": [1, 0.3, 0.3],
             "lightIntensity": 36,
+            "explosion": "smallHitExplosion",
+            "shieldExplosion": "smallShieldHitExplosion"
+        }, {
+            "name": "repeater",
+            "damage": 1.25,
+            "shader": "billboard",
+            "texture": "repeaterProjectile",
+            "size": 1.75,
+            "mass": 0.5,
+            "duration": 2000,
+            "dissipationDuration": 750,
+            "intersectionPositions": [0.25],
+            "width": 0.29,
+            "thickness": 0.4,
+            "muzzleFlash": {
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 1, 0.7, 1],
+                "size": 1.9,
+                "duration": 150
+            },
+            "lightColor": [1, 1, 0.7],
+            "lightIntensity": 25,
             "explosion": "smallHitExplosion",
             "shieldExplosion": "smallShieldHitExplosion"
         }, {
@@ -2564,6 +2615,42 @@
                 "volume": 1.5
             },
             "scoreValue": 30
+        }, {
+            "name": "lightRepeaterGun",
+            "fullName": "Light plasma repeater",
+            "shader": "ship",
+            "model": "repeater",
+            "texture": "libra",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
+            "projectile": "repeater",
+            "projectileVelocity": 800,
+            "cooldown": 125,
+            "barrels": [{
+                    "position": [0, 2.33, 0]
+                }],
+            "attachmentPoint": [0, 0, 0.66],
+            "fireSound": {
+                "name": "repeaterShot",
+                "volume": 0.5
+            },
+            "rotationStyle": "yawPitch",
+            "basePoint": [0, 0, 0],
+            "rotators": [{
+                    "axis": [0, 0, 1],
+                    "center": [0, 0, 0],
+                    "range": [-4, 4],
+                    "defaultAngle": 0,
+                    "rotationRate": 15,
+                    "transformGroupIndex": 0
+                }, {
+                    "axis": [1, 0, 0],
+                    "center": [0, 0, 0],
+                    "range": [-4, 4],
+                    "defaultAngle": 0,
+                    "rotationRate": 15,
+                    "transformGroupIndex": 1
+                }],
+            "scoreValue": 25
         }, {
             "name": "smallPlasmaTurret",
             "fullName": "Plasma turret",
@@ -4018,16 +4105,16 @@
                     "size": [20, 40, 10]
                 }],
             "weaponSlots": [{
-                    "position": [14, 13, 1.85],
+                    "position": [13, 13, 1.85],
                     "clear": true
                 }, {
-                    "position": [-14, 13, 1.85],
+                    "position": [-13, 13, 1.85],
                     "clear": true
                 }, {
-                    "position": [22, 9, 1.85],
+                    "position": [23, 9, 1.85],
                     "clear": true
                 }, {
-                    "position": [-22, 9, 1.85],
+                    "position": [-23, 9, 1.85],
                     "clear": true
                 }],
             "missileLaunchers": [{
@@ -4334,6 +4421,15 @@
                 }, {
                     "name": "player-tier4",
                     "basedOn": "player-tier3",
+                    "weapons": [{
+                            "class": "lightRepeaterGun"
+                        }, {
+                            "class": "lightRepeaterGun"
+                        }, {
+                            "class": "lightRepeaterGun"
+                        }, {
+                            "class": "lightRepeaterGun"
+                        }],
                     "shield": {
                         "class": "imperialFighterMk4"
                     }

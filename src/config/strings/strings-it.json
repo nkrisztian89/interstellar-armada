@@ -108,7 +108,7 @@
         "playerSpacecraftTitle": "Astronave:",
         "playerSpacecraftData": "<strong>Classe:</strong> {class}",
         "playerSpacecraftWeapons": "<strong>Armi:</strong> {weapons}<br/><strong>Potenza di fuoco:</strong> {firepower}, <strong>Portata:</strong> {range}",
-        "playerSpacecraftMissiles": "<strong>Missili:</strong> {missiles}<br/><strong>Total firepower:</strong> {firepower}, <strong>Portata ideale:</strong> {range}",
+        "playerSpacecraftMissiles": "<strong>Missili:</strong> {missiles}<br/><strong>Potenza di fuoco totale:</strong> {firepower}, <strong>Portata ideale:</strong> {range}",
         "playerSpacecraftShield": "<strong>Scudo:</strong> {shield}<br/><strong>Capienza:</strong> {shieldCapacity}, <strong>Frequenza di ricarica:</strong> {shieldRechargeRate}",
         "playerSpacecraftPropulsion": "<strong>Propulsione:</strong> {propulsion}<br/><strong>Velocità di combattimento:</strong> {speed}, <strong>Frequenza di rotazione:</strong> {turnRate}",
         "objectiveSubjects": {
@@ -161,6 +161,7 @@
         "submissionTitleColumn": "Titolo",
         "submissionDateColumn": "Inviato",
         "submissionStatusColumn": "Stato",
+        "submissionStatsColumn": "Statistiche",
         "submissionActionsColumn": "Azioni",
         "deleteSubmissionButton": "Rimuovi",
         "revokeSubmissionButton": "Revoca",
@@ -170,6 +171,11 @@
             "pending": "In attesa...",
             "approved": "Approvata!",
             "rejected": "Rifiutata:"
+        },
+        "submissionStats": {
+            "started": "Iniziata: {count}",
+            "won": "Vinta: {count}",
+            "lost": "Persa: {count}"
         }
     },
     "missionHubError": {
@@ -208,7 +214,7 @@
         "308": "Titolo della missione non valido: Il titolo della missione deve essere lungo tra {minTitleLength} e {maxTitleLength} caratteri!",
         "309": "Descrizione missione non valida: La descrizione della missione deve essere lunga almeno {minDescriptionLength} caratteri!",
         "310": "La missione selezionata non sembra avere alcuna astronave al suo interno!",
-        "311": "La missione selezionata non sembra avere un set di astronavi pilotate!",
+        "311": "La missione selezionata non sembra avere un set di astronavi pilotate!"
     },
     "location": {
         "unknown": "Sconosciuta",
@@ -240,7 +246,7 @@
         "hostingPlayerColumn": "Giocatore ospitante",
         "playersColumn": " Giocatori",
         "startedColumn": " Avviato",
-        "iniziato": {
+        "started": {
             "yes": "sì",
             "no": "no"
         },
@@ -267,7 +273,7 @@
         "invalidTextError": "Errore: messaggio di testo non valido! Messaggio non inviato",
         "serverIsFullError": "Impossibile connettersi al server di gioco: il server è attualmente pieno!",
         "incompatibleApiVersionError": "Impossibile connettersi al server di gioco: versione ({serverVersion}) del server di gioco non compatibile con questo client ({clientVersion})!",
-        "noWelcomeError": "Impossibile connettersi al server di gioco: nessun messaggio di benvenuto ricevuto!",
+        "noWelcomeError": "Impossibile connettersi al server di gioco: nessun messaggio di benvenuto ricevuto!"
     },
     "multiLobby": {
         "leaveButton": "Lascia il gioco",
@@ -280,7 +286,7 @@
         "connectionColumn": "Connessione",
         "connection": {
             "server": "server",
-            "diretta": " diretto"
+            "direct": " diretto"
         },
         "pingColumn": "Ping",
         "readyColumn": "Pronto",
@@ -309,7 +315,7 @@
         "playerJoinedMessage": "{nome} si è unito alla partita!",
         "playerLeftMessage": "{nome} ha lasciato la partita!",
         "playerReadyMessage": "{nome} è pronto a giocare!",
-        "playerKickedMessage": "{nome} è stato espulso dalla partita dall'host!",
+        "playerKickedMessage": "{nome} è stato espulso dalla partita dall'host!"
     },
     "settings": {
         "general": "Impostazioni generali",
@@ -347,7 +353,7 @@
         "header": "Informazioni",
         "okButton": "OK"
     },
-    " loading": {
+    "loading": {
         "header": "Attendere prego!",
         "resourcesStart": "caricamento risorse grafiche...",
         "resourceReady": "caricata {risorsa}, progresso totale: {loaded} / {total}...",
@@ -696,21 +702,21 @@
         "creditsProgramming": "Programmazione",
         "creditsRequireJSNote": "Usa RequireJS di",
         "creditsFonts": "Fonts",
-        "credits3DModels": "Modelli 3D",
-        "creditsTextures": "Texture",
-        "creditsMusic": "Musiche",
+        "credits3DModelsTexturesMusic": "Modelli 3D, texture, musiche",
         "creditsSoundEffects": "Effetti sonori",
         "creditsFreesoundNote": "Alcuni effetti sonori basati su campioni dei seguenti utenti di freesound.org:",
         "creditsOtherSoundsNote": "Alcuni effetti sonori basati su un campione di",
         "creditsSoundLicenseNote": "clicca qui per l'attribuzione degli effetti sonori e i dettagli delle licenze",
+        "creditsTranslationItalian": "Traduzione in italiano",
         "creditsTesting": "Test",
         "usedSoftwareHeader": "Software utilizzato",
-        "usedSoftwareParagraph": "Questo gioco è stato creato utilizzando software liberamente disponibile e/o open source e standard aperti. Per la creazione delle risorse del gioco sono stati utilizzati {inkscape}, {blender}, {gimp}, {audacity}, {bfxr}, {lmms}, {fontforge} e strumenti specializzati sviluppati (in {netbeans} e {lazarus}) da Krisztián Nagy, mentre il gioco stesso è stato sviluppato utilizzando {netbeans}, {git}, {npm}, {grunt}, {sass}, {chrome} e {firefox}, tutti in esecuzione su {ubuntu}. Anche alcuni pratici plugin di Netbeans supportano lo sviluppo: {eslint}, GLSL Syntax Highlighter.",
+        "usedSoftwareParagraph": "Questo gioco (ad eccezione delle voci fuori campo) è stato creato utilizzando software liberamente disponibile e/o open source e standard aperti. Per la creazione delle risorse del gioco sono stati utilizzati {inkscape}, {blender}, {gimp}, {audacity}, {bfxr}, {lmms}, {fontforge} e strumenti specializzati sviluppati (in {netbeans} e {lazarus}) da Krisztián Nagy, mentre il gioco stesso è stato sviluppato utilizzando {netbeans}, {git}, {npm}, {grunt}, {sass}, {chrome} e {firefox}, tutti in esecuzione su {ubuntu}. Anche alcuni pratici plugin di Netbeans supportano lo sviluppo: {eslint}, GLSL Syntax Highlighter.<br><br>Le voci fuori campo sono state generate utilizzando il servizio di intelligenza artificiale generativa offerto da {elevenlabs} e modificate con {audacity} da Krisztián Nagy.",
         "licenseHeader": "Licenza",
-        "licenseParagraph": "Il codice sorgente del gioco (HTML, Javascript, file sorgente CSS, file JSON contenenti la configurazione del gioco e file di testo di accompagnamento) è stato creato da Krisztián Nagy e rilasciato sotto la licenza {license}, tranne che per la libreria {requireJS} inclusa, per la quale si veda {requireJSLicense}.<br><br>Per quanto riguarda la licenza dei font utilizzati nel gioco, si veda: {sansation} (di Bernd Montag), {aldrich} e {audiowide} (dalla libreria di Google Fonts). Alcune modifiche ad Aldrich sono state apportate da Krisztián Nagy, descritte nel file {fontlog}.<br><br>Le immagini, i modelli 3D, le texture e i file musicali sono stati tutti creati da Krisztián Nagy e sono rilasciati sotto la licenza {assetLicense}. Per quanto riguarda gli effetti sonori, clicca su {soundLicense} per informazioni dettagliate su licenze e attribuzioni.",
+        "licenseParagraph": "Il codice sorgente del gioco (HTML, Javascript, file sorgente CSS, file JSON contenenti la configurazione del gioco e file di testo di accompagnamento) è stato creato da Krisztián Nagy e rilasciato sotto la licenza {license}, tranne che per la libreria {requireJS} inclusa, per la quale si veda {requireJSLicense}.<br><br>Per quanto riguarda la licenza dei font utilizzati nel gioco, si veda: {sansation} (di Bernd Montag), {aldrich} e {audiowide} (dalla libreria di Google Fonts). Alcune modifiche ad Aldrich sono state apportate da Krisztián Nagy, descritte nel file {fontlog}.<br><br>Le immagini, i modelli 3D, le texture e i file musicali sono stati tutti creati da Krisztián Nagy e sono rilasciati sotto la licenza {assetLicense}. Per quanto riguarda gli effetti sonori, clicca su {soundLicense} per informazioni dettagliate su licenze e attribuzioni.<br><br>Le voci fuori campo sono state generate in parte come utente gratuito e in parte come utente a pagamento del servizio {elevenlabs} e sono pertanto soggette ai {elevenlabsTerms}. Non ti è consentito utilizzarli per scopi commerciali! Se li ridistribuisci (non a fini commerciali) nella loro forma originale o modificata o come fonte di un lavoro derivato, devi mantenere l'attribuzione a ElevenLabs.",
         "requireJSLicense": "la licenza MIT",
         "licenseElectronParagraph": "Questa versione del gioco è stata pacchettizzata con il framework {electron}, disponibile sotto {electronLicense}.",
         "electronLicense": "la licenza MIT",
+        "elevenlabsTerms": "Termini di servizio di ElevenLabs",
         "here": "qui"
     },
     "setting": {
@@ -739,7 +745,8 @@
         "title": "Impostazioni generali",
         "language": "Lingua:",
         "analytics": "Segnala statistiche anonime:",
-        "analyticsNote": "I rapporti non contengono informazioni personali, ma solo statistiche sull'uso delle funzioni e sulle prestazioni di gioco con un ID generato a caso. Si prega di aiutare lo sviluppo mantenendo questa opzione attiva."
+        "analyticsNote": "I rapporti non contengono informazioni personali, ma solo statistiche sull'uso delle funzioni e sulle prestazioni di gioco con un ID generato a caso. Si prega di aiutare lo sviluppo mantenendo questa opzione attiva.",
+        "showDemoButton": "Mostra il pulsante 'Avvia dimostrazione' per le missioni:"
     },
     "graphics": {
         "backButton": "Torna al menu",
@@ -768,6 +775,7 @@
         "masterVolume": "Volume principale:",
         "musicVolume": "Volume delle musiche:",
         "sfxVolume": "Volume degli effetti sonori:",
+        "voiceVolume": "Volume della voce:",
         "uiVolume": "Volume dell'interfaccia utente:"
     },
     "gameplaySettings": {
@@ -776,13 +784,17 @@
         "hudTitle": "HUD",
         "cameraTitle": "Visuale",
         "controlsTitle": "Controlli",
+        "otherTitle": "Altre",
         "targetHealthAtCenter": "Barra di integrità del bersaglio sempre al centro:",
         "offsetImpactIndicators": "Sfoca indicatori di impatto:",
         "relativeTargetOrientation": "Mostra il bersaglio in orientamento relativo:",
+        "showVersionInfo": "Mostra la versione del gioco:",
+        "showFpsCounter": "Mostra contatore FPS:",
         "preferredFighterView": "Vista preferita del combattente:",
         "preferredShipView": "Vista dell'astronave preferita:",
         "demoViewSwitching": "Cambio automatico di visuale in modalità dimostrazione:",
-        "defaultSalvoMode": "Modalità missile in serie per impostazione predefinita:"
+        "defaultSalvoMode": "Modalità missile in serie per impostazione predefinita:",
+        "showReadyMessage": "Mostra messaggio 'pronto' all'inizio delle missioni:"
     },
     "controller": {
         "general": "Generale",
@@ -926,5 +938,67 @@
         "bombers": "I bombardieri sono efficaci contro le piccole astronavi.",
         "corvettes": "Le corvette sono efficaci contro gli intercettatori e altri combattenti.",
         "frigates": "Le fregate sono efficaci contro le astronavi da combattimento."
+    },
+    "radio": {
+        "attacking1": "I'm engaging the enemy!",
+        "attacking2": "Target in range!",
+        "attacking3": "Opening fire at the target!",
+        "attacking4": "Opening fire!",
+        "attacking5": "Enemy in range, opening fire!",
+        "attacking6": "Attacking target!",
+        "attacking7": "Firing weapons!",
+        "approaching1": "I'm closing in on the target!",
+        "approaching2": "Moving to attack target!",
+        "approaching3": "Moving to attack range!",
+        "approaching4": "Approaching the enemy!",
+        "approaching5": "Target acquired! Closing in!",
+        "clear1": "Sensors show no more enemies.",
+        "clear2": "All hostiles have been eliminated.",
+        "clear3": "Scope's clear, no hostiles remaining.",
+        "compliment1": "Nice shot!",
+        "compliment2": "Well done!",
+        "compliment3": "Great job!",
+        "damaged1": "I'm taking heavy damage!",
+        "damaged2": "I can't hold on much longer!",
+        "damaged3": "Taking serious damage!",
+        "die1": "Argh!",
+        "die2": "I'm going down!",
+        "die3": "Nooo!",
+        "evading1": "Taking evasive action.",
+        "evading2": "Incoming enemy fire. Evading!",
+        "evading3": "Executing evasive maneuvers!",
+        "hit1": "I'm under attack!",
+        "hit2": "I'm hit!",
+        "hit3": "I'm taking hits!",
+        "hit4": "I'm under fire!",
+        "hit5": "Taking enemy fire!",
+        "incoming1": "Hostiles incoming!",
+        "incoming2": "Incoming hostiles!",
+        "incoming3": "Picking up enemy ships!",
+        "incoming4": "Detecting new enemies!",
+        "kill1": "I've taken care of this one!",
+        "kill2": "One less to go!",
+        "kill3": "Target destroyed.",
+        "kill4": "Hostile eliminated.",
+        "kill5": "Target neutralized.",
+        "kill6": "Enemy neutralized.",
+        "leaving1": "I'm leaving. See you at base!",
+        "leaving2": "Engaging jump engines!",
+        "leaving3": "Jumping out!",
+        "leaving4": "Initiating jump sequence.",
+        "missiles1": "Launching missiles!",
+        "missiles2": "Launching missiles at the target!",
+        "missiles3": "Target locked. Launching missiles!",
+        "missiles4": "Missiles away!",
+        "standdown1": "Standing down.",
+        "standdown2": "Cutting engines.",
+        "standdown3": "Disengaging.",
+        "wingmanlost1": "We lost a wingman!",
+        "wingmanlost2": "Wingman down!",
+        "wingmanlost3": "We lost a fighter!",
+        "wingmanlost4": "We lost one of ours!",
+        "shiplost1": "We lost a ship!",
+        "shiplost2": "We just lost a ship!",
+        "shiplost3": "Friendly ship down!"
     }
 }

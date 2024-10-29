@@ -1,5 +1,5 @@
 /**
- * Copyright 2016, 2020-2022 Krisztián Nagy
+ * Copyright 2016, 2020-2024 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for projectile classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -31,7 +31,7 @@ define([
              */
             CANVAS_UPDATE_PROPERTIES = [
                 "shader", "texture",
-                "size", "intersectionPositions", "width"
+                "size", "intersectionPositions", "width", "thickness"
             ],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options

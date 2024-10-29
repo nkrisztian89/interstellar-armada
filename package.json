@@ -35,7 +35,8 @@
                 "audio-playback",
                 "opengl",
                 "hardware-observe",
-                "joystick"
+                "joystick",
+                "screen-inhibit-control"
             ]
         },
         "files": [
@@ -70,8 +71,8 @@
         "url": "https://github.com/nkrisztian89/interstellar-armada/issues"
     },
     "devDependencies": {
-        "electron": "^26.1.0",
-        "electron-builder": "^24.6.3",
+        "electron": "^27.0.2",
+        "electron-builder": "^24.6.4",
         "grunt": "^1.5.3",
         "grunt-concurrent": "^3.0.0",
         "grunt-contrib-clean": "^2.0.0",

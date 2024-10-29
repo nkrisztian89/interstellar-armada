@@ -142,7 +142,17 @@ define([
              * Whether we are in the first load cycle (no items have been loaded yet)
              * @type Boolean
              */
-            _firstLoad = true;
+            _firstLoad = true,
+            /**
+             * Cached value of the color to be used to render the wireframe value
+             * @type Number[4]
+             */
+            _wireframeColor,
+            /**
+             * Cached value of the color to be used to render the reveal animation
+             * @type Number[4]
+             */
+            _revealColor;
     // ------------------------------------------------------------------------------
     // private functions
     /**
@@ -281,8 +291,10 @@ define([
      */
     function _setWireframeRevealUniformFunctions(model) {
         var front = model.getMaxY(), length = model.getHeight();
+        _wireframeColor = _getSetting(SETTINGS.WIREFRAME_COLOR);
+        _revealColor = _getSetting(SETTINGS.REVEAL_COLOR);
         model.setUniformValueFunction(UNIFORM_WIREFRAME_COLOR_NAME, function () {
-            return _getSetting(SETTINGS.WIREFRAME_COLOR);
+            return _wireframeColor;
         });
         model.setUniformValueFunction(UNIFORM_REVEAL_FRONT_NAME, function () {
             // while revealing the solid model, the wireframe model will disappear starting from the other side
@@ -297,7 +309,7 @@ define([
             return (_revealState <= REVEAL_WIREFRAME_END_STATE) ? length * _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR) : 0;
         });
         model.setUniformValueFunction(UNIFORM_REVEAL_COLOR_NAME, function () {
-            return _getSetting(SETTINGS.REVEAL_COLOR);
+            return _revealColor;
         });
     }
     /**
@@ -306,6 +318,7 @@ define([
      */
     function _setSolidRevealUniformFunctions(model) {
         var front = model.getMaxY(), length = model.getHeight();
+        _revealColor = _getSetting(SETTINGS.REVEAL_COLOR);
         model.setUniformValueFunction(UNIFORM_REVEAL_FRONT_NAME, function () {
             return true;
         });
@@ -316,7 +329,7 @@ define([
             return (_revealState < REVEAL_SOLID_END_STATE) ? length * _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR) : 0;
         });
         model.setUniformValueFunction(UNIFORM_REVEAL_COLOR_NAME, function () {
-            return _getSetting(SETTINGS.REVEAL_COLOR);
+            return _revealColor;
         });
     }
     /**
