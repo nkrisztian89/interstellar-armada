@@ -40,6 +40,7 @@ define([
                 INFO_BOX_SOURCE: "infobox.html",
                 INFO_BOX_CSS: "infobox.css",
                 MENU_COMPONENT_SOURCE: "menucomponent.html",
+                MENU_COMPONENT_CSS: "menucomponent.css",
                 CHECK_GROUP_SOURCE: "checkgroup.html",
                 CHECK_GROUP_CSS: "checkgroup.css",
                 LIST_COMPONENT_SOURCE: "listcomponent.html",
@@ -262,6 +263,7 @@ define([
      * @type MenuComponent~Style
      */
     exports.MENU_STYLE = {
+        cssFilename: exports.MENU_COMPONENT_CSS,
         menuClassName: exports.MENU_CLASS_NAME,
         buttonContainerClassName: exports.MENU_BUTTON_CONTAINER_CLASS_NAME,
         selectedButtonClassName: components.SELECTED_CLASS_NAME,

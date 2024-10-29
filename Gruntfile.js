@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018, 2020-2023 Krisztián Nagy
+ * Copyright 2016-2018, 2020-2024 Krisztián Nagy
  * @file Grunt configuration file for the Interstellar Armada game
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -41,6 +41,7 @@ module.exports = function (grunt) {
                 "css/infobox.css": 'src/scss/components/infobox.scss',
                 "css/listcomponent.css": 'src/scss/components/listcomponent.scss',
                 "css/loadingbox.css": 'src/scss/components/loadingbox.scss',
+                "css/menucomponent.css": 'src/scss/components/menucomponent.scss',
                 "css/selector.css": 'src/scss/components/selector.scss',
                 "css/slider.css": 'src/scss/components/slider.scss',
                 "css/editor.css": 'src/scss/editor.scss'
