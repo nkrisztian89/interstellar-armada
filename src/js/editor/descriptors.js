@@ -4564,6 +4564,27 @@ define([
                 baseType: BaseType.ENUM,
                 values: utils.getEnumObject(ai.getAITypes())
             },
+            AI_VOICE = {
+                baseType: BaseType.ENUM,
+                getValues: function () {
+                    return ["none"].concat(config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES));
+                }
+            },
+            AI_PARAMS = {
+                baseType: BaseType.OBJECT,
+                name: "aiParams",
+                getPreviewText: function (instance) {
+                    return "voice: " + (instance.voice || "random");
+                },
+                properties: {
+                    VOICE: {
+                        name: "voice",
+                        type: AI_VOICE,
+                        optional: true,
+                        defaultText: "random"
+                    }
+                }
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -4637,6 +4658,9 @@ define([
             _craftCanHaveInitialBlinkTimeDelta = function (data) {
                 return _craftIsMulti(data) && (data.initialBlinkTime !== undefined);
             },
+            _craftHasAI = function (data) {
+                return !!data.ai;
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -4684,6 +4708,13 @@ define([
                         defaultText: "none",
                         isValid: _craftIsNotPilotedSingle,
                         description: "The type of AI that should control this station.\nfighter: attacks the target head on, does charge attacks and evasive maneuvers if it gets hit\nship: approaches to weapon range and then turns according to the attack vector of the spacecraft class to attack the target with rotating weapons\nstation: does not move or turn, just attacks with its rotating weapons\nsentry: does not move, but turns according to its attack vector and attacks if the target comes within range"
+                    },
+                    AI_PARAMS: {
+                        name: "aiParams",
+                        type: AI_PARAMS,
+                        optional: true,
+                        defaultText: "default",
+                        isValid: _craftHasAI
                     },
                     POSITION: {
                         name: "position",

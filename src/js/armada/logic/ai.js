@@ -589,14 +589,20 @@ define([
         _availableVoices.splice(index, 1);
         return result;
     }
+    /**
+     * @typedef {Object} AIParams An object describing the individual properties for one spacecraft AI instance.
+     * @property {String} [voice] Which voice to use when playing radio messages transmitted by this AI.
+     * One of settings.json/logic.battle.pilotVoices or "none" (if this AI should not transmit radio messages)
+     */
     // ##############################################################################
     /**
      * @class
      * An abstract AI class that provides some generally useful methods for controlling a spacecraft.
      * @param {Spacecraft} spacecraft The AI will control this spacecraft.
      * @param {Mission} mission The mission within which this AI will control the spacecraft
+     * @param {AIParams} [params] An object containing the individual properties to set for this AI
      */
-    function SpacecraftAI(spacecraft, mission) {
+    function SpacecraftAI(spacecraft, mission, params) {
         /**
          * The spacecraft this AI is controlling.
          * @type Spacecraft
@@ -703,7 +709,7 @@ define([
          * @type SpacecraftEvents~RadioData
          */
         this._radioData = {
-            voice: 0,
+            voice: (params && params.voice) ? config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES).indexOf(params.voice) : 0,
             messageType: -1
         };
         // attaching handlers to the spacecraft events
@@ -712,7 +718,9 @@ define([
             this._spacecraft.addEventHandler(SpacecraftEvents.BEING_HIT, this._handleBeingHit.bind(this));
             this._spacecraft.addEventHandler(SpacecraftEvents.COMMAND_RECEIVED, this._handleCommand.bind(this));
             this._spacecraft.addEventHandler(SpacecraftEvents.GAIN_KILL, this._handleGainKill.bind(this));
-            this._radioData.voice = getAvailableVoice();
+            if (!params || !params.voice) {
+                this._radioData.voice = getAvailableVoice(); // automatically assign a random voice, if there isn't one set specifically
+            }
         }
     }
     /**
@@ -743,7 +751,7 @@ define([
      */
     SpacecraftAI.prototype._sendRadio = function (messageType, delay, priority) {
         var now = performance.now(), elapsed = now - this._lastRadioTime;
-        if (!this._radioSilence && (this._spacecraft && this._spacecraft.isAlive() && !this._spacecraft.isAway()) && (
+        if (!this._radioSilence && (this._radioData.voice >= 0) && (this._spacecraft && this._spacecraft.isAlive() && !this._spacecraft.isAway()) && (
                 (messageType !== this._lastRadioType) && (elapsed >= _differentRadioMessageDelay) ||
                 (elapsed > _sameRadioMessageDelay) ||
                 (delay > 0) ||
@@ -1301,10 +1309,11 @@ define([
      * guns pointing forward, requiring it to face its target when firing.
      * @param {Spacecraft} fighter The fighter to control
      * @param {Mission} mission The mission within which this AI will control the fighter
+     * @param {AIParams} [params] An object containing the individual properties to set for this AI
      */
-    function FighterAI(fighter, mission) {
+    function FighterAI(fighter, mission, params) {
         var reactionTimeFactor = ((mission.getPilotedSpacecraft() && mission.getPilotedSpacecraft().isHostile(fighter)) ? mission.getDifficultyLevel().getEnemyReactionTimeFactor() : 1);
-        SpacecraftAI.call(this, fighter, mission);
+        SpacecraftAI.call(this, fighter, mission, params);
         /**
          * The time elapsed since finishing the last roll movement while firing (reset when not firing or when a new attack run starts), in 
          * milliseconds.
@@ -1917,9 +1926,10 @@ define([
      * style defined which governs how to orient itself to the proper direction.
      * @param {Spacecraft} ship The ship to control
      * @param {Mission} mission The mission within which this AI will control the ship
+     * @param {AIParams} [params] An object containing the individual properties to set for this AI
      */
-    function ShipAI(ship, mission) {
-        SpacecraftAI.call(this, ship, mission);
+    function ShipAI(ship, mission, params) {
+        SpacecraftAI.call(this, ship, mission, params);
     }
     ShipAI.prototype = new SpacecraftAI();
     ShipAI.prototype.constructor = ShipAI;
@@ -2049,10 +2059,11 @@ define([
      * or move (unless specifically ordered via a move command), just aim its turrets at the most suitable enemy target and fire.
      * @param {Spacecraft} station The station to control
      * @param {Mission} mission The mission within which this AI will control the station
+     * @param {AIParams} [params] An object containing the individual properties to set for this AI
      * @param {Boolean} [shouldTurn=false] If true, the station is supposed to turn into attack orientation, but not move
      */
-    function StationAI(station, mission, shouldTurn) {
-        SpacecraftAI.call(this, station, mission);
+    function StationAI(station, mission, params, shouldTurn) {
+        SpacecraftAI.call(this, station, mission, params);
         /**
          * Whether the station is supposed to turn into attack orientation
          * @type Boolean
@@ -2166,9 +2177,10 @@ define([
      * not move (unless specifically ordered via a move command), aim its turrets at the most suitable enemy target and fire.
      * @param {Spacecraft} sentry The sentry to control
      * @param {Mission} mission The mission within which this AI will control the sentry
+     * @param {AIParams} [params] An object containing the individual properties to set for this AI
      */
-    function SentryAI(sentry, mission) {
-        StationAI.call(this, sentry, mission, true);
+    function SentryAI(sentry, mission, params) {
+        StationAI.call(this, sentry, mission, params, true);
     }
     SentryAI.prototype = new StationAI();
     SentryAI.prototype.constructor = SentryAI;
@@ -2196,9 +2208,10 @@ define([
      * @param {String} aiTypeName
      * @param {Spacecraft} spacecraft
      * @param {Mission} mission 
+     * @param {AIParams} params
      */
-    AIContext.prototype.addAI = function (aiTypeName, spacecraft, mission) {
-        this._ais.push(new _aiConstructors[aiTypeName](spacecraft, mission));
+    AIContext.prototype.addAI = function (aiTypeName, spacecraft, mission, params) {
+        this._ais.push(new _aiConstructors[aiTypeName](spacecraft, mission, params));
     };
     /**
      * Returns the index of the voice (within the array settings.json/logic.battle.pilotVoices) corresponding to the AI

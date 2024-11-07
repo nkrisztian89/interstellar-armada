@@ -1435,7 +1435,7 @@ define([
                 }
             }
             if (aiType) {
-                ai.addAI(aiType, craft, this);
+                ai.addAI(aiType, craft, this, spacecrafts[i].aiParams);
             }
         }
         if (count > 1) {

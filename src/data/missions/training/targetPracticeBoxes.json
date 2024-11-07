@@ -644,6 +644,9 @@
             "name": "Flapper",
             "class": "drone",
             "ai": "fighter",
+            "aiParams": {
+                "voice": "none"
+            },
             "position": [-2000, -2000, -150],
             "rotations": ["z+45"],
             "away": true,
