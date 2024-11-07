@@ -4668,7 +4668,8 @@ define([
                 baseType: BaseType.OBJECT,
                 name: "Spacecraft",
                 getName: function (instance) {
-                    return instance.name || (instance.squad || instance.class) + (instance.count ? (" (" + instance.count + ")") : "");
+                    return (instance.name || (instance.squad || instance.class) + (instance.count ? (" (" + instance.count + ")") : "")) +
+                            (_craftIsNotPiloted(instance) ? "" : " ★"); // adding a unicode star to the piloted spacecraft's name
                 },
                 getColor: function (instance) {
                     return instance.away ? SPACECRAFT_AWAY_COLOR : undefined;
