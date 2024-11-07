@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2019-2023 Krisztián Nagy
+ * Copyright 2016-2017, 2019-2024 Krisztián Nagy
  * @file Provides the content and event handlers for the Properties window of the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -8,17 +8,15 @@
 /**
  * @param utils Used for enum handling
  * @param application Used for showing errors
- * @param config Used to obtain configuration settings
  * @param descriptors Used to obtain the appropriate properties description object
  * @param common Used to create selectors
  */
 define([
     "utils/utils",
     "modules/application",
-    "armada/configuration",
     "editor/descriptors",
     "editor/common"
-], function (utils, application, config, descriptors, common) {
+], function (utils, application, descriptors, common) {
     "use strict";
     var
             // ------------------------------------------------------------------------------

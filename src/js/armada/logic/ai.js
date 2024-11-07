@@ -692,6 +692,11 @@ define([
          */
         this._radioPriority = 0;
         /**
+         * While true, radio messages are not transmitted by this AI.
+         * @type Boolean
+         */
+        this._radioSilence = false;
+        /**
          * The data to be passed to the event system (via a SpacecraftEvents.RADIO event sent to the controlled spacecraft) when a
          * radio message is transmitted by this AI pilot. This data data is also set when the delayed transmission of a radio message
          * is scheduled.
@@ -738,7 +743,7 @@ define([
      */
     SpacecraftAI.prototype._sendRadio = function (messageType, delay, priority) {
         var now = performance.now(), elapsed = now - this._lastRadioTime;
-        if ((this._spacecraft && this._spacecraft.isAlive() && !this._spacecraft.isAway()) && (
+        if (!this._radioSilence && (this._spacecraft && this._spacecraft.isAlive() && !this._spacecraft.isAway()) && (
                 (messageType !== this._lastRadioType) && (elapsed >= _differentRadioMessageDelay) ||
                 (elapsed > _sameRadioMessageDelay) ||
                 (delay > 0) ||
@@ -761,6 +766,13 @@ define([
             }
         }
         return false;
+    };
+    /**
+     * Sets whether radio transmissions by this AI should be suspended.
+     * @param {Boolean} value
+     */
+    SpacecraftAI.prototype.setRadioSilence = function (value) {
+        this._radioSilence = value;
     };
     /**
      * Send the scheduled delayed radio message, if the scheduled time is reached.
@@ -2204,6 +2216,19 @@ define([
         return -1;
     };
     /**
+     * Returns the AI that controls the passed spacecraft (null if there is no AI associated with the passed spacecraft).
+     * @param {Boolean} silence
+     * @param {Spacecraft[]} [spacecrafts] If null or undefined, will be set for all spacecrafts.
+     */
+    AIContext.prototype.setRadioSilenceForSpacecrafts = function (silence, spacecrafts) {
+        var i;
+        for (i = 0; i < this._ais.length; i++) {
+            if (!spacecrafts || (spacecrafts.indexOf(this._ais[i].getSpacecraft()) >= 0)) {
+                this._ais[i].setRadioSilence(silence);
+            }
+        }
+    };
+    /**
      * Performs the control step for all the stored AIs.
      * @param {Number} dt the time elapsed since the last control step, in milliseconds.
      */
@@ -2295,6 +2320,7 @@ define([
         clearAIs: _context.clearAIs.bind(_context),
         addAI: _context.addAI.bind(_context),
         getVoiceOfSpacecraft: _context.getVoiceOfSpacecraft.bind(_context),
+        setRadioSilenceForSpacecrafts: _context.setRadioSilenceForSpacecrafts.bind(_context),
         control: _context.control.bind(_context),
         broadcastSpacecraftEvent: _context.broadcastSpacecraftEvent.bind(_context),
         handlePlayerGainKill: _context.handlePlayerGainKill.bind(_context),

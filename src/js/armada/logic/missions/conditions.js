@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file The classes defining conditions which can trigger events during missions
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -207,6 +207,13 @@ define([
             return (spacecrafts.length === 1) && (spacecrafts[0] === mission.getPilotedSpacecraft());
         }
         return false;
+    };
+    /**
+     * Whether the subject group has no spacecrafts (single or squad or team) set
+     * @returns {Boolean}
+     */
+    SubjectGroup.prototype.isEmpty = function () {
+        return !this._descriptor.spacecrafts && !this._descriptor.squads && !this._descriptor.teams;
     };
     /**
      * 

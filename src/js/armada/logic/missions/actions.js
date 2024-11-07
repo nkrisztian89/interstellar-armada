@@ -11,6 +11,7 @@
  * @param game Used to dispatch messages to BattleScreen
  * @param strings Used for translation support
  * @param SpacecraftEvents Used to trigger spacecraft events
+ * @param ai Used to execute actions such as Radio Silence on spacecraft AIs
  * @param conditions Used for parsing and creating conditions from mission data
  */
 define([
@@ -19,6 +20,7 @@ define([
     "modules/game",
     "armada/strings",
     "armada/logic/SpacecraftEvents",
+    "armada/logic/ai",
     "armada/logic/missions/conditions",
     "utils/polyfill"
 ], function (
@@ -26,6 +28,7 @@ define([
         application, game,
         strings,
         SpacecraftEvents,
+        ai,
         conditions) {
     "use strict";
     var
@@ -46,6 +49,8 @@ define([
                 DAMAGE: "damage",
                 /** Executing this action changes the state of the HUD on the piloted spacecraft (e.g. hide / show / highlight an element) */
                 HUD: "hud",
+                /** Executing this action starts or stops radio silence for the subject AIs (they will not transmit radio messages) */
+                RADIO_SILENCE: "radioSilence",
                 /** Executing this action marks the mission as complete */
                 WIN: "win",
                 /** Executing this action marks the mission as failed */
@@ -622,10 +627,53 @@ define([
             spacecraft.handleEvent(SpacecraftEvents.HUD, this._params);
         }
     };
+    // #########################################################################
+    /**
+     * @class
+     * @extends Action
+     * @param {Object} dataJSON
+     * @param {Trigger} trigger
+     */
+    function RadioSilenceAction(dataJSON, trigger) {
+        Action.call(this, dataJSON, trigger);
+    }
+    RadioSilenceAction.prototype = new Action();
+    RadioSilenceAction.prototype.constructor = RadioSilenceAction;
+    /**
+     * @typedef RadioSilenceAction~Params
+     * @property {Boolean} silence
+     */
+    /**
+     * @override
+     * @param {RadioSilenceAction~Params} params
+     * @returns {Boolean}
+     */
+    RadioSilenceAction.prototype._checkParams = function (params) {
+        /**
+         * @type SpacecraftEvents~HUDData
+         */
+        this._params = params;
+        if (!this._params ||
+                ((this._params.silence === undefined) || (typeof this._params.silence !== "boolean"))) {
+            this._handleWrongParams();
+            return false;
+        }
+        return true;
+    };
+    /**
+     * @override
+     * @param {Mission} mission
+     */
+    RadioSilenceAction.prototype.execute = function (mission) {
+        var spacecrafts;
+        spacecrafts = this._subjects.isEmpty() ? null : this._subjects.getSpacecrafts(mission, true);
+        ai.setRadioSilenceForSpacecrafts(this._params.silence, spacecrafts);
+    };
+    // -------------------------------------------------------------------------
     /**
      * @param {Object} dataJSON
      * @param {Trigger} trigger 
-     * @returns {WinAction|LoseAction|MessageAction|ClearMessagesAction|CommandAction|HUDAction|Action}
+     * @returns {WinAction|LoseAction|MessageAction|ClearMessagesAction|CommandAction|SetPropertiesAction|RepairAction|DamageAction|HUDAction|RadioSilenceAction|Action}
      */
     function createAction(dataJSON, trigger) {
         return new (_actionConstructors[dataJSON.type] || Action)(dataJSON, trigger);
@@ -642,6 +690,7 @@ define([
     _actionConstructors[ActionType.REPAIR] = RepairAction;
     _actionConstructors[ActionType.DAMAGE] = DamageAction;
     _actionConstructors[ActionType.HUD] = HUDAction;
+    _actionConstructors[ActionType.RADIO_SILENCE] = RadioSilenceAction;
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

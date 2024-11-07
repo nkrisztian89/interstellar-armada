@@ -3176,7 +3176,7 @@ define([
             SUBJECT_GROUP = {
                 baseType: BaseType.OBJECT,
                 name: "SubjectGroup",
-                getPreviewText: function (instance, parent) {
+                getPreviewText: function (instance, parent, allIfEmpty) {
                     var prefix = "", subjects = [];
                     if (parent && parent.params && parent.params.which === conditions.ConditionSubjectsWhich.ANY) {
                         prefix = "any of ";
@@ -3191,7 +3191,7 @@ define([
                         subjects = subjects.concat(instance.teams);
                     }
                     if (subjects.length === 0) {
-                        return "none";
+                        return allIfEmpty ? "all spacecrafts" : "none";
                     }
                     if (subjects.length === 1) {
                         return subjects[0];
@@ -4052,6 +4052,9 @@ define([
             _parentIsHUDAction = function (data, parent) {
                 return !!parent && (parent.type === ActionType.HUD);
             },
+            _parentIsRadioSilenceAction = function (data, parent) {
+                return !!parent && (parent.type === ActionType.RADIO_SILENCE);
+            },
             _missionHasMessages = function (data, parent, itemName) {
                 var prefix = strings.MISSION.PREFIX.name + utils.getFilenameWithoutExtension(itemName) + strings.MISSION.MESSAGES_SUFFIX.name;
                 return !!parent && (parent.type === ActionType.MESSAGE) && (strings.getKeys(prefix).length > 0);
@@ -4128,6 +4131,10 @@ define([
                     // HUDAction params:
                     if (instance.state !== undefined) {
                         return "HUD: " + (instance.section ? instance.section + " " : "") + instance.state;
+                    }
+                    // RadioSilenceAction params:
+                    if (instance.silence !== undefined) {
+                        return "silence " + (instance.silence ? "on" : "off");
                     }
                     return "none";
                 },
@@ -4264,11 +4271,24 @@ define([
                         type: HUD_SECTION_STATE,
                         isRequired: _parentIsHUDAction,
                         isValid: _parentIsHUDAction
+                    },
+                    // RadioSilenceAction params:
+                    SILENCE: {
+                        name: "silence",
+                        type: BaseType.BOOLEAN,
+                        isRequired: _parentIsRadioSilenceAction,
+                        isValid: _parentIsRadioSilenceAction
                     }
                 }
             },
             _actionCanHaveSubjects = function (data) {
-                return (data.type === ActionType.COMMAND) || (data.type === ActionType.SET_PROPERTIES) || (data.type === ActionType.REPAIR) || (data.type === ActionType.DAMAGE);
+                return [
+                    ActionType.COMMAND,
+                    ActionType.SET_PROPERTIES,
+                    ActionType.REPAIR,
+                    ActionType.DAMAGE,
+                    ActionType.RADIO_SILENCE
+                ].indexOf(data.type) >= 0;
             },
             _actionCanHaveParams = function (data) {
                 return [
@@ -4277,7 +4297,8 @@ define([
                     ActionType.SET_PROPERTIES,
                     ActionType.REPAIR,
                     ActionType.DAMAGE,
-                    ActionType.HUD
+                    ActionType.HUD,
+                    ActionType.RADIO_SILENCE
                 ].indexOf(data.type) >= 0;
             },
             /**
@@ -4330,6 +4351,14 @@ define([
                                 }
                                 result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects, instance) : "damage") + ":" +
                                         _getPropertiesText(instance.params, "-");
+                                break;
+                            case ActionType.RADIO_SILENCE:
+                                if (!instance.params || (instance.params.silence === undefined)) {
+                                    result = "radio silence off";
+                                } else {
+                                    result = "radio silence " + (instance.params.silence ? "on" : "off");
+                                }
+                                result = (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects, instance, true) + ": " : "") + result;
                                 break;
                             default:
                                 result = result + instance.type;

@@ -276,7 +276,8 @@ module.exports = function (grunt) {
                 ["ambientColor"],
                 ["revealState"],
                 ["piloted"],
-                ["objectIntensity"]
+                ["objectIntensity"],
+                ["radioSilence"]
             ].map(
             function (replacement) {
 // create the replacements for each simple setter
