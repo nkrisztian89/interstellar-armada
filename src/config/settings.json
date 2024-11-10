@@ -1021,6 +1021,35 @@
             "minVoiceMessageDelayForDifferentType": 250,
             "minVoiceMessageDelayForSameSourceSameType": 5000,
             "minVoiceMessageDelayForSameSourceDifferentType": 1500,
+            "aiPresets": [{
+                    "name": "rookie",
+                    "evasionDelayFactor": 1.5,
+                    "fireDelayFactor": 1.5,
+                    "maxAimError": 2.5,
+                    "aimErrorResetDistance": 10
+                }, {
+                    "name": "elite",
+                    "evasionDelayFactor": 0.75,
+                    "fireDelayFactor": 0.75,
+                    "aimUpdateInterval": 1000,
+                    "maxAimError": 1.5,
+                    "aimErrorResetDistance": 30
+                }, {
+                    "name": "ace",
+                    "evasionDelayFactor": 0.5,
+                    "fireDelayFactor": 0.5,
+                    "aimUpdateInterval": 1000,
+                    "maxAimError": 1.25,
+                    "aimErrorResetDistance": 35
+                }, {
+                    "name": "aggressive",
+                    "evasionDelayFactor": 5,
+                    "fireDelayFactor": 0.5
+                }, {
+                    "name": "elusive",
+                    "evasionDelayFactor": 0.5,
+                    "fireDelayFactor": 2
+                }],
             "weaponFireSoundStackMinimumDistance": 100,
             "hitSoundStackingTimeThreshold": 0.1,
             "hitSoundStackingVolumeFactor": 0.5,

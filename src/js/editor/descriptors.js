@@ -4570,18 +4570,117 @@ define([
                     return ["none"].concat(config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES));
                 }
             },
+            _mapAiPreset = function (aiPreset) {
+                return aiPreset.name;
+            },
+            _findAiPreset = function (name) {
+                return config.getBattleSetting(config.BATTLE_SETTINGS.AI_PRESETS).find(function (preset) {
+                    return preset.name === name;
+                });
+            },
+            _getDefaultForAiParam = function (data, param, defaultValue) {
+                var preset;
+                if (data.preset) {
+                    preset = _findAiPreset(data.preset);
+                }
+                if (preset && preset[param] !== undefined) {
+                    return preset[param];
+                }
+                return defaultValue;
+            },
+            AI_PRESET = {
+                baseType: BaseType.ENUM,
+                getValues: function () {
+                    return config.getBattleSetting(config.BATTLE_SETTINGS.AI_PRESETS).map(_mapAiPreset);
+                }
+            },
+            _parentHasFighterAI = function (data, parent) {
+                return parent.ai === "fighter";
+            },
             AI_PARAMS = {
                 baseType: BaseType.OBJECT,
                 name: "aiParams",
                 getPreviewText: function (instance) {
-                    return "voice: " + (instance.voice || "random");
+                    var result = "";
+                    if ((instance.evasionDelayFactor !== undefined) || (instance.fireDelayFactor !== undefined) ||
+                            (instance.aimUpdateInterval !== undefined) || (instance.maxAimError !== undefined) ||
+                            (instance.aimErrorResetDistance !== undefined)) {
+                        result = result + "custom";
+                    }
+                    if (instance.preset) {
+                        result = (result ? result + " " : "") + instance.preset;
+                    }
+                    return (result ? result + "; " : "") + "voice: " + (instance.voice || "random");
                 },
                 properties: {
                     VOICE: {
                         name: "voice",
+                        description: "Which voice to use when playing radio messages transmitted by this AI.",
                         type: AI_VOICE,
                         optional: true,
                         defaultText: "random"
+                    },
+                    PRESET: {
+                        name: "preset",
+                        description: "Predefined set of default values to use for the parameters not set specifically.",
+                        type: AI_PRESET,
+                        optional: true,
+                        defaultText: "none"
+                    },
+                    EVASION_DELAY_FACTOR: {
+                        name: "evasionDelayFactor",
+                        description: "The AI starts evasive maneuvers a certain time after being hit / seeing an incoming shot, influenced by this factor and the set difficulty. The higher this factor, the slower the AI will react to hits.",
+                        type: NON_NEGATIVE_SCALE,
+                        optional: true,
+                        getDerivedDefault: function (data) {
+                            return _getDefaultForAiParam(data, "evasionDelayFactor", 1);
+                        },
+                        isValid: _parentHasFighterAI,
+                        updateOnValidate: true
+                    },
+                    FIRE_DELAY_FACTOR: {
+                        name: "fireDelayFactor",
+                        description: "The AI starts firing a certain time after aiming at its target, influenced by this factor and the set difficulty. The higher this factor, the longer it will take for the AI to start to fire.",
+                        type: NON_NEGATIVE_SCALE,
+                        optional: true,
+                        getDerivedDefault: function (data) {
+                            return _getDefaultForAiParam(data, "fireDelayFactor", 1);
+                        },
+                        isValid: _parentHasFighterAI,
+                        updateOnValidate: true
+                    },
+                    AIM_UPDATE_INTERVAL: {
+                        name: "aimUpdateInterval",
+                        description: "The AI periodically updates the point it is aiming at (trying to estimate the target's upcoming position, with an error). This is the time between two updates. The higher this number, the slower the AI will react to changes in its target's movement.",
+                        type: POSITIVE_MILLISECONDS,
+                        optional: true,
+                        getDerivedDefault: function (data) {
+                            return _getDefaultForAiParam(data, "aimUpdateInterval", ai.DEFAULT_AIM_UPDATE_INTERVAL);
+                        },
+                        isValid: _parentHasFighterAI,
+                        updateOnValidate: true
+                    },
+                    MAX_AIM_ERROR: {
+                        name: "maxAimError",
+                        description: "When calculating the point the AI should aim at, a random error is added. This is the maximum amount that error can be. The higher this number, the less accurate the AI will be.",
+                        type: NON_NEGATIVE_DEGREES_180,
+                        optional: true,
+                        getDerivedDefault: function (data) {
+                            return _getDefaultForAiParam(data, "maxAimError", ai.DEFAULT_MAX_AIM_ERROR);
+                        },
+                        isValid: _parentHasFighterAI,
+                        updateOnValidate: true
+                    },
+                    AIM_ERROR_RESET_DISTANCE: {
+                        name: "aimErrorResetDistance",
+                        description: "While the AI's target doesn't change its course, the aim error is reduced at each aim update. This value determines how much the target's course needs to change for the aim error to be reset to the maximum. The higher this number, the better the AI will track its target's movement.",
+                        type: POSITIVE_DISTANCE,
+                        optional: true,
+                        getDerivedDefault: function (data) {
+                            return _getDefaultForAiParam(data, "aimErrorResetDistance", ai.DEFAULT_AIM_ERROR_RESET_DISTANCE);
+                        },
+                        isValid: _parentHasFighterAI,
+                        updateOnValidate: true
                     }
                 }
             },
@@ -4708,14 +4807,16 @@ define([
                         optional: true,
                         defaultText: "none",
                         isValid: _craftIsNotPilotedSingle,
-                        description: "The type of AI that should control this station.\nfighter: attacks the target head on, does charge attacks and evasive maneuvers if it gets hit\nship: approaches to weapon range and then turns according to the attack vector of the spacecraft class to attack the target with rotating weapons\nstation: does not move or turn, just attacks with its rotating weapons\nsentry: does not move, but turns according to its attack vector and attacks if the target comes within range"
+                        description: "The type of AI that should control this spacecraft.\nfighter: attacks the target head on, does charge attacks and evasive maneuvers if it gets hit\nship: approaches to weapon range and then turns according to the attack vector of the spacecraft class to attack the target with rotating weapons\nstation: does not move or turn, just attacks with its rotating weapons\nsentry: does not move, but turns according to its attack vector and attacks if the target comes within range"
                     },
                     AI_PARAMS: {
                         name: "aiParams",
+                        description: "Specific properties of the AI controlling this spacecraft.",
                         type: AI_PARAMS,
                         optional: true,
                         defaultText: "default",
-                        isValid: _craftHasAI
+                        isValid: _craftHasAI,
+                        updateOnValidate: true
                     },
                     POSITION: {
                         name: "position",

@@ -244,16 +244,16 @@ define([
              */
             EVASIVE_MANEUVER_DURATION = 1000,
             /**
-             * Fighters will update the offset vector they use to aim at their target in this interval, in milliseconds.
+             * Fighters will update the offset vector they use to aim at their target in this interval, in milliseconds. (default value)
              * @type Number
              */
-            TARGET_OFFSET_UPDATE_INTERVAL = 1500,
+            DEFAULT_AIM_UPDATE_INTERVAL = 1500,
             /**
-             * When starting a new attack run, a random aiming error will be calculated for fighter in the range of +/- this many degrees
-             * along both axes
+             * When starting a new attack run, a random aiming error will be calculated for fighters in the range of +/- this many degrees
+             * along both axes (default value)
              * @type Number
              */
-            MAX_AIM_ERROR = Math.radians(2),
+            DEFAULT_MAX_AIM_ERROR = 2,
             /**
              * Every time a new target offset is calculated, if it is not significantly different from the previous one, the maximum aiming
              * error is reduced by multiplying the current maximum by this factor. (otherwise, a new aiming error with the same maximum is
@@ -262,11 +262,11 @@ define([
              */
             AIM_ERROR_REDUCTION_FACTOR = 0.5,
             /**
-             * The square of the length of the difference between a newly calculated and the previous target offset needs to be less than 
-             * this number in order to reduce the aiming error. (in meters)
+             * The length of the difference between a newly calculated and the previous target offset needs to be less than
+             * this number (default value) in order to reduce the aiming error. (in meters)
              * @type Number
              */
-            AIM_ERROR_REDUCTION_THRESHOLD = 25 * 25,
+            DEFAULT_AIM_ERROR_RESET_DISTANCE = 25,
             /**
              * Once aimed, fighters will start firing after this time elapses, in milliseconds. (to simulate a reaction time)
              * @type Number
@@ -418,6 +418,11 @@ define([
              * @type Number
              */
             _differentRadioMessageDelay = 0,
+            /**
+             * Cached value of the list of available AI presets loaded from settings.json to base the AI params (for individual spacecrafts) off of
+             * @type FighterAIParams[]
+             */
+            _aiPresets,
             /**
              * Cached value of the configuration setting determining for maximum how long should spacecrafts accelerate their turning, in
              * seconds.
@@ -1301,6 +1306,118 @@ define([
             this._sendRadio(_radioMessageCompliment, RADIO_MESSAGE_COMPLIMENT_DELAY, RADIO_MESSAGE_COMPLIMENT_PRIORITY);
         }
     };
+    /**
+     * @typedef {AIParams} FighterAIParams An object describing the individual properties for one fighter AI instance.
+     * @property {Number} [evasionDelayFactor=1] The AI starts evasive maneuvers a certain time after being hit / seeing an incoming shot. That time is multiplied by this factor.
+     * @property {Number} [fireDelayFactor=1] The AI starts firing a certain time after aiming at its target. That time is multiplied by this factor.
+     * @property {Number} [aimUpdateInterval] The AI periodically updates the point it is aiming at (trying to estimate the target's upcoming position, with an error). This is the time between two updates, in milliseconds.
+     * @property {Number} [maxAimError] When calculating the point the AI should aim at, a random error is added. This is the maximum amount that error can be, in degrees (+/-, on both axes)
+     * @property {Number} [aimErrorResetDistance] While the AI's target doesn't change its course, the aim error is reduced at each aim update. This value determines how much the target's course needs to change for the aim error to be reset to the maximum, in meters.
+     */
+    /**
+     * Returns the AI preset (defined in settings.json/logic.battle.aiPresets) that has the passed name
+     * @param {String} name
+     * @returns {FighterAIParams}
+     */
+    function _getAiPreset(name) {
+        var i;
+        for (i = 0; i < _aiPresets.length; i++) {
+            if (_aiPresets[i].name === name) {
+                return _aiPresets[i];
+            }
+        }
+        return null;
+    }
+    /**
+     * Returns the evasion delay factor value that should be used for an AI with the passed AI params
+     * @param {FighterAIParams} params
+     * @returns {Number}
+     */
+    function _getEvasionDelayFactor(params) {
+        var preset;
+        if (params) {
+            if (params.evasionDelayFactor !== undefined) {
+                return params.evasionDelayFactor;
+            }
+            preset = params.preset ? _getAiPreset(params.preset) : null;
+            if (preset && (preset.evasionDelayFactor !== undefined)) {
+                return preset.evasionDelayFactor;
+            }
+        }
+        return 1;
+    }
+    /**
+     * Returns the fire delay factor value that should be used for an AI with the passed AI params
+     * @param {FighterAIParams} params
+     * @returns {Number}
+     */
+    function _getFireDelayFactor(params) {
+        var preset;
+        if (params) {
+            if (params.fireDelayFactor !== undefined) {
+                return params.fireDelayFactor;
+            }
+            preset = params.preset ? _getAiPreset(params.preset) : null;
+            if (preset && (preset.fireDelayFactor !== undefined)) {
+                return preset.fireDelayFactor;
+            }
+        }
+        return 1;
+    }
+    /**
+     * Returns the aim update interval value that should be used for an AI with the passed AI params
+     * @param {FighterAIParams} params
+     * @returns {Number}
+     */
+    function _getAimUpdateInterval(params) {
+        var preset;
+        if (params) {
+            if (params.aimUpdateInterval !== undefined) {
+                return params.aimUpdateInterval;
+            }
+            preset = params.preset ? _getAiPreset(params.preset) : null;
+            if (preset && (preset.aimUpdateInterval !== undefined)) {
+                return preset.aimUpdateInterval;
+            }
+        }
+        return DEFAULT_AIM_UPDATE_INTERVAL;
+    }
+    /**
+     * Returns the maximum aim error value that should be used for an AI with the passed AI params
+     * @param {FighterAIParams} params
+     * @returns {Number}
+     */
+    function _getMaxAimError(params) {
+        var preset;
+        if (params) {
+            if (params.maxAimError !== undefined) {
+                return params.maxAimError;
+            }
+            preset = params.preset ? _getAiPreset(params.preset) : null;
+            if (preset && (preset.maxAimError !== undefined)) {
+                return preset.maxAimError;
+            }
+        }
+        return DEFAULT_MAX_AIM_ERROR;
+    }
+    /**
+     * Returns the aim error reset distance value that should be used for an AI with the passed AI params
+     * @param {FighterAIParams} params
+     * @returns {Number}
+     */
+    function _getAimErrorResetDistance(params) {
+        var preset;
+        if (params) {
+            if (params.aimErrorResetDistance !== undefined) {
+                return params.aimErrorResetDistance;
+            }
+            preset = params.preset ? _getAiPreset(params.preset) : null;
+            if (preset && (preset.aimErrorResetDistance !== undefined)) {
+                return preset.aimErrorResetDistance;
+            }
+        }
+        return DEFAULT_AIM_ERROR_RESET_DISTANCE;
+    }
     // ##############################################################################
     /**
      * @class
@@ -1309,7 +1426,7 @@ define([
      * guns pointing forward, requiring it to face its target when firing.
      * @param {Spacecraft} fighter The fighter to control
      * @param {Mission} mission The mission within which this AI will control the fighter
-     * @param {AIParams} [params] An object containing the individual properties to set for this AI
+     * @param {FighterAIParams} [params] An object containing the individual properties to set for this AI
      */
     function FighterAI(fighter, mission, params) {
         var reactionTimeFactor = ((mission.getPilotedSpacecraft() && mission.getPilotedSpacecraft().isHostile(fighter)) ? mission.getDifficultyLevel().getEnemyReactionTimeFactor() : 1);
@@ -1341,7 +1458,7 @@ define([
          * The amount of time to wait before starting evasive maneuvers, in milliseconds.
          * @type Number
          */
-        this._evasiveManeuverDelay = EVASIVE_MANEUVER_DELAY * reactionTimeFactor;
+        this._evasiveManeuverDelay = EVASIVE_MANEUVER_DELAY * reactionTimeFactor * _getEvasionDelayFactor(params);
         /**
          * The time elapsed since the current evasive maneuver started, in milliseconds, or -1 if there is no evasive maneuver in progress.
          * @type Number
@@ -1400,15 +1517,32 @@ define([
          */
         this._targetOffset = [0, 0, 0];
         /**
+         * The amount of time between two offset vector updates, in milliseconds.
+         * @type Number
+         */
+        this._targetOffsetUpdateInterval = _getAimUpdateInterval(params);
+        /**
          * Countdown timer for when to update the stored target offset vector. In milliseconds.
          * @type Number
          */
         this._targetOffsetUpdateTimeLeft = 0;
         /**
-         * The current maximum to use when calculating the next aiming error.
+         * If the square of the length (in meters) of the difference between a newly calculated and the previous target offset is less than
+         * this number, the aiming error gets reduced, if it is more, it gets reset to maximum when offset is updated.
          * @type Number
          */
-        this._maxAimError = 0;
+        this._aimErrorResetThreshold = _getAimErrorResetDistance(params);
+        this._aimErrorResetThreshold *= this._aimErrorResetThreshold;
+        /**
+         * The maximum aiming error (the aiming error is reset to this value after the target's offset vector changes more than the set threshold), in radians.
+         * @type Number
+         */
+        this._maxAimError = Math.radians(_getMaxAimError(params));
+        /**
+         * The current maximum to use when calculating the next aiming error, in radians.
+         * @type Number
+         */
+        this._currentAimError = 0;
         /**
          * The current aiming error by which the aim angles are offset. (yaw, pitch)
          * @type Array
@@ -1423,7 +1557,7 @@ define([
          * The amount of time to wait before starting to fire after aiming, in milliseconds.
          * @type Number
          */
-        this._fireDelay = FIRE_DELAY * reactionTimeFactor;
+        this._fireDelay = FIRE_DELAY * reactionTimeFactor * _getFireDelayFactor(params);
         /**
          * The list of missiles that we fired at the current target (to avoid overkill by launching too many)
          * @type Missile[]
@@ -1440,8 +1574,8 @@ define([
      * Calculates a new random aiming error based on the current maximum.
      */
     FighterAI.prototype._updateAimError = function () {
-        this._aimError[0] = (_aimErrorSeed() - 0.5) * 2 * this._maxAimError;
-        this._aimError[1] = (_aimErrorSeed() - 0.5) * 2 * this._maxAimError;
+        this._aimError[0] = (_aimErrorSeed() - 0.5) * 2 * this._currentAimError;
+        this._aimError[1] = (_aimErrorSeed() - 0.5) * 2 * this._currentAimError;
     };
     /**
      * Sets up the state of the AI to perform a new attack run, to be used when switching to a new target or after a charge maneuver has 
@@ -1459,8 +1593,8 @@ define([
         this._isBlockedBy = null;
         this._rollTime = -1;
         this._targetOffset = [0, 0, 0];
-        this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
-        this._maxAimError = MAX_AIM_ERROR;
+        this._targetOffsetUpdateTimeLeft = this._targetOffsetUpdateInterval;
+        this._currentAimError = this._maxAimError;
         this._fireDelayLeft = this._fireDelay;
         this._updateAimError();
     };
@@ -1647,12 +1781,12 @@ define([
                     _targetPositionVector[2] = targetPosition[14];
                     // updating target offset and aim error, if it is time
                     if (this._targetOffsetUpdateTimeLeft <= 0) {
-                        this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
+                        this._targetOffsetUpdateTimeLeft = this._targetOffsetUpdateInterval;
                         newOffset = vec.diff3Aux(this._spacecraft.getTargetHitPosition(), _targetPositionVector);
-                        if (vec.length3Squared(vec.diff3Aux(this._targetOffset, newOffset)) < AIM_ERROR_REDUCTION_THRESHOLD) {
-                            this._maxAimError *= AIM_ERROR_REDUCTION_FACTOR;
+                        if (vec.length3Squared(vec.diff3Aux(this._targetOffset, newOffset)) < this._aimErrorResetThreshold) {
+                            this._currentAimError *= AIM_ERROR_REDUCTION_FACTOR;
                         } else {
-                            this._maxAimError = MAX_AIM_ERROR;
+                            this._currentAimError = this._maxAimError;
                         }
                         this._targetOffset[0] = newOffset[0];
                         this._targetOffset[1] = newOffset[1];
@@ -2320,12 +2454,16 @@ define([
         _radioMessageShipLost = voiceMessages.indexOf("shiplost");
         _sameRadioMessageDelay = config.getBattleSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_SAME_SOURCE_SAME_TYPE);
         _differentRadioMessageDelay = config.getBattleSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_SAME_SOURCE_DIFFERENT_TYPE);
+        _aiPresets = config.getBattleSetting(config.BATTLE_SETTINGS.AI_PRESETS);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         SpacecraftCommand: SpacecraftCommand,
         JumpCommandWay: JumpCommandWay,
+        DEFAULT_AIM_UPDATE_INTERVAL: DEFAULT_AIM_UPDATE_INTERVAL,
+        DEFAULT_MAX_AIM_ERROR: DEFAULT_MAX_AIM_ERROR,
+        DEFAULT_AIM_ERROR_RESET_DISTANCE: DEFAULT_AIM_ERROR_RESET_DISTANCE,
         getAITypes: getAITypes,
         resetJumpInPositionSeed: resetJumpInPositionSeed,
         resetRandomSeeds: resetRandomSeeds,

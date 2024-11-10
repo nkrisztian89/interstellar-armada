@@ -262,6 +262,40 @@ define([
             }
         }
     };
+    _customTypes.AI_PRESET = {
+        baseType: "object",
+        properties: {
+            NAME: {
+                name: "name",
+                type: "string"
+            },
+            EVASION_DELAY_FACTOR: {
+                name: "evasionDelayFactor",
+                type: "number",
+                optional: true
+            },
+            FIRE_DELAY_FACTOR: {
+                name: "fireDelayFactor",
+                type: "number",
+                optional: true
+            },
+            AIM_UPDATE_INTERVAL: {
+                name: "aimUpdateInterval",
+                type: "number",
+                optional: true
+            },
+            MAX_AIM_ERROR: {
+                name: "maxAimError",
+                type: "number",
+                optional: true
+            },
+            AIM_ERROR_RESET_DISTANCE: {
+                name: "aimErrorResetDistance",
+                type: "number",
+                optional: true
+            }
+        }
+    };
     _customTypes.CRAFT_INDICATOR_POSITIONS = {
         baseType: "array", // how many crafts are in the wing
         elementType: {
@@ -1598,6 +1632,14 @@ define([
         MIN_VOICE_MESSAGE_DELAY_FOR_SAME_SOURCE_DIFFERENT_TYPE: {
             name: "minVoiceMessageDelayForSameSourceDifferentType",
             type: "number"
+        },
+        /**
+         * The list of presets to base AI parameters (set for individual spacecrafts) off of
+         */
+        AI_PRESETS: {
+            name: "aiPresets",
+            type: "array",
+            elementType: _customTypes.AI_PRESET
         },
         WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE: {
             name: "weaponFireSoundStackMinimumDistance",
