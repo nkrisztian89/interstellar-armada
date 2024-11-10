@@ -2193,7 +2193,7 @@ define([
      * @param {Mission} mission The current mission, used to select the available sound samples for the mission's messages to be loaded
      */
     function _addHUDToScene(mission) {
-        var i, j, n, layout, mappings, indicator, layoutDescriptor, element, voices, missionVoiceMessages;
+        var i, j, n, layout, mappings, indicator, layoutDescriptor, element, voices, missionVoiceMessages, craft;
         // keep the ons with the same shader together for faster rendering
         // ---------------------------------------------------------
         // UI 2D SHADER
@@ -2532,23 +2532,30 @@ define([
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name);
-        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).name);
+        if (_multi) {
+            resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).name);
+        }
         voices = config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES);
         _voiceMessages = config.getBattleSetting(config.BATTLE_SETTINGS.VOICE_MESSAGES);
-        missionVoiceMessages = mission.getMessageIds();
+        missionVoiceMessages = mission.getMessageParams();
         for (i = 0; i < voices.length; i++) {
-            // loading generic voice message samples
-            for (j = 0; j < _voiceMessages.length; j++) {
-                _getGenericVoiceSoundEffect(voices[i], _voiceMessages[j]);
-            }
-            // loading mission specific voice message samples for AI pilots
-            for (j = 0; j < missionVoiceMessages.length; j++) {
-                _getMissionPilotVoiceSoundEffect(voices[i], mission, missionVoiceMessages[j]);
+            if (ai.isVoiceUsed(i)) {
+                // loading generic voice message samples
+                for (j = 0; j < _voiceMessages.length; j++) {
+                    _getGenericVoiceSoundEffect(voices[i], _voiceMessages[j]);
+                }
+                // loading mission specific voice message samples for AI pilots
+                for (j = 0; j < missionVoiceMessages.length; j++) {
+                    craft = mission.getSpacecraft(missionVoiceMessages[j].source);
+                    if (craft && (ai.getVoiceOfSpacecraft(craft) === i)) {
+                        _getMissionPilotVoiceSoundEffect(voices[i], mission, missionVoiceMessages[j].textID);
+                    }
+                }
             }
         }
         // loading mission specific voice message samples
         for (i = 0; i < missionVoiceMessages.length; i++) {
-            _getMissionVoiceSoundEffect(mission, missionVoiceMessages[i]);
+            _getMissionVoiceSoundEffect(mission, missionVoiceMessages[i].textID);
         }
     }
     /**
@@ -5028,7 +5035,7 @@ define([
             }
             this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
             utils.executeAsync(function () {
-                var i, j, voices, missionVoiceMessages;
+                var i, j, voices, missionVoiceMessages, craft;
                 this.setAntialiasing(graphics.getAntialiasing());
                 this.setFiltering(graphics.getFiltering());
                 this.clearSceneCanvasBindings();
@@ -5071,42 +5078,48 @@ define([
                         craft.addEventHandler(SpacecraftEvents.RADIO, _handleSpacecraftRadio.bind(craft));
                     }
                 });
-                _missileLoadedSound = resources.getSoundEffect(
+                _missileLoadedSound = _missileLoadedSound || resources.getSoundEffect(
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOADED_SOUND).name).createSoundClip(
                         resources.SoundCategory.SOUND_EFFECT,
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOADED_SOUND).volume);
                 _missileLockingSoundsPlayed = 0;
-                _missileLockingSound = resources.getSoundEffect(
+                _missileLockingSound = _missileLockingSound || resources.getSoundEffect(
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKING_SOUND).name).createSoundClip(
                         resources.SoundCategory.SOUND_EFFECT,
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKING_SOUND).volume);
-                _missileLockedSound = resources.getSoundEffect(
+                _missileLockedSound = _missileLockedSound || resources.getSoundEffect(
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKED_SOUND).name).createSoundClip(
                         resources.SoundCategory.SOUND_EFFECT,
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKED_SOUND).volume);
-                _messageSound = resources.getSoundEffect(
+                _messageSound = _messageSound || resources.getSoundEffect(
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name).createSoundClip(
                         resources.SoundCategory.SOUND_EFFECT,
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).volume);
-                _messageTypeSound = resources.getSoundEffect(
+                _messageTypeSound = _messageTypeSound || resources.getSoundEffect(
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).name).createSoundClip(
                         resources.SoundCategory.SOUND_EFFECT,
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).volume,
                         true);
-                _newHostilesAlertSound = resources.getSoundEffect(
+                _newHostilesAlertSound = _newHostilesAlertSound || resources.getSoundEffect(
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name).createSoundClip(
                         resources.SoundCategory.SOUND_EFFECT,
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).volume);
-                _connectionWarningSound = resources.getSoundEffect(
-                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).name).createSoundClip(
-                        resources.SoundCategory.SOUND_EFFECT,
-                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).volume);
+                if (_multi) {
+                    _connectionWarningSound = _connectionWarningSound || resources.getSoundEffect(
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).name).createSoundClip(
+                            resources.SoundCategory.SOUND_EFFECT,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).volume);
+                }
                 voices = config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES);
-                missionVoiceMessages = mission.getMessageIds();
+                missionVoiceMessages = mission.getMessageParams();
                 if (!_genericVoiceSounds) {
                     _genericVoiceSounds = [];
                     for (i = 0; i < voices.length; i++) {
                         _genericVoiceSounds.push([]);
+                    }
+                }
+                for (i = 0; i < voices.length; i++) {
+                    if ((_genericVoiceSounds[i].length === 0) && ai.isVoiceUsed(i)) {
                         for (j = 0; j < _voiceMessages.length; j++) {
                             _genericVoiceSounds[i].push(_getGenericVoiceSoundEffect(voices[i], _voiceMessages[j]));
                         }
@@ -5115,13 +5128,18 @@ define([
                 _missionPilotVoiceSounds = [];
                 for (i = 0; i < voices.length; i++) {
                     _missionPilotVoiceSounds.push({});
-                    for (j = 0; j < missionVoiceMessages.length; j++) {
-                        _missionPilotVoiceSounds[i][missionVoiceMessages[j]] = _getMissionPilotVoiceSoundEffect(voices[i], mission, missionVoiceMessages[j]);
+                    if (ai.isVoiceUsed(i)) {
+                        for (j = 0; j < missionVoiceMessages.length; j++) {
+                            craft = mission.getSpacecraft(missionVoiceMessages[j].source);
+                            if (craft && (ai.getVoiceOfSpacecraft(craft) === i)) {
+                                _missionPilotVoiceSounds[i][missionVoiceMessages[j].textID] = _getMissionPilotVoiceSoundEffect(voices[i], mission, missionVoiceMessages[j].textID);
+                            }
+                        }
                     }
                 }
                 _missionVoiceSounds = {};
                 for (i = 0; i < missionVoiceMessages.length; i++) {
-                    _missionVoiceSounds[missionVoiceMessages[i]] = _getMissionVoiceSoundEffect(mission, missionVoiceMessages[i]);
+                    _missionVoiceSounds[missionVoiceMessages[i].textID] = _getMissionVoiceSoundEffect(mission, missionVoiceMessages[i].textID);
                 }
                 if (!_multi) {
                     this._loadingBox.hide();

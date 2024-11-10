@@ -324,11 +324,11 @@ define([
         }, this._params.urgent);
     };
     /**
-     * Returns the string ID of the message that can be used as a translation key or for choosing the appropriate sound sample to play.
-     * @returns {String}
+     * Returns the parameters of the message (used to get the message ID and source to load the appropriate sound sample to play).
+     * @returns {MessageAction~Params}
      */
-    MessageAction.prototype.getMessageId = function () {
-        return this._params.textID;
+    MessageAction.prototype.getMessageParams = function () {
+        return this._params;
     };
     // #########################################################################
     /**

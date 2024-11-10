@@ -628,7 +628,7 @@ define([
             popup.alignPosition();
         };
         updateButtonText = function () {
-            button.textContent = (arrayType ? arrayType.getPreviewText(data, parent) : type.getPreviewText(data, parent)) || "...";
+            button.textContent = (arrayType ? arrayType.getPreviewText(data, parent, _item.name, topParent) : type.getPreviewText(data, parent, _item.name, topParent)) || "...";
             if (parentPopup) {
                 parentPopup.alignPosition();
             }
@@ -819,7 +819,7 @@ define([
                     label.textContent = (array.length > 0) ? type.getDisplayName() + " list" : EMPTY_LIST_TEXT;
                 },
                 updateButtonText = function () {
-                    button.innerHTML = arrayType.getPreviewText(array, parent) || "...";
+                    button.innerHTML = arrayType.getPreviewText(array, parent, _item.name, topParent) || "...";
                     if (parentPopup) {
                         parentPopup.alignPosition();
                     }
@@ -1278,7 +1278,7 @@ define([
             } else {
                 defaultValue = propertyDescriptor.defaultValue;
                 if ((defaultValue === undefined) && propertyDescriptor.getDerivedDefault) {
-                    defaultValue = propertyDescriptor.getDerivedDefault(parent, objectParent, _item.name);
+                    defaultValue = propertyDescriptor.getDerivedDefault(parent, objectParent, _item.name, topParent);
                 }
                 if (typeof defaultValue === "number") {
                     labelText = defaultValue.toString();

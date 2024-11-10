@@ -444,16 +444,16 @@ define([
         return this._actions;
     };
     /**
-     * Returns the list of all the text IDs belonging to message actions that are part of this event.
-     * @returns {String[]}
+     * Returns the list of all the message params belonging to message actions that are part of this event.
+     * @returns {MessageAction~Params[]}
      */
-    MissionEvent.prototype.getMessageIds = function () {
-        var i, result = [], id;
+    MissionEvent.prototype.getMessageParams = function () {
+        var i, result = [], params;
         for (i = 0; i < this._actions.length; i++) {
             if (this._actions[i].getType() === eventActions.ActionType.MESSAGE) {
-                id = this._actions[i].getMessageId();
-                if (id) {
-                    result.push(id);
+                params = this._actions[i].getMessageParams();
+                if (params) {
+                    result.push(params);
                 }
             }
         }

@@ -714,7 +714,7 @@ define([
          * @type SpacecraftEvents~RadioData
          */
         this._radioData = {
-            voice: (params && params.voice) ? config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES).indexOf(params.voice) : 0,
+            voice: (params && params.voice) ? config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES).indexOf(params.voice) : -1,
             messageType: -1
         };
         // attaching handlers to the spacecraft events
@@ -723,7 +723,7 @@ define([
             this._spacecraft.addEventHandler(SpacecraftEvents.BEING_HIT, this._handleBeingHit.bind(this));
             this._spacecraft.addEventHandler(SpacecraftEvents.COMMAND_RECEIVED, this._handleCommand.bind(this));
             this._spacecraft.addEventHandler(SpacecraftEvents.GAIN_KILL, this._handleGainKill.bind(this));
-            if (!params || !params.voice) {
+            if ((!params || !params.voice) && mission.getPilotedSpacecraft() && this._spacecraft.isFriendly(mission.getPilotedSpacecraft())) {
                 this._radioData.voice = getAvailableVoice(); // automatically assign a random voice, if there isn't one set specifically
             }
         }
@@ -2363,6 +2363,21 @@ define([
         return -1;
     };
     /**
+     * Returns if the pilot voice with the passed index (within the array settings.json/logic.battle.pilotVoices) is
+     * corresponding to one of the currently added spacecraft AIs.
+     * @param {Number} voiceIndex
+     * @returns {Boolean}
+     */
+    AIContext.prototype.isVoiceUsed = function (voiceIndex) {
+        var i;
+        for (i = 0; i < this._ais.length; i++) {
+            if (this._ais[i].getVoice() === voiceIndex) {
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
      * Returns the AI that controls the passed spacecraft (null if there is no AI associated with the passed spacecraft).
      * @param {Boolean} silence
      * @param {Spacecraft[]} [spacecrafts] If null or undefined, will be set for all spacecrafts.
@@ -2471,6 +2486,7 @@ define([
         clearAIs: _context.clearAIs.bind(_context),
         addAI: _context.addAI.bind(_context),
         getVoiceOfSpacecraft: _context.getVoiceOfSpacecraft.bind(_context),
+        isVoiceUsed: _context.isVoiceUsed.bind(_context),
         setRadioSilenceForSpacecrafts: _context.setRadioSilenceForSpacecrafts.bind(_context),
         control: _context.control.bind(_context),
         broadcastSpacecraftEvent: _context.broadcastSpacecraftEvent.bind(_context),

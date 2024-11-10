@@ -966,13 +966,13 @@ define([
         return this._difficultyLevel;
     };
     /**
-     * Returns the list of all the message event text IDs (the ones used as translation keys) used in this mission.
-     * @returns {String[]}
+     * Returns the list of all the message event params (including message IDs and sources) used in this mission.
+     * @returns {MessageAction~Params[]}
      */
-    Mission.prototype.getMessageIds = function () {
+    Mission.prototype.getMessageParams = function () {
         var result = [], i;
         for (i = 0; i < this._events.length; i++) {
-            result = result.concat(this._events[i].getMessageIds());
+            result = result.concat(this._events[i].getMessageParams());
         }
         return result;
     };

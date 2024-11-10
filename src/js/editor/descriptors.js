@@ -4594,13 +4594,17 @@ define([
                     return config.getBattleSetting(config.BATTLE_SETTINGS.AI_PRESETS).map(_mapAiPreset);
                 }
             },
+            _getDefaultVoice = function (data, parent, itemName, topParent) {
+                var pilotedCraft = topParent.spacecrafts.find(_craftIsPiloted);
+                return (pilotedCraft && (parent.team === pilotedCraft.team)) ? "random" : "none";
+            },
             _parentHasFighterAI = function (data, parent) {
                 return parent.ai === "fighter";
             },
             AI_PARAMS = {
                 baseType: BaseType.OBJECT,
                 name: "aiParams",
-                getPreviewText: function (instance) {
+                getPreviewText: function (instance, parent, itemName, topParent) {
                     var result = "";
                     if ((instance.evasionDelayFactor !== undefined) || (instance.fireDelayFactor !== undefined) ||
                             (instance.aimUpdateInterval !== undefined) || (instance.maxAimError !== undefined) ||
@@ -4610,7 +4614,7 @@ define([
                     if (instance.preset) {
                         result = (result ? result + " " : "") + instance.preset;
                     }
-                    return (result ? result + "; " : "") + "voice: " + (instance.voice || "random");
+                    return (result ? result + "; " : "") + "voice: " + (instance.voice || _getDefaultVoice(instance, parent, itemName, topParent));
                 },
                 properties: {
                     VOICE: {
@@ -4618,7 +4622,7 @@ define([
                         description: "Which voice to use when playing radio messages transmitted by this AI.",
                         type: AI_VOICE,
                         optional: true,
-                        defaultText: "random"
+                        getDerivedDefault: _getDefaultVoice
                     },
                     PRESET: {
                         name: "preset",
@@ -4738,6 +4742,9 @@ define([
                     spacecraftClass = classes.getSpacecraftClass(data.class);
                     return spacecraftClass.getDefaultLoadout() || "none";
                 }
+            },
+            _craftIsPiloted = function (data) {
+                return data.piloted || (data.pilotedIndex !== undefined);
             },
             _craftIsNotPiloted = function (data) {
                 return !data.piloted && !data.pilotedIndex;
@@ -5092,13 +5099,15 @@ define([
      * Returns a displayable preview text for data of this type
      * @param {Object} data
      * @param {Object} parent The parent of data
+     * @param {String} [itemName] The name of the editor item this property belongs to
+     * @param {Object} [topParent] The top level parent object of the property with this type 
      * @returns {String}
      */
-    Type.prototype.getPreviewText = function (data, parent) {
+    Type.prototype.getPreviewText = function (data, parent, itemName, topParent) {
         var result;
         if (this._descriptor.baseType === BaseType.ARRAY) {
             if (this._descriptor.getPreviewText) {
-                result = this._descriptor.getPreviewText(data, parent);
+                result = this._descriptor.getPreviewText(data, parent, itemName, topParent);
             }
             if (!result) {
                 if (data.length === 0) {
@@ -5116,7 +5125,7 @@ define([
             return result;
         }
         return this._descriptor.getPreviewText ?
-                this._descriptor.getPreviewText(data, parent) :
+                this._descriptor.getPreviewText(data, parent, itemName, topParent) :
                 this._descriptor.name;
     };
     /**
