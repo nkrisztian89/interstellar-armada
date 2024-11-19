@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2022 Krisztián Nagy
+ * Copyright 2016-2024 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for spacecraft classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -443,7 +443,7 @@ define([
             _updateExplodeButton();
             _updateShieldRechargeButton();
         });
-        _elements.options.appendChild(preview.createSetting(_optionElements.environmentSelector, "Environment:"));
+        _elements.options.appendChild(common.createSetting(_optionElements.environmentSelector, "Environment:"));
         // loadout selector
         _optionElements.loadoutSelector = common.createSelector(_spacecraftClass.getLoadoutNames(), _loadoutName, true, function () {
             preview.updateCanvas({
@@ -455,7 +455,7 @@ define([
             _updateExplodeButton();
             _updateShieldRechargeButton();
         });
-        _elements.options.appendChild(preview.createSetting(_optionElements.loadoutSelector, "Loadout:"));
+        _elements.options.appendChild(common.createSetting(_optionElements.loadoutSelector, "Loadout:"));
         // faction color picker
         _optionElements.factionColorPicker = common.createColorPicker(_factionColor, function () {
             _factionColorChanged = true;
@@ -466,12 +466,15 @@ define([
             _updateExplodeButton();
             _updateShieldRechargeButton();
         });
-        _elements.options.appendChild(preview.createSetting(_optionElements.factionColorPicker, "Faction color:"));
+        _elements.options.appendChild(common.createSetting(_optionElements.factionColorPicker, "Faction color:"));
         // engine state editor
         _optionElements.engineStateEditor = _createEngineEditor();
-        _elements.options.appendChild(preview.createSetting(_optionElements.engineStateEditor, "Engine:"));
+        _elements.options.appendChild(common.createSetting(_optionElements.engineStateEditor, "Engine:"));
         // explode button
-        _optionElements.explodeButton = common.createButton("Explode", function () {
+        _optionElements.explodeButton = common.createButton({
+            caption: "Explode",
+            class: "explode"
+        }, function () {
             if (_spacecraft.getHitpoints() > 0) {
                 _spacecraft.setHitpointsToZero();
                 _spacecraft.addEventHandler(SpacecraftEvents.DESTRUCTED, function () {
@@ -493,13 +496,13 @@ define([
             _updateExplodeButton();
             _updateShieldRechargeButton();
         });
-        _elements.options.appendChild(preview.createSetting(_optionElements.explodeButton));
+        _elements.options.appendChild(common.createSetting(_optionElements.explodeButton));
         // shield recharge button
         _optionElements.shieldRechargeButton = common.createButton("Recharge shield", function () {
             _spacecraft.rechargeShield();
             preview.startAnimating();
         });
-        _elements.options.appendChild(preview.createSetting(_optionElements.shieldRechargeButton));
+        _elements.options.appendChild(common.createSetting(_optionElements.shieldRechargeButton));
     }
     /**
      * The animation step (i.e. spacecraft.simulate())

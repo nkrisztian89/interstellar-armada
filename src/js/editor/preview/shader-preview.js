@@ -1,5 +1,5 @@
 /**
- * Copyright 2017, 2020-2021, 2023 Krisztián Nagy
+ * Copyright 2017, 2020-2021, 2023-2024 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for shader resources within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -138,8 +138,6 @@ define([
 
             _elements.info.innerHTML = _getInfo(managedShader);
             _elements.info.hidden = !_elements.info.innerHTML;
-
-            _elements.div.style.height = (_elements.div.parentNode.clientHeight - (_elements.options.clientHeight + _elements.info.clientHeight)) + "px";
         });
         resources.requestResourceLoad();
     }

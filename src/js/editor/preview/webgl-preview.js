@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2022 Krisztián Nagy
+ * Copyright 2016-2024 Krisztián Nagy
  * @file Provides the general structure to preview windows of the Interstellar Armada editor that use a WebGL scene 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -73,8 +73,6 @@ define([
             CAMERA_ROTATE_BUTTON = utils.MouseButton.MIDDLE,
             ENLARGE_FACTOR = 1.05,
             SHRINK_FACTOR = 0.95,
-            SETTING_CLASS = "setting",
-            SETTING_LABEL_CLASS = "settingLabel",
             CANVAS_BACKGROUND_COLOR = [0, 0, 0, 1],
             AMBIENT_COLOR = [0, 0, 0],
             MANAGED_CONTEXT_NAME = "context",
@@ -145,10 +143,16 @@ define([
              */
             _animating,
             /**
-             * Whether the animation should be stopped next time a frame is about to be rendered by requestAnimFrame
+             * The handle returned by requestAnimationFrame to be used when cancelling the animation
+             * @type Number
+             */
+            _animationId,
+            /**
+             * Whether the canvas size has changed while the animation loop is on, so the canvas render
+             * size needs to be updated before rendering the next frame
              * @type Boolean
              */
-            _animationStopScheduled,
+            _canvasSizeNeedsUpdate = false,
             /**
              * Whether the sound should be muted
              * @type Boolean
@@ -170,6 +174,17 @@ define([
              * @type Function
              */
             _editProperty,
+            /**
+             * Used to update the canvas render size and initiate a new render whenever the size of the
+             * canvas element changes.
+             * @type ResizeObserver
+             */
+            _resizeObserver,
+            /**
+             * A flag to mark when all the resources are loaded and ready so that a render call can be safely made.
+             * @type Boolean
+             */
+            _readyToRender,
             /**
              * 
              * @type Object
@@ -285,7 +300,9 @@ define([
             if (_fps) {
                 infoSections.push("FPS: " + _fps);
             }
-            _elements.info.appendChild(common.createLabel(infoSections.join("<br/>")));
+            if (infoSections.length > 0) {
+                _elements.info.appendChild(common.createLabel(infoSections.join("<br/>")));
+            }
         }
         _elements.info.hidden = (_elements.info.innerHTML === "");
     }
@@ -310,11 +327,9 @@ define([
         }
     }
     /**
-     * Updates both the calculated CSS size for the canvas as well as sets the size attributes according to the rendered (client) size.
+     * Updates the canvas render size to match the canvas element's current (client) size
      */
     function _updateCanvasSize() {
-        _elements.div.style.height = (_elements.div.parentNode.clientHeight - (_elements.options.clientHeight + _elements.info.clientHeight)) + "px";
-        _elements.canvas.style.height = _elements.div.style.height;
         _elements.canvas.width = _elements.canvas.clientWidth;
         _elements.canvas.height = _elements.canvas.clientHeight;
     }
@@ -324,7 +339,7 @@ define([
      * @param {Number} [dt=0] The time elapsed since the last render (to advance animation, in milliseconds)
      */
     function requestRender(force, dt) {
-        if (!_animating || force) {
+        if (_readyToRender && (!_animating || force)) {
             dt = dt || 0;
             if (_particlePool.hasLockedObjects()) {
                 _particlePool.executeForLockedObjects(_handleParticle);
@@ -333,7 +348,6 @@ define([
                 _explosionPool.executeForLockedObjects(_handleExplosion);
             }
             _updateInfo();
-            _updateCanvasSize();
             _scene.render(_context, dt);
             if (_currentContext && _currentContext.functions.animate) {
                 _currentContext.functions.animate(dt);
@@ -360,17 +374,13 @@ define([
                 _lastRenderTimestamp = timestamp;
             }
             dt = timestamp - _lastRenderTimestamp;
-            if (!_animationStopScheduled) {
-                requestRender(true, dt);
-                _lastRenderTimestamp = timestamp;
-                window.requestAnimationFrame(_renderFrame);
-            } else {
-                _fps = 0;
-                _animating = false;
-                _updateAnimateButton();
-                _updateInfo();
+            if (_canvasSizeNeedsUpdate) {
                 _updateCanvasSize();
+                _canvasSizeNeedsUpdate = false;
             }
+            requestRender(true, dt);
+            _lastRenderTimestamp = timestamp;
+            window.requestAnimationFrame(_renderFrame);
         }
     }
     /**
@@ -379,19 +389,22 @@ define([
     function startAnimating() {
         if (!_animating) {
             _animating = true;
-            _animationStopScheduled = false;
             _lastRenderTimestamp = 0;
             _updateAnimateButton();
-            window.requestAnimationFrame(_renderFrame);
-        } else if (_animationStopScheduled) {
-            _animationStopScheduled = false;
+            _animationId = window.requestAnimationFrame(_renderFrame);
         }
     }
     /**
-     * Sets the animation loop to be stopped next time the frame render is invoked
+     * Stops the animation loop
      */
     function stopAnimating() {
-        _animationStopScheduled = true;
+        if (_animating) {
+            window.cancelAnimationFrame(_animationId);
+            _fps = 0;
+            _animating = false;
+            _updateAnimateButton();
+            _updateInfo();
+        }
     }
     /**
      * Turns the model or the camera (or both), depending on which turn mode is active. Attached to the mouse move after a mouse down 
@@ -600,38 +613,17 @@ define([
         }
     }
     /**
-     * Creates and returns a <span> HTML element storing the passed text, having the class associated with setting labels.
-     * @param {String} text
-     * @returns {Element}
-     */
-    function _createSettingLabel(text) {
-        var result = document.createElement("span");
-        result.classList.add(SETTING_LABEL_CLASS);
-        result.innerHTML = text;
-        return result;
-    }
-    /**
-     * Creates a setting element for the preview options panel, with a label and a control
-     * @param {Element} control The control to edit the value of the setting
-     * @param {String} [labelText] The text that should show on the label (if any)
-     * @returns {Element}
-     */
-    function createSetting(control, labelText) {
-        var result = document.createElement("div");
-        result.classList.add(SETTING_CLASS);
-        if (labelText) {
-            result.appendChild(_createSettingLabel(labelText));
-        }
-        result.appendChild(control);
-        return result;
-    }
-    /**
-     * Call this whenever a resize event occurs on the window to update the canvas
+     * Call this whenever the size of the canvas element changes to update the canvas
      */
     function _handleResize() {
         if (_scene) {
-            _updateCanvasSize();
-            requestRender();
+            if (_animating) {
+                // we will need to update the size at the next render
+                _canvasSizeNeedsUpdate = true;
+            } else {
+                _updateCanvasSize();
+                requestRender();
+            }
         }
     }
     /**
@@ -658,6 +650,8 @@ define([
         shouldReload = !params.preserve || params.reload;
         wasAnimating = _animating;
         stopAnimating();
+        _readyToRender = false;
+        _canvasSizeNeedsUpdate = false;
         if (graphics.shouldUseShadowMapping()) {
             graphics.getShadowMappingShader();
         }
@@ -714,7 +708,6 @@ define([
             _elements.canvas.hidden = false;
             _updateForLOD();
             _updateInfo();
-            _updateCanvasSize();
             _context.clear();
             resources.executeWhenReady(function () {
                 _scene.addToContext(_context);
@@ -774,6 +767,7 @@ define([
                 _elements.canvas.onmousemove = _handleMouseMove;
                 _elements.canvas.onwheel = _handleWheel;
                 _context.executeWhenReady(function () {
+                    _readyToRender = true;
                     _updateForRenderMode();
                     _updateForLOD();
                     _currentContext.functions.updateForRefresh();
@@ -816,7 +810,7 @@ define([
                 _updateForRenderMode();
                 requestRender();
             });
-            _elements.options.appendChild(createSetting(_optionElements.renderModeSelector, "Render mode:"));
+            _elements.options.appendChild(common.createSetting(_optionElements.renderModeSelector, "Render mode:"));
         }
         if (_currentContext.params.lodSetting) {
             // LOD selector
@@ -824,20 +818,22 @@ define([
                 _lod = _optionElements.lodSelector.value;
                 _updateForLOD();
                 requestRender();
-                _updateInfo();
             });
-            _elements.options.appendChild(createSetting(_optionElements.lodSelector, "LOD:"));
+            _elements.options.appendChild(common.createSetting(_optionElements.lodSelector, "LOD:"));
         }
         if (_currentContext.params.animateButton) {
             // animate button
-            _optionElements.animateButton = common.createButton(_animating ? "Stop" : "Animate", function () {
+            _optionElements.animateButton = common.createButton({
+                caption: _animating ? "Stop" : "Animate",
+                class: "animate"
+            }, function () {
                 if (!_animating) {
                     startAnimating();
                 } else {
                     stopAnimating();
                 }
             });
-            _elements.options.appendChild(createSetting(_optionElements.animateButton));
+            _elements.options.appendChild(common.createSetting(_optionElements.animateButton));
         }
         if (_currentContext.params.muteCheckbox) {
             // mute checkbox
@@ -845,7 +841,7 @@ define([
                 _muted = _optionElements.muteCheckbox.checked;
                 audio.setMasterVolume(_muted ? 0 : 1);
             });
-            _elements.options.appendChild(createSetting(_optionElements.muteCheckbox, "Mute:"));
+            _elements.options.appendChild(common.createSetting(_optionElements.muteCheckbox, "Mute:"));
         }
         _currentContext.functions.createOptions();
         _elements.options.hidden = (_elements.options.innerHTML === "");
@@ -864,7 +860,8 @@ define([
         _elements = elements;
         createOptions();
         updateCanvas(params);
-        window.addEventListener("resize", _handleResize);
+        _resizeObserver = new ResizeObserver(_handleResize);
+        _resizeObserver.observe(_elements.canvas);
     }
     /**
      * Clears the preview and its current context so that a new preview (or the same with a different context) can be opened
@@ -872,6 +869,10 @@ define([
     function clear() {
         stopAnimating();
         setContext(null);
+        if (_resizeObserver && _elements) {
+            _resizeObserver.unobserve(_elements.canvas);
+            _resizeObserver = null;
+        }
     }
     /**
      * Updates the preview (refreshes if needed) in case the property with the given name changed
@@ -887,8 +888,6 @@ define([
                 reload: true
             });
         } else if (_currentContext.params.infoUpdateProperties.indexOf(name) >= 0) {
-            _updateInfo();
-            _updateCanvasSize();
             requestRender();
         }
     }
@@ -929,7 +928,6 @@ define([
         requestRender: requestRender,
         startAnimating: startAnimating,
         stopAnimating: stopAnimating,
-        createSetting: createSetting,
         clearSettingsForNewItem: clearSettingsForNewItem,
         updateCanvas: updateCanvas,
         refresh: refresh,

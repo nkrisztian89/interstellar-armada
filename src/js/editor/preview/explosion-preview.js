@@ -1,5 +1,5 @@
 /**
- * Copyright 2016, 2020-2021 Krisztián Nagy
+ * Copyright 2016, 2020-2024 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for explosion classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -146,7 +146,7 @@ define([
             });
             preview.startAnimating();
         });
-        _elements.options.appendChild(preview.createSetting(_optionElements.restartButton));
+        _elements.options.appendChild(common.createSetting(_optionElements.restartButton));
         return true;
     }
     /**

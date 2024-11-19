@@ -20,15 +20,17 @@ body {
     padding: 0;
     overflow: hidden;
     color: $text-color;
+    display: flex;
+    flex-direction: row;
 
-    font-size: 0.9vw; /* for em units */ 
+    font-size: 0.9vw; /* for em units */
 }
 
 button {
     font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
     font-size: 0.8vw;
     height: 1.6em;
-    
+
     &.icon {
         background-size: 1.3em;
         border: 1px solid #888;
@@ -37,7 +39,7 @@ button {
         background-repeat: no-repeat;
         background-position: center center;
     }
-    
+
     &.add {
         background-image: url(../assets/images/editor/add.png);
     }
@@ -171,7 +173,7 @@ select.withJumpButton, select.withUnsetButton {
 
     padding-top: 0.2em;
     padding-bottom: 0.2em;
-    
+
     cursor: move;
 }
 
@@ -209,10 +211,10 @@ $dialog-width: 20em;
 /* window */
 
 div.window {
-    position: fixed;
     margin: 0;
     padding: 0;
     text-align: left;
+    height: 100%;
 }
 
 $title-height: 2.0vw;
@@ -225,7 +227,7 @@ div.windowTitle {
 
     background-image:
         -webkit-linear-gradient(
-        top, 
+        top,
         #dddddd,
         #aaaaaa
         );
@@ -259,10 +261,12 @@ div.windowToolbar {
 div.windowContent {
     position: relative;
     box-sizing: border-box;
-    width: 100%; 
+    width: 100%;
     height: calc(100% - #{$title-height});
     margin: 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
 
     background-color: #444444;
 }
@@ -281,24 +285,15 @@ div.windowLabel {
 /* window layout */
 
 div#items {
-    left: 0;
-    width: 20%;
-    height: 100%;
-    top: 0;
+    flex: 0;
 }
 
 div#preview {
-    left: 20%;
-    top: 0;
-    width: 60%;
-    height: 100%;
+    flex: 1;
 }
 
 div#properties {
-    right: 0;
-    top: 0;
-    width: 20%;
-    height: 100%;
+    flex: 0;
 }
 
 div#items > div.windowContent {
@@ -431,18 +426,24 @@ li.element.dragover {
 
 #previewOptions {
     position: relative;
-    top: 0;
-    left: 0;
     margin: 0;
     padding-top: 0.6em;
     padding-left: 0.6em;
     padding-right: 0.6em;
     padding-bottom: 0;
+    flex: 0;
+    button.animate {
+        width: 5.5em;
+    }
+    button.explode {
+        width: 5.5em;
+    }
 }
 
 #previewCanvas {
     position: relative;
     width: 100%;
+    height: 100%;
 
     padding: 0;
     border: 0;
@@ -450,8 +451,9 @@ li.element.dragover {
 
 #previewDiv {
     position: relative;
-    max-height: 100%;
     width: calc(100% + #{$scrollbar-width}); /* hiding scrollbar */
+    height: 100%;
+    flex: 1;
 
     padding: 0;
     border: 0;
@@ -462,13 +464,12 @@ li.element.dragover {
 
 #previewInfo {
     position: relative;
-    bottom: 0.3em;
-    left: 0;
     margin: 0;
     padding-top: 0.6em;
     padding-bottom: 0.6em;
     padding-left: 0.4em;
     padding-right: 0.4em;
+    flex: 0;
 }
 
 #previewInfo > span.label {
@@ -481,6 +482,34 @@ li.element.dragover {
     background-color: #444444;
     padding: 0.2em;
     pointer-events: none;
+}
+
+.previewImageContainer {
+    box-sizing: border-box;
+    padding: 1em;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    img {
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
+        display: block;
+        margin: auto;
+        box-sizing: border-box;
+        &[hidden] {
+            display: none;
+        }
+    }
+    &.black-background img {
+        background-color: black;
+    }
+    &.checkerboard-background img {
+        background: url(../assets/images/checkerboard.png);
+    }
 }
 
 span.objectives {
@@ -610,7 +639,7 @@ button.setProperty {
 }
 
 tr:not(:hover) button.setProperty {
-   display: none; 
+    display: none;
 }
 
 button.unsetProperty {
@@ -620,7 +649,7 @@ button.unsetProperty {
 }
 
 tr:not(:hover) button.unsetProperty {
-   opacity: 25%;
+    opacity: 25%;
 }
 
 button.jumpReference {

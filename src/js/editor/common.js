@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2020-2023 Krisztián Nagy
+ * Copyright 2016-2017, 2020-2024 Krisztián Nagy
  * @file Provides some common functions to be used for the Interstellar Armada editor.
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -70,6 +70,8 @@ define([
             EVENT_SHOW_NAME = "show",
             EVENT_HIDE_NAME = "hide",
             EVENT_REMOVE_HIDE_NAME = "removeHide",
+            SETTING_CLASS = "setting",
+            SETTING_LABEL_CLASS = "settingLabel",
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -448,6 +450,32 @@ define([
         return result;
     }
     /**
+     * Creates and returns a <span> HTML element storing the passed text, having the class associated with setting labels.
+     * @param {String} text
+     * @returns {Element}
+     */
+    function _createSettingLabel(text) {
+        var result = document.createElement("span");
+        result.classList.add(SETTING_LABEL_CLASS);
+        result.innerHTML = text;
+        return result;
+    }
+    /**
+     * Creates a setting element for the preview options panel, with a label and a control
+     * @param {Element} control The control to edit the value of the setting
+     * @param {String} [labelText] The text that should show on the label (if any)
+     * @returns {Element}
+     */
+    function createSetting(control, labelText) {
+        var result = document.createElement("div");
+        result.classList.add(SETTING_CLASS);
+        if (labelText) {
+            result.appendChild(_createSettingLabel(labelText));
+        }
+        result.appendChild(control);
+        return result;
+    }
+    /**
      * @class
      * Represents an (initially hidden) panel that can be shown at a position depending on another element and can have children of the 
      * same type. Showing a popup automatically hides all other popups on the same level.
@@ -712,6 +740,7 @@ define([
         createColorPreview: createColorPreview,
         createVectorEditor: createVectorEditor,
         createRangeEditor: createRangeEditor,
+        createSetting: createSetting,
         Popup: Popup,
         removePopups: removePopups,
         alignPopups: alignPopups

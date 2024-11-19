@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2023 Krisztián Nagy
+ * Copyright 2016-2024 Krisztián Nagy
  * @file The main module for the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -23,6 +23,7 @@
  * @param common Used for clearing open popups
  * @param descriptors Used to determine whether the descriptor for a specific resource / class category is available
  * @param properties Used to generate the content of the Properties window
+ * @param texturePreview Used to create previews for texture resources
  * @param shaderPreview Used to create previews for shader resources
  * @param skyboxPreview Used to create previews for skybox classes
  * @param backgroundObjectPreview Used to create previews for background object classes
@@ -50,6 +51,7 @@ define([
     "editor/common",
     "editor/descriptors",
     "editor/properties",
+    "editor/preview/texture-preview",
     "editor/preview/shader-preview",
     "editor/preview/skybox-preview",
     "editor/preview/backgroundObject-preview",
@@ -67,7 +69,7 @@ define([
         environments, missions,
         control, strings,
         common, descriptors, properties,
-        shaderPreview,
+        texturePreview, shaderPreview,
         skyboxPreview, backgroundObjectPreview, explosionPreview, projectilePreview, weaponPreview, missilePreview, spacecraftPreview, environmentPreview, missionPreview) {
     "use strict";
     var
@@ -139,6 +141,7 @@ define([
              * @type Object
              */
             _previews = {
+                "textures": texturePreview,
                 "shaders": shaderPreview,
                 "skyboxClasses": skyboxPreview,
                 "backgroundObjectClasses": backgroundObjectPreview,

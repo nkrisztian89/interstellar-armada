@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2021, 2023 Krisztián Nagy
+ * Copyright 2016-2021, 2023-2024 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for weapon classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -251,8 +251,8 @@ define([
         };
         _optionElements.rotator1Angle = common.createNumericInput(0, {}, changeHandler);
         _optionElements.rotator2Angle = common.createNumericInput(0, {}, changeHandler);
-        _elements.options.appendChild(preview.createSetting(_optionElements.rotator1Angle, "Rotator 1 angle:"));
-        _elements.options.appendChild(preview.createSetting(_optionElements.rotator2Angle, "Rotator 2 angle:"));
+        _elements.options.appendChild(common.createSetting(_optionElements.rotator1Angle, "Rotator 1 angle:"));
+        _elements.options.appendChild(common.createSetting(_optionElements.rotator2Angle, "Rotator 2 angle:"));
     }
     /**
      * For the WebGL preview context.

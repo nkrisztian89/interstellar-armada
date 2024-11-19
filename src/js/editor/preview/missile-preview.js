@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 Krisztián Nagy
+ * Copyright 2019-2024 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for missile classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -163,7 +163,7 @@ define([
         for (i = 1; i <= count; i++) {
             trailEmitter.addPoint(vec.sum3Aux(enginePosition, vec.scaled3Aux(direction, (count - i) * segmentLength)), dt);
         }
-        preview.requestRender();
+        preview.requestRender(true, 1);
     }
     /**
      * For the WebGL preview context.
@@ -336,7 +336,7 @@ define([
         _optionElements.addTrailButton = common.createButton("Add trail", function () {
             _addTrail();
         });
-        _elements.options.appendChild(preview.createSetting(_optionElements.addTrailButton));
+        _elements.options.appendChild(common.createSetting(_optionElements.addTrailButton));
         // environment selector
         _optionElements.environmentSelector = common.createSelector(environments.getEnvironmentNames(), _environmentName, true, function () {
             preview.updateCanvas({
@@ -346,10 +346,10 @@ define([
             });
 
         });
-        _elements.options.appendChild(preview.createSetting(_optionElements.environmentSelector, "Environment:"));
+        _elements.options.appendChild(common.createSetting(_optionElements.environmentSelector, "Environment:"));
         // engine state editor
         _optionElements.engineStateEditor = _createEngineEditor();
-        _elements.options.appendChild(preview.createSetting(_optionElements.engineStateEditor, "Thrusters:"));
+        _elements.options.appendChild(common.createSetting(_optionElements.engineStateEditor, "Thrusters:"));
     }
     /**
      * The animation step

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017, 2020-2021 Krisztián Nagy
+ * Copyright 2017, 2020-2024 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for environments within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -141,7 +141,7 @@ define([
                 cameraSpeed: value
             });
         });
-        _elements.options.appendChild(preview.createSetting(_optionElements.cameraSpeedEditor, "Camera speed:"));
+        _elements.options.appendChild(common.createSetting(_optionElements.cameraSpeedEditor, "Camera speed:"));
     }
     /**
      * The animation step (i.e. environment.simulate())

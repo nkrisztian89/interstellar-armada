@@ -422,10 +422,28 @@ define([
         return false;
     };
     /**
+     * All the types this texture has available images for.
+     * @returns {String[]}
+     */
+    TextureResource.prototype.getTypes = function () {
+        return Object.keys(this._images);
+    };
+    /**
+     * All the qualities this texture has available images for.
      * @returns {String[]}
      */
     TextureResource.prototype.getQualities = function () {
         return Object.keys(this._qualitySuffixes);
+    };
+    /**
+     * Returns the full constructed filename for the image corresponding to the passed type
+     * and the most fitting available quality from the passed quality preference list.
+     * @param {String[]} type
+     * @param {String[]} qualityPreferenceList
+     * @returns {String}
+     */
+    TextureResource.prototype.getPathForType = function (type, qualityPreferenceList) {
+        return this._getPath(type, this._getMostFittingQuality(qualityPreferenceList));
     };
     /**
      * @param {String} type
@@ -453,11 +471,10 @@ define([
      * @returns {Object.<String, ManagedTexture>} 
      */
     TextureResource.prototype.getManagedTexturesOfTypes = function (types, qualityPreferenceList) {
-        var i, result, mostFittingQuality;
-        types.sort();
+        var i, result, mostFittingQuality, sortedTypes = types.slice().sort();
         // return from cache if possible
         for (i = 0; i < this._cachedManagedTexturesOfTypes.length; i++) {
-            if (utils.arraysEqual(types, this._cachedManagedTexturesOfTypes[i].types) && utils.arraysEqual(qualityPreferenceList, this._cachedManagedTexturesOfTypes[i].qualityPreferenceList)) {
+            if (utils.arraysEqual(sortedTypes, this._cachedManagedTexturesOfTypes[i].types) && utils.arraysEqual(qualityPreferenceList, this._cachedManagedTexturesOfTypes[i].qualityPreferenceList)) {
                 return this._cachedManagedTexturesOfTypes[i].textures;
             }
         }
@@ -468,7 +485,7 @@ define([
         }
         // cache the result
         this._cachedManagedTexturesOfTypes.push({
-            types: types,
+            types: sortedTypes,
             qualityPreferenceList: qualityPreferenceList,
             textures: result
         });
