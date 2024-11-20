@@ -4594,6 +4594,15 @@ define([
                     return config.getBattleSetting(config.BATTLE_SETTINGS.AI_PRESETS).map(_mapAiPreset);
                 }
             },
+            _craftIsPiloted = function (data) {
+                return data.piloted || (data.pilotedIndex !== undefined);
+            },
+            _craftIsNotPiloted = function (data) {
+                return !data.piloted && !data.pilotedIndex;
+            },
+            _craftIsNotPilotedSingle = function (data) {
+                return !data.piloted;
+            },
             _getDefaultVoice = function (data, parent, itemName, topParent) {
                 var pilotedCraft = topParent.spacecrafts.find(_craftIsPiloted);
                 return (pilotedCraft && (parent.team === pilotedCraft.team)) ? "random" : "none";
@@ -4742,15 +4751,6 @@ define([
                     spacecraftClass = classes.getSpacecraftClass(data.class);
                     return spacecraftClass.getDefaultLoadout() || "none";
                 }
-            },
-            _craftIsPiloted = function (data) {
-                return data.piloted || (data.pilotedIndex !== undefined);
-            },
-            _craftIsNotPiloted = function (data) {
-                return !data.piloted && !data.pilotedIndex;
-            },
-            _craftIsNotPilotedSingle = function (data) {
-                return !data.piloted;
             },
             _craftCanHavePositions = function (data) {
                 return _craftIsMulti(data) && !data.position && !data.formation;

@@ -93,6 +93,14 @@ define([
     // ----------------------------------------------------------------------
     // Private Functions
     /**
+     * Updates the info text at the bottom of the preview according to the current image
+     */
+    function _updateInfo() {
+        _elements.info.innerHTML = _image ? "Image: " + _textureResource.getPathForType(_textureType, graphics.getTextureQualityPreferenceList()) +
+                ", size: " + _image.naturalWidth + "x" + _image.naturalHeight : "";
+        _elements.info.hidden = !_elements.info.innerHTML;
+    }
+    /**
      * Updates the preview according to the currently selected texture type
      */
     function _updateForTextureType() {
@@ -145,14 +153,6 @@ define([
         _elements.options.appendChild(common.createSetting(_optionElements.textureTypeSelector, "Type:"));
         _elements.options.appendChild(common.createSetting(_optionElements.backgroundSelector, "Background:"));
         _elements.options.hidden = (_elements.options.innerHTML === "");
-    }
-    /**
-     * Updates the info text at the bottom of the preview according to the current image
-     */
-    function _updateInfo() {
-        _elements.info.innerHTML = _image ? "Image: " + _textureResource.getPathForType(_textureType, graphics.getTextureQualityPreferenceList()) +
-                ", size: " + _image.naturalWidth + "x" + _image.naturalHeight : "";
-        _elements.info.hidden = !_elements.info.innerHTML;
     }
     // ----------------------------------------------------------------------
     // Public Functions
