@@ -929,7 +929,7 @@
         }, {
             "name": "coloredBillboard-instanced",
             "vertexShaderSource": "billboard/billboard-colored-instanced.vert",
-            "fragmentShaderSource": "billboard/trail-instanced.frag",
+            "fragmentShaderSource": "billboard/billboard-colored-instanced.frag",
             "blendMode": "add",
             "instanceAttributeRoles": {
                 "i_position": "u_position",
@@ -946,7 +946,7 @@
                 "instanced": "coloredBillboard-instanced"
             },
             "vertexShaderSource": "billboard/billboard-colored.vert",
-            "fragmentShaderSource": "billboard/trail.frag",
+            "fragmentShaderSource": "billboard/billboard-colored.frag",
             "blendMode": "add",
             "vertexAttributeRoles": {
                 "a_position": "position",
@@ -963,7 +963,8 @@
                 "i_startDirection": "u_startDirection",
                 "i_endDirection": "u_endDirection",
                 "i_size": "u_size",
-                "i_color": "u_color"
+                "i_startColor": "u_startColor",
+                "i_endColor": "u_endColor"
             },
             "vertexAttributeRoles": {
                 "a_position": "position"

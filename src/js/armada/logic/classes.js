@@ -1055,11 +1055,17 @@ define([
          */
         this._size = dataJSON ? (dataJSON.size || 1) : 0;
         /**
-         * The color that can be passed to the shader to modulate the texture with
+         * The color at the point of emission that can be passed to the shader to modulate the texture with
          * while rendering. [red,green,blue, alpha]
          * @type Number[4]
          */
-        this._color = dataJSON ? (dataJSON.color || [1, 1, 1, 1]) : null;
+        this._startColor = dataJSON ? (dataJSON.startColor || [1, 1, 1, 1]) : null;
+        /**
+         * The color at the end of the trail that can be passed to the shader to modulate the texture with
+         * while rendering. [red,green,blue, alpha]
+         * @type Number[4]
+         */
+        this._endColor = dataJSON ? (dataJSON.endColor || this._startColor) : null;
         /**
          * The duration of any given point of the trail (the trail will end where the object leaving
          * it passed this much time ago), in milliseconds
@@ -1086,10 +1092,16 @@ define([
         return this._size;
     };
     /**
-     * @returns {Number[3]}
+     * @returns {Number[4]}
      */
-    TrailDescriptor.prototype.getColor = function () {
-        return this._color;
+    TrailDescriptor.prototype.getStartColor = function () {
+        return this._startColor;
+    };
+    /**
+     * @returns {Number[4]}
+     */
+    TrailDescriptor.prototype.getEndColor = function () {
+        return this._endColor;
     };
     /**
      * @returns {Number}

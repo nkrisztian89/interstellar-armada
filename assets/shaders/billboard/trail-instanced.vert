@@ -13,11 +13,13 @@ attribute vec3 i_endPosition;
 attribute vec3 i_startDirection;
 attribute vec3 i_endDirection;
 attribute vec3 i_size;
-attribute lowp vec4 i_color;
+attribute lowp vec4 i_startColor;
+attribute lowp vec4 i_endColor;
 
 // varyings
 varying mediump vec2 v_texCoord;
-varying lowp vec4 v_color;
+varying lowp vec4 v_startColor;
+varying lowp vec4 v_endColor;
 
 void main() {
         float ratio = (a_position.y * 0.5) + 0.5;
@@ -33,5 +35,6 @@ void main() {
 	gl_Position = mvpMatrix * vec4(a_position, 1.0);	
 	
         v_texCoord = vec2((a_position.x * 0.5) + 0.5, mix(i_size.y, i_size.z, ratio));
-        v_color = i_color;
+        v_startColor = i_startColor;
+        v_endColor = i_endColor;
 }

@@ -817,6 +817,7 @@ define([
                     vec.NULL3,
                     vec.NULL3,
                     vec.NULL4,
+                    vec.NULL4,
                     0, 0, 0,
                     this._descriptor.getInstancedShader()));
         }.bind(this));
@@ -867,7 +868,8 @@ define([
                 this._lastSegment ? this._lastSegment.getEndDirection() : direction,
                 point,
                 direction,
-                this._descriptor.getColor(),
+                this._descriptor.getStartColor(),
+                this._descriptor.getEndColor(),
                 this._descriptor.getDuration(),
                 prevTime,
                 Math.min(this._descriptor.getDuration(), prevTime + this._descriptor.getGrowthRate() * dt),

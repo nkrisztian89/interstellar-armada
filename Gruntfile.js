@@ -70,6 +70,8 @@ module.exports = function (grunt) {
                 ["ignoreTransform", "should"],
                 ["color"],
                 ["lightColor"],
+                ["startColor"],
+                ["endColor"],
                 ["layers"],
                 ["growthRate"],
                 ["dimensions"],

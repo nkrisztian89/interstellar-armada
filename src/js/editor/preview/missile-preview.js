@@ -46,7 +46,7 @@ define([
              */
             CANVAS_UPDATE_PROPERTIES = [
                 "model", "modelScale", "shader", "texture",
-                "trail", "thrusterSlots"
+                "trail", "propulsion", "thrusterSlots"
             ],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options

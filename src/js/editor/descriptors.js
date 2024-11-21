@@ -1163,10 +1163,16 @@ define([
                         name: "texture",
                         type: TEXTURE_REFERENCE
                     },
-                    COLOR: {
-                        name: "color",
+                    START_COLOR: {
+                        name: "startColor",
                         type: BaseType.COLOR4,
                         defaultValue: [1, 1, 1, 1]
+                    },
+                    END_COLOR: {
+                        name: "endColor",
+                        type: BaseType.COLOR4,
+                        optional: true,
+                        defaultText: "same as startColor"
                     },
                     SIZE: {
                         name: "size",

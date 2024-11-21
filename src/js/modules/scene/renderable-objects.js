@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2023 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file Provides various basic renderable object classes that can be added to scenes inside renderable nodes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -41,6 +41,8 @@ define([
             UNIFORM_NORMAL_MATRIX_NAME = "normalMatrix",
             UNIFORM_BILLBOARD_SIZE_NAME = "billboardSize",
             UNIFORM_COLOR_NAME = "color",
+            UNIFORM_START_COLOR_NAME = "startColor",
+            UNIFORM_END_COLOR_NAME = "endColor",
             UNIFORM_POINT_CLOUD_SHIFT_NAME = "shift",
             UNIFORM_POINT_CLOUD_FARTHEST_Z_NAME = "farthestZ",
             UNIFORM_POSITION_NAME = "position",
@@ -1500,7 +1502,8 @@ define([
      * @param {Number[3]} startDirection The direction of the trail path at the position where this segment starts
      * @param {Number[3]} endPosition The coordinates where this segment ends
      * @param {Number[3]} endDirection The direction of the trail path at the position where this segment ends
-     * @param {Number[4]} color The RGBA color of this segment
+     * @param {Number[4]} startColor The RGBA color at the start of the trail of this segment (towards the direction where the segment ends)
+     * @param {Number[4]} endColor The RGBA color at the end of the trail of this segment (towards the direction where the segment starts)
      * @param {Number} duration The total duration of this segment (either ends), in milliseconds
      * @param {Number} startTimeLeft The time left of the total duration at the position where this segment starts, at the time when this segment is created.
      * When the start position expires (time left is zero), it will be moved toward the end position and reach it when it expires, too. In milliseconds.
@@ -1508,7 +1511,7 @@ define([
      * When this time expires, the segment is removed. In milliseconds.
      * @param {ManagedShader} instancedShader The shader that should be active while rendering this object using instancing.
      */
-    function TrailSegment(model, shader, textures, size, wireframe, startPosition, startDirection, endPosition, endDirection, color, duration, startTimeLeft, endTimeLeft, instancedShader) {
+    function TrailSegment(model, shader, textures, size, wireframe, startPosition, startDirection, endPosition, endDirection, startColor, endColor, duration, startTimeLeft, endTimeLeft, instancedShader) {
         RenderableObject3D.call(this);
         /**
          * The model to store the simple billboard data.
@@ -1552,10 +1555,15 @@ define([
          */
         this._direction = [0, 0, 0];
         /**
-         * The RGBA color of this segment
+         * The RGBA color at the start of the trail of this segment (towards the direction where the segment ends)
          * @type Number[4]
          */
-        this._color = [0, 0, 0, 0];
+        this._startColor = [0, 0, 0, 0];
+        /**
+         * The RGBA color at the end of the trail of this segment (towards the direction where the segment starts)
+         * @type Number[4]
+         */
+        this._endColor = [0, 0, 0, 0];
         /**
          * The total duration of this segment (either ends), in milliseconds
          * @type Number
@@ -1575,7 +1583,7 @@ define([
          */
         this._endTimeLeft = 0;
         if (model) {
-            this.init(model, shader, textures, size, wireframe, startPosition, startDirection, endPosition, endDirection, color, duration, startTimeLeft, endTimeLeft, instancedShader);
+            this.init(model, shader, textures, size, wireframe, startPosition, startDirection, endPosition, endDirection, startColor, endColor, duration, startTimeLeft, endTimeLeft, instancedShader);
         }
         this.setUniformValueFunction(UNIFORM_START_POSITION_NAME, function () {
             return this._startPosition;
@@ -1592,8 +1600,11 @@ define([
         this.setUniformValueFunction(UNIFORM_SIZE_NAME, function () {
             return this._sizeVector;
         });
-        this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
-            return this._color;
+        this.setUniformValueFunction(UNIFORM_START_COLOR_NAME, function () {
+            return this._startColor;
+        });
+        this.setUniformValueFunction(UNIFORM_END_COLOR_NAME, function () {
+            return this._endColor;
         });
     }
     TrailSegment.prototype = new RenderableObject3D();
@@ -1609,7 +1620,8 @@ define([
      * @param {Number[3]} startDirection The direction of the trail path at the position where this segment starts
      * @param {Number[3]} endPosition The coordinates where this segment ends
      * @param {Number[3]} endDirection The direction of the trail path at the position where this segment ends
-     * @param {Number[4]} color The RGBA color of this segment
+     * @param {Number[4]} startColor The RGBA color at the start of the trail of this segment (towards the direction where the segment ends)
+     * @param {Number[4]} endColor The RGBA color at the end of the trail of this segment (towards the direction where the segment starts)
      * @param {Number} duration The total duration of this segment (either ends), in milliseconds
      * @param {Number} startTimeLeft The time left of the total duration at the position where this segment starts, at the time when this segment is created.
      * When the start position expires (time left is zero), it will be moved toward the end position and reach it when it expires, too. In milliseconds.
@@ -1617,14 +1629,15 @@ define([
      * When this time expires, the segment is removed. In milliseconds.
      * @param {ManagedShader} instancedShader The shader that should be active while rendering this object using instancing.
      */
-    TrailSegment.prototype.init = function (model, shader, textures, size, wireframe, startPosition, startDirection, endPosition, endDirection, color, duration, startTimeLeft, endTimeLeft, instancedShader) {
+    TrailSegment.prototype.init = function (model, shader, textures, size, wireframe, startPosition, startDirection, endPosition, endDirection, startColor, endColor, duration, startTimeLeft, endTimeLeft, instancedShader) {
         RenderableObject3D.prototype.init.call(this, shader, false, true, mat.translation4vAux(startPosition), mat.IDENTITY4, mat.scaling4Aux(size), instancedShader);
         this.setTextures(textures);
         vec.setVector3(this._startPosition, startPosition);
         vec.setVector3(this._endPosition, endPosition);
         vec.setVector3(this._startDirection, startDirection);
         vec.setVector3(this._endDirection, endDirection);
-        vec.setVector4(this._color, color);
+        vec.setVector4(this._startColor, startColor);
+        vec.setVector4(this._endColor, endColor);
         this._duration = duration;
         this._startTimeLeft = startTimeLeft;
         this._endTimeLeft = endTimeLeft;
