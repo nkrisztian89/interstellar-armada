@@ -4416,6 +4416,9 @@ define([
                         return "lose";
                     }
                     if (instance.trigger && (!instance.trigger.conditions || instance.trigger.conditions.length === 0)) {
+                        if (instance.trigger.delay > 0) {
+                            return "at " + utils.getTimeString(instance.trigger.delay);
+                        }
                         return "start";
                     }
                     if (instance.actions) {

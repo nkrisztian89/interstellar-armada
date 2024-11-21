@@ -1648,31 +1648,28 @@ define([
 
     /**
      * Returns the width of the model in meters.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getWidthInMeters = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getWidth(lod) * this._scale;
     };
 
     /**
      * Returns the height of the model in meters.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getHeightInMeters = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getHeight(lod) * this._scale;
     };
 
     /**
      * Returns the depth of the model in meters.
-     * @param {Number} [lod=0] The level of detail of the mesh to consider.
+     * @param {Number} [lod] The level of detail of the mesh to consider.
      * @returns {Number}
      */
     Model.prototype.getDepthInMeters = function (lod) {
-        lod = (lod !== undefined) ? lod : this._minLOD;
         return this.getDepth(lod) * this._scale;
     };
 

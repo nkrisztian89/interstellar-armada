@@ -279,17 +279,22 @@ define([
      * Creates the content for the preview information panel and adds it to the page.
      */
     function _updateInfo() {
-        var infoSections = [], info;
+        var infoSections = [], info, lod;
         _elements.info.innerHTML = "";
         if (_currentContext) {
             if (_model && _model.getModel) {
+                lod = _model.getCurrentLOD();
                 infoSections.push(
                         "Model: " +
-                        "triangles: " + _model.getModel().getNumTriangles(_model.getCurrentLOD()) +
-                        ", lines: " + _model.getModel().getNumLines(_model.getCurrentLOD()) +
-                        ", dimensions: " + _model.getModel().getWidth(_model.getCurrentLOD()).toFixed(3) + " × " +
-                        _model.getModel().getHeight(_model.getCurrentLOD()).toFixed(3) + " × " +
-                        _model.getModel().getDepth(_model.getCurrentLOD()).toFixed(3));
+                        "triangles: " + _model.getModel().getNumTriangles(lod) +
+                        ", lines: " + _model.getModel().getNumLines(lod) +
+                        ", dimensions: " + _model.getModel().getWidth(lod).toFixed(3) + " × " +
+                        _model.getModel().getHeight(lod).toFixed(3) + " × " +
+                        _model.getModel().getDepth(lod).toFixed(3) + ", scale: " +
+                        _model.getModel().getScale() + ", world size: " +
+                        utils.getLengthString(_model.getModel().getWidthInMeters(lod)) + " x " +
+                        utils.getLengthString(_model.getModel().getHeightInMeters(lod)) + " x " +
+                        utils.getLengthString(_model.getModel().getDepthInMeters(lod)));
             }
             if (_currentContext.functions.getInfo) {
                 info = _currentContext.functions.getInfo();
