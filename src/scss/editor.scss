@@ -26,6 +26,12 @@ body {
     font-size: 0.9vw; /* for em units */
 }
 
+div {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
 button {
     font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
     font-size: 0.8vw;
@@ -147,6 +153,11 @@ select.withJumpButton, select.withUnsetButton {
     height: 1.4em;
     margin-bottom: 0;
     margin-right: 0.28em;
+    box-sizing: border-box;
+    padding: 1px;
+    font-size: 100%;
+    font-family: inherit;
+    line-height: normal;
 }
 
 .colorPreview {
@@ -211,8 +222,6 @@ $dialog-width: 20em;
 /* window */
 
 div.window {
-    margin: 0;
-    padding: 0;
     text-align: left;
     height: 100%;
 }
@@ -263,8 +272,6 @@ div.windowContent {
     box-sizing: border-box;
     width: 100%;
     height: calc(100% - #{$title-height});
-    margin: 0;
-    padding: 0;
     display: flex;
     flex-direction: column;
 
@@ -273,7 +280,7 @@ div.windowContent {
 
 div.windowLabel {
     position: relative;
-    padding: 40% 1em;
+    padding: 40vh 1em;
     text-align: center;
 }
 
@@ -286,23 +293,27 @@ div.windowLabel {
 
 div#items {
     flex: 0;
+    div.windowLabel {
+        min-width: 15em;
+    }
+    &>div.windowContent {
+        height: calc(100% - #{$title-height + $toolbar-height});
+        scroll-behavior: smooth;
+    }
 }
 
 div#preview {
     flex: 1;
+    &>div.windowContent {
+        background-color: #3d3d3d;
+    }
 }
 
 div#properties {
     flex: 0;
-}
-
-div#items > div.windowContent {
-    height: calc(100% - #{$title-height + $toolbar-height});
-    scroll-behavior: smooth;
-}
-
-div#preview > div.windowContent {
-    background-color: #3d3d3d;
+    div.windowLabel {
+        min-width: 15em;
+    }
 }
 
 $scrollbar-width: 17px;
@@ -359,6 +370,7 @@ ul {
 
     list-style-type: none;
 
+    user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none
@@ -368,9 +380,6 @@ ul.elementList {
     padding-top: 0;
     padding-bottom: 0;
     padding-left: 1em;
-}
-
-li.category {
 }
 
 .itemType {
@@ -390,7 +399,7 @@ span.category {
 
 span.category:hover, span.element:hover {
     cursor: pointer;
-
+    user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none
@@ -426,11 +435,9 @@ li.element.dragover {
 
 #previewOptions {
     position: relative;
-    margin: 0;
     padding-top: 0.6em;
     padding-left: 0.6em;
     padding-right: 0.6em;
-    padding-bottom: 0;
     flex: 0;
     button.animate {
         width: 5.5em;
@@ -444,9 +451,6 @@ li.element.dragover {
     position: relative;
     width: 100%;
     height: 100%;
-
-    padding: 0;
-    border: 0;
 }
 
 #previewDiv {
@@ -454,17 +458,12 @@ li.element.dragover {
     width: calc(100% + #{$scrollbar-width}); /* hiding scrollbar */
     height: 100%;
     flex: 1;
-
-    padding: 0;
-    border: 0;
-
     overflow-x: hidden;
     overflow-y: scroll;
 }
 
 #previewInfo {
     position: relative;
-    margin: 0;
     padding-top: 0.6em;
     padding-bottom: 0.6em;
     padding-left: 0.4em;
