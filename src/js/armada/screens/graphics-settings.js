@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file This module manages and provides the Graphics settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -165,6 +165,7 @@ define([
             CUBEMAP_QUALITY_SELECTOR_ID = "cubemapQualitySelector",
             LOD_SELECTOR_ID = "lodSelector",
             MISSILES_IN_LAUNCHERS_SELECTOR_ID = "missilesInLaunchersSelector",
+            THRUSTER_LIGHT_SOURCES_SELECTOR_ID = "thrusterLightSourcesSelector",
             SHADER_COMPLEXITY_SELECTOR_ID = "shaderComplexitySelector",
             SHADOW_MAPPING_SELECTOR_ID = "shadowMappingSelector",
             SHADOW_QUALITY_SELECTOR_ID = "shadowQualitySelector",
@@ -239,6 +240,10 @@ define([
         /**
          * @type Selector
          */
+        this._thrusterLightSourcesSelector = null;
+        /**
+         * @type Selector
+         */
         this._shaderComplexitySelector = null;
         /**
          * @type Selector
@@ -302,6 +307,9 @@ define([
             this._maxDynamicLightsSelector = this._registerSelector(MAX_DYNAMIC_LIGHTS_SELECTOR_ID,
                     strings.GRAPHICS.MAX_DYNAMIC_LIGHTS.name,
                     _getMaxDynamicLightsSettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
+            this._thrusterLightSourcesSelector = this._registerSelector(THRUSTER_LIGHT_SOURCES_SELECTOR_ID,
+                strings.GRAPHICS.THRUSTER_LIGHT_SOURCES.name,
+                strings.getOnOffSettingValues(), RIGHT_OPTION_PARENT_ID);
             this._particleAmountSelector = this._registerSelector(PARTICLE_AMOUNT_SELECTOR_ID,
                     strings.GRAPHICS.PARTICLE_AMOUNT.name,
                     _getParticleAmountSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
@@ -345,6 +353,7 @@ define([
         graphics.setCubemapQuality(_getCubemapQualitySettingValues()[this._cubemapQualitySelector.getSelectedIndex()][1]);
         graphics.setLODLevel(_getLODSettingValues()[this._lodSelector.getSelectedIndex()][1]);
         graphics.setMissilesInLaunchersVisible((this._missilesInLaunchersSelector.getSelectedIndex() === SETTING_ON_INDEX));
+        graphics.setLightSourcesForThrusters((this._thrusterLightSourcesSelector.getSelectedIndex() === SETTING_ON_INDEX));
         graphics.setParticleAmount(_getParticleAmountSettingValues()[this._particleAmountSelector.getSelectedIndex()][1]);
         graphics.setDustParticleAmount(_getDustParticleAmountSettingValues()[this._dustParticleAmountSelector.getSelectedIndex()][1]);
         graphics.handleSettingsChanged();
@@ -393,6 +402,10 @@ define([
         this._cubemapQualitySelector.onChange = setCustomLevel;
         this._lodSelector.onChange = setCustomLevel;
         this._missilesInLaunchersSelector.onChange = setCustomLevel;
+        this._thrusterLightSourcesSelector.onChange = function (stepping) {
+            graphics.setLightSourcesForThrusters((this._thrusterLightSourcesSelector.getSelectedIndex() === SETTING_ON_INDEX));
+            setCustomLevel(stepping);
+        }.bind(this);
         this._particleAmountSelector.onChange = setCustomLevel;
         this._dustParticleAmountSelector.onChange = setCustomLevel;
         this._shaderComplexitySelector.onChange = function (stepping) {
@@ -401,6 +414,7 @@ define([
             this._updateShadowQualitySelector();
             this._updateShadowDistanceSelector();
             this._updateMaxDynamicLightsSelector();
+            this._updateThrusterLightSourcesSelector();
             setCustomLevel(stepping);
         }.bind(this);
         this._shadowMappingSelector.onChange = function (stepping) {
@@ -423,6 +437,7 @@ define([
             graphics.setPointLightAmount(_getMaxDynamicLightsSettingValues()[this._maxDynamicLightsSelector.getSelectedIndex()][1]);
             this._updateShadowMappingSelector();
             this._updateShadowDistanceSelector();
+            this._updateThrusterLightSourcesSelector();
             setCustomLevel(stepping);
         }.bind(this);
     };
@@ -439,6 +454,7 @@ define([
         this._cubemapQualitySelector.setValueList(_getCubemapQualitySettingValues().map(_mapCaption));
         this._lodSelector.setValueList(_getLODSettingValues().map(_mapCaption));
         this._missilesInLaunchersSelector.setValueList(strings.getOnOffSettingValues());
+        this._thrusterLightSourcesSelector.setValueList(strings.getOnOffSettingValues());
         this._shaderComplexitySelector.setValueList(_getShaderComplexitySettingValues().map(_mapCaption));
         this._shadowMappingSelector.setValueList(strings.getOnOffSettingValues());
         this._shadowQualitySelector.setValueList(_getShadowQualitySettingValues().map(_mapCaption));
@@ -502,6 +518,19 @@ define([
         }
     };
     /**
+     * Updates both the value list and the currently selected value of the thruster light sources selector based on whether dynamic lights are
+     * available at the current settings
+     */
+    GraphicsScreen.prototype._updateThrusterLightSourcesSelector = function () {
+        if (graphics.areDynamicLightsAvailable() && (graphics.getMaxPointLights() > 0)) {
+            this._thrusterLightSourcesSelector.setValueList(strings.getOnOffSettingValues());
+            this._thrusterLightSourcesSelector.selectValueWithIndex((graphics.shouldCreateLightSourcesForThrusters() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
+        } else {
+            this._thrusterLightSourcesSelector.setValueList(strings.getOffSettingValue());
+            this._thrusterLightSourcesSelector.selectValueWithIndex(SETTING_OFF_INDEX);
+        }
+    };
+    /**
      * Updates the component states based on the current graphics settings
      */
     GraphicsScreen.prototype._updateValues = function () {
@@ -514,6 +543,7 @@ define([
             this._cubemapQualitySelector.selectValueWithIndex(_findIndexOf(graphics.getCubemapQuality(), _getCubemapQualitySettingValues()));
             this._lodSelector.selectValueWithIndex(_findIndexOf(graphics.getLODLevel(), _getLODSettingValues()));
             this._missilesInLaunchersSelector.selectValueWithIndex((graphics.areMissilesInLaunchersVisible() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
+            this._updateThrusterLightSourcesSelector();
             this._shaderComplexitySelector.selectValueWithIndex(_findIndexOf(graphics.getShaderComplexity(), _getShaderComplexitySettingValues()));
             this._updateShadowMappingSelector();
             this._updateShadowQualitySelector();

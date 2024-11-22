@@ -327,7 +327,19 @@ define([
         }
         _spacecraft.addToScene(preview.getScene(), undefined, false,
                 (environmentChanged || shouldReload) ?
-                {weapons: true, missilesInLaunchers: true, allMissilesInLaunchers: true, lightSources: true, blinkers: true, hitboxes: true, thrusterParticles: true, explosion: true, shield: true, sound: true} :
+                {
+                    weapons: true,
+                    missilesInLaunchers: true,
+                    allMissilesInLaunchers: true,
+                    lightSources: true,
+                    blinkers: true,
+                    hitboxes: true,
+                    thrusterParticles: true,
+                    thrusterLightSources: graphics.shouldCreateLightSourcesForThrusters(),
+                    explosion: true,
+                    shield: true,
+                    sound: true
+                } :
                 {self: false, weapons: true},
                 {
                     replaceVisualModel: true,

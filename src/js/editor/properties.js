@@ -399,7 +399,7 @@ define([
     function _getDefaultValue(propertyDescriptor, basedOn, parent, grandParent, topParent, undefinedIfOptionalWithNoDefault, undefinedIfOptionalOrHasDefault, typeName, arrayIndex, propertyOfArrayElement) {
         var result, type, propertyDescriptors, propertyDescriptorNames, i, optional, count;
         type = new descriptors.Type(propertyDescriptor.type);
-        optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, grandParent, _item.name));
+        optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, grandParent, _item.name, topParent));
         // automatic naming - only for string type name properties (can be enum as well)
         if ((propertyDescriptor.name === descriptors.NAME_PROPERTY_NAME) && typeName && (type.getBaseType() === descriptors.BaseType.STRING)) {
             if (arrayIndex !== undefined) {
@@ -1268,7 +1268,7 @@ define([
         var result = document.createElement("div"),
                 labelText, defaultValue, label, button, type = new descriptors.Type(propertyDescriptor.type), optional, setProperty, limit = false;
         result.title = "";
-        optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, objectParent, _item.name));
+        optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, objectParent, _item.name, topParent));
         if (((!parent || (parent === _item.data)) && _basedOn) || ((parent !== _item.data) && parent[descriptors.BASED_ON_PROPERTY_NAME])) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
         } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.defaultText || propertyDescriptor.getDerivedDefault) {
@@ -1401,8 +1401,8 @@ define([
                  */
                 type = new descriptors.Type(propertyDescriptor.type), elementType, required, optional;
         topName = topName || propertyDescriptor.name;
-        required = !!propertyDescriptor.isRequired && propertyDescriptor.isRequired(parent, objectParent, _item.name);
-        optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, objectParent, _item.name));
+        required = !!propertyDescriptor.isRequired && propertyDescriptor.isRequired(parent, objectParent, _item.name, topParent);
+        optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, objectParent, _item.name, topParent));
         if (data === undefined) {
             result = _createUnsetControl(propertyDescriptor, topName, parent, objectParent, topParent, parentPopup, changeHandler, row);
         } else {
@@ -1530,8 +1530,8 @@ define([
             nameCell.title = propertyDescriptor.name + (propertyDescriptor.description ? ": " + propertyDescriptor.description : "");
             row.appendChild(nameCell);
             valueCell = document.createElement("td");
-            valid = !propertyDescriptor.isValid || propertyDescriptor.isValid(data, parent, _item.name);
-            required = (!!propertyDescriptor.isRequired && propertyDescriptor.isRequired(data, parent, _item.name)) || (!propertyDescriptor.optional && (propertyDescriptor.defaultValue === undefined) && (propertyDescriptor.getDerivedDefault !== undefined));
+            valid = !propertyDescriptor.isValid || propertyDescriptor.isValid(data, parent, _item.name, topParent);
+            required = (!!propertyDescriptor.isRequired && propertyDescriptor.isRequired(data, parent, _item.name, topParent)) || (!propertyDescriptor.optional && (propertyDescriptor.defaultValue === undefined) && (propertyDescriptor.getDerivedDefault !== undefined));
             if (!valid || (row.required && !required)) {
                 delete data[propertyDescriptor.name];
             } else if (required && (data[propertyDescriptor.name] === undefined) && (!_basedOn || (data !== _item.data))) {
@@ -1568,7 +1568,7 @@ define([
         validate = function (sourceRow, basedOn) {
             var i, valid;
             for (i = 0; i < rows.length; i++) {
-                valid = !itemDescriptor[properties[i]].isValid || itemDescriptor[properties[i]].isValid(data, parent, _item.name);
+                valid = !itemDescriptor[properties[i]].isValid || itemDescriptor[properties[i]].isValid(data, parent, _item.name, topParent);
                 if ((rows[i].hidden !== !valid) || (valid && (basedOn || (itemDescriptor[properties[i]].updateOnValidate && (sourceRow !== rows[i]))))) {
                     if (rows[i].valueCell.control.popup) {
                         rows[i].valueCell.control.popup.remove();

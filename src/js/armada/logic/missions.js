@@ -1788,6 +1788,7 @@ define([
                 weapons: true,
                 missilesInLaunchers: graphics.areMissilesInLaunchersVisible(),
                 thrusterParticles: !preview,
+                thrusterLightSources: !preview && graphics.shouldCreateLightSourcesForThrusters(),
                 projectileResources: !preview,
                 missileResources: !preview,
                 explosion: !preview,

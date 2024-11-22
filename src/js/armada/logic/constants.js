@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file Provides some constants to be used in other game logic modules
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -35,6 +35,11 @@ define(function () {
              * @type Number
              */
             BLINKER_LIGHT_PRIORITY = 4,
+            /**
+             * Lights sources for thrusters on spacecrafts will be added to their scenes with this priority
+             * @type Number
+             */
+            THRUSTER_LIGHT_PRIORITY = 4,
             /**
              * Name of the pool for reusable Particle instances
              * @type String
@@ -83,6 +88,7 @@ define(function () {
         PROJECTILE_LIGHT_PRIORITY: PROJECTILE_LIGHT_PRIORITY,
         MISSILE_LIGHT_PRIORITY: MISSILE_LIGHT_PRIORITY,
         BLINKER_LIGHT_PRIORITY: BLINKER_LIGHT_PRIORITY,
+        THRUSTER_LIGHT_PRIORITY: THRUSTER_LIGHT_PRIORITY,
         PARTICLE_POOL_NAME: PARTICLE_POOL_NAME,
         PROJECTILE_POOL_NAME: PROJECTILE_POOL_NAME,
         MISSILE_POOL_NAME: MISSILE_POOL_NAME,

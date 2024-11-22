@@ -401,6 +401,7 @@ define([
         BACKGROUND_QUALITY: {name: "graphics.backgroundQuality"},
         MODEL_DETAILS: {name: "graphics.modelDetails"},
         MISSILES_IN_LAUNCHERS: {name: "graphics.missilesInLaunchers"},
+        THRUSTER_LIGHT_SOURCES: {name: "graphics.thrusterLightSources"},
         SHADERS: {name: "graphics.shaders"},
         SHADOWS: {name: "graphics.shadows"},
         SHADOW_QUALITY: {name: "graphics.shadowQuality"},

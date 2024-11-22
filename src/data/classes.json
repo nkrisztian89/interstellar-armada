@@ -4168,16 +4168,20 @@
                             "size": 1.8
                         }, {
                             "position": [21.75, -5.4, 9.15],
-                            "size": 1.8
+                            "size": 1.8,
+                            "lightFactor": 0.2
                         }, {
                             "position": [19.25, -5.4, 9.15],
-                            "size": 1.8
+                            "size": 1.8,
+                            "lightFactor": 0.2
                         }, {
                             "position": [16.75, -5.4, 9.15],
-                            "size": 1.8
+                            "size": 1.8,
+                            "lightFactor": 0.2
                         }, {
                             "position": [14.25, -5.4, 9.15],
-                            "size": 1.8
+                            "size": 1.8,
+                            "lightFactor": 0.2
                         }]
                 }, {
                     "group": 4,
@@ -4190,16 +4194,20 @@
                             "size": 1.8
                         }, {
                             "position": [-21.75, -5.4, 9.15],
-                            "size": 1.8
+                            "size": 1.8,
+                            "lightFactor": 0.2
                         }, {
                             "position": [-19.25, -5.4, 9.15],
-                            "size": 1.8
+                            "size": 1.8,
+                            "lightFactor": 0.2
                         }, {
                             "position": [-16.75, -5.4, 9.15],
-                            "size": 1.8
+                            "size": 1.8,
+                            "lightFactor": 0.2
                         }, {
                             "position": [-14.25, -5.4, 9.15],
-                            "size": 1.8
+                            "size": 1.8,
+                            "lightFactor": 0.2
                         }]
                 }, {
                     "group": 5,

@@ -25,5 +25,5 @@ $margin-bottom: 0.5em;
 .settingsDivRight {
     display: inline-block;
     width: $div-width;
-    margin-bottom: #{$margin-bottom + 3.95em};
+    margin-bottom: $margin-bottom;
 }

@@ -547,7 +547,7 @@ define([
      * @param {ThrusterSlot[]} thrusterSlots
      */
     function _loadThrusterSlots(dataJSON, object, thrusterSlots) {
-        var i, j, groupIndex, uses, startPosition, translationVector, size, count, jsonObject;
+        var i, j, groupIndex, uses, startPosition, translationVector, size, count, lightFactor, jsonObject;
         for (i = 0; i < dataJSON.thrusterSlots.length; i++) {
             groupIndex = dataJSON.thrusterSlots[i].group;
             uses = dataJSON.thrusterSlots[i].uses;
@@ -556,10 +556,12 @@ define([
                 translationVector = dataJSON.thrusterSlots[i].vector || _missingVector3(object, "thrusterSlot array vector");
                 size = dataJSON.thrusterSlots[i].size || _missingNumber(object, "thrusterSlot array size");
                 count = dataJSON.thrusterSlots[i].count;
+                lightFactor = dataJSON.thrusterSlots[i].lightFactor;
                 for (j = 0; j < count; j++) {
                     thrusterSlots.push(new ThrusterSlot({//eslint-disable-line no-use-before-define
                         position: vec.sum3(startPosition, vec.scaled3Aux(translationVector, j)),
                         size: size,
+                        lightFactor: lightFactor,
                         groupIndex: groupIndex,
                         uses: uses
                     }));
@@ -3573,6 +3575,11 @@ define([
          * @type Number
          */
         this.group = dataJSON ? ((typeof dataJSON.groupIndex) === "number" ? dataJSON.groupIndex : _missingNumber(this, "groupIndex")) : 0;
+        /**
+         * The strength of the light source created for this thruster slot will be multiplied by this factor.
+         * @type Number
+         */
+        this.lightFactor = dataJSON ? ((dataJSON.lightFactor !== undefined) ? dataJSON.lightFactor : 1.0) : 0;
     }
     // ##############################################################################
     /**

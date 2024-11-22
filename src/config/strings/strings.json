@@ -782,6 +782,7 @@
         "backgroundQuality": "Background details:",
         "modelDetails": "Model details:",
         "missilesInLaunchers": "Show missiles in launchers:",
+        "thrusterLightSources": "Light sources for thrusters:",
         "shaders": "Shader details:",
         "shadows": "Shadows:",
         "shadowQuality": "Shadow resolution:",

@@ -1888,6 +1888,7 @@ define([
      * loaded missiles behind the first one into the launch tubes (for displaying
      * missile loadout in wireframe)
      * @property {Boolean} thrusterParticles
+     * @property {Boolean} thrusterLightSources
      * @property {Boolean} projectileResources
      * @property {Boolean} missileResources
      * @property {Boolean} explosion
@@ -2012,7 +2013,7 @@ define([
         // add the thruster particles
         if (addSupplements.thrusterParticles === true) {
             if (this._propulsion) {
-                this._propulsion.addToScene(node);
+                this._propulsion.addToScene(node, addSupplements.thrusterLightSources);
             }
         }
         // add projectile resources

@@ -53,6 +53,7 @@
             ]
         },
         "showMissilesInLaunchers": false, 
+        "createLightSourcesForThrusters": false,
         "particleAmount": {
             "amount": "maximum",
             "autoLimitByScreenSize": true,

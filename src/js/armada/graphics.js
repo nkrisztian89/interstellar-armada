@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021, 2023 Krisztián Nagy
+ * Copyright 2014-2021, 2023-2024 Krisztián Nagy
  * @file Provides functionality to parse and load the graphics settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -725,6 +725,13 @@ define([
              */
             MISSILES_IN_LAUNCHERS_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "missilesInLaunchers",
             // ............................................................................................
+            // Create light sources for thrusters
+            /**
+             * The key identifying the location where the creation of light sources for thrusters setting is stored in local storage.
+             * @type String
+             */
+            THRUSTER_LIGHT_SOURCES_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "thrusterLightSources",
+            // ............................................................................................
             // Shader complexity
             /**
              * The key identifying the location where the shader complexity level setting is stored in local storage.
@@ -1175,6 +1182,11 @@ define([
          */
         this._missilesInLaunchers = false;
         /**
+         * Whether light sources should be created for each thruster on spacecrafts.
+         * @type Boolean
+         */
+        this._thrusterLightSources = false;
+        /**
          * The currently set and available texture qualities.
          * @type TextureQuality
          */
@@ -1484,6 +1496,8 @@ define([
         this._limitSettingByScreenSize(dataJSON.levelOfDetail, this._lodLevel, this.getMaxLoadedLOD.bind(this), this.setLODLevel.bind(this), "level");
         // whether to show loaded missiles in their launchers (during missions)
         this.setMissilesInLaunchersVisible(types.getBooleanValue(dataJSON.showMissilesInLaunchers, {name: "settings.graphics.showMissilesInLaunchers"}), false);
+        // whether to create light sources for thrusters on spacecrafts
+        this.setLightSourcesForThrusters(types.getBooleanValue(dataJSON.createLightSourcesForThrusters, {name: "settings.graphics.createLightSourcesForThrusters"}), false);
         // load the particle amount settings
         this.setParticleAmount(dataJSON.particleAmount.amount, false);
         // if the particle amount is limited by screen size, check the current size and apply the limit
@@ -1539,6 +1553,7 @@ define([
         loadSetting(CUBEMAP_QUALITY_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getCubemapQualities())}, this.getCubemapQuality(), this.setCubemapQuality.bind(this));
         loadSetting(MAX_LOD_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getLODLevels())}, this.getLODLevel(), this.setLODLevel.bind(this));
         loadSetting(MISSILES_IN_LAUNCHERS_LOCAL_STORAGE_ID, "boolean", this.areMissilesInLaunchersVisible(), this.setMissilesInLaunchersVisible.bind(this));
+        loadSetting(THRUSTER_LIGHT_SOURCES_LOCAL_STORAGE_ID, "boolean", this.shouldCreateLightSourcesForThrusters(), this.setLightSourcesForThrusters.bind(this));
         loadSetting(SHADER_COMPLEXITY_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getShaderComplexities())}, this.getShaderComplexity(), this.setShaderComplexity.bind(this));
         loadSetting(SHADOW_MAPPING_LOCAL_STORAGE_ID, "boolean", this.isShadowMappingEnabled(), this.setShadowMapping.bind(this));
         loadSetting(SHADOW_MAP_QUALITY_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getShadowMapQualities())}, this.getShadowMapQuality(), this.setShadowMapQuality.bind(this));
@@ -1788,6 +1803,27 @@ define([
      */
     GraphicsSettingsContext.prototype.areMissilesInLaunchersVisible = function () {
         return this._missilesInLaunchers;
+    };
+    /**
+     * Sets whether light sources should be created for each thruster on spacecrafts.
+     * @param {Boolean} [value]
+     * @param {Boolean} [saveToLocalStorage=true]
+     */
+    GraphicsSettingsContext.prototype.setLightSourcesForThrusters = function (value, saveToLocalStorage) {
+        if (saveToLocalStorage === undefined) {
+            saveToLocalStorage = true;
+        }
+        this._thrusterLightSources = value;
+        if (saveToLocalStorage) {
+            localStorage[THRUSTER_LIGHT_SOURCES_LOCAL_STORAGE_ID] = value.toString();
+        }
+    };
+    /**
+     * Returns whether light sources should be created for each thruster on spacecrafts.
+     * @returns {Boolean}
+     */
+    GraphicsSettingsContext.prototype.shouldCreateLightSourcesForThrusters = function () {
+        return this._thrusterLightSources;
     };
     /**
      * Returns the string identifying the current shader complexity level setting.
@@ -2568,6 +2604,8 @@ define([
         getLODContext: _context.getLODContext.bind(_context),
         setMissilesInLaunchersVisible: _context.setMissilesInLaunchersVisible.bind(_context),
         areMissilesInLaunchersVisible: _context.areMissilesInLaunchersVisible.bind(_context),
+        setLightSourcesForThrusters: _context.setLightSourcesForThrusters.bind(_context),
+        shouldCreateLightSourcesForThrusters: _context.shouldCreateLightSourcesForThrusters.bind(_context),
         getShaderComplexity: _context.getShaderComplexity.bind(_context),
         setShaderComplexity: _context.setShaderComplexity.bind(_context),
         getShaderComplexities: _context.getShaderComplexities.bind(_context),

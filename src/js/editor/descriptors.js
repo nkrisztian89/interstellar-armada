@@ -1281,6 +1281,9 @@ define([
                     type: EXPLOSION_CLASS_REFERENCE
                 }
             },
+            _topParentIsNotMissile = function (data, parent, itemName, topParent) {
+                return topParent.lightIntensity === undefined;
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -1296,6 +1299,13 @@ define([
                         name: "size",
                         type: POSITIVE_SCALE,
                         newValue: 1
+                    },
+                    LIGHT_FACTOR: {
+                        name: "lightFactor",
+                        type: NON_NEGATIVE_SCALE,
+                        optional: true,
+                        defaultValue: 1,
+                        isValid: _topParentIsNotMissile
                     }
                 }
             },
@@ -1313,12 +1323,25 @@ define([
             _hasCount = function (data) {
                 return data.count > 0;
             },
+            _hasCountAndTopParentIsNotMissile = function (data, parent, itemName, topParent) {
+                return _hasCount(data) && _topParentIsNotMissile(data, parent, itemName, topParent);
+            },
             /**
              * @type Editor~TypeDescriptor
              */
             THRUSTER_SLOT = {
                 baseType: BaseType.OBJECT,
                 name: "ThrusterSlot",
+                getName: function (instance) {
+                    var result;
+                    if (instance.uses.length > 2) {
+                        result = instance.uses[0] + " + " + (instance.uses.length - 1) + " uses";
+                    } else {
+                        result = instance.uses.join(", ");
+                    }
+                    result += " (" + (instance.count ? instance.count : instance.thrusters.length) + ")";
+                    return result;
+                },
                 properties: {
                     GROUP: {
                         name: "group",
@@ -1331,7 +1354,8 @@ define([
                     THRUSTERS: {
                         name: "thrusters",
                         type: _createTypedArrayType(THRUSTER, {min: 1}),
-                        isValid: _hasNoCount
+                        isValid: _hasNoCount,
+                        isRequired: _hasNoCount
                     },
                     COUNT: {
                         name: "count",
@@ -1342,18 +1366,28 @@ define([
                     POSITION: {
                         name: "position",
                         type: BaseType.VECTOR3,
-                        isValid: _hasCount
+                        isValid: _hasCount,
+                        isRequired: _hasCount
                     },
                     VECTOR: {
                         name: "vector",
                         type: BaseType.VECTOR3,
-                        isValid: _hasCount
+                        isValid: _hasCount,
+                        isRequired: _hasCount
                     },
                     SIZE: {
                         name: "size",
                         type: POSITIVE_SCALE,
                         newValue: 1,
-                        isValid: _hasCount
+                        isValid: _hasCount,
+                        isRequired: _hasCount
+                    },
+                    LIGHT_FACTOR: {
+                        name: "lightFactor",
+                        type: NON_NEGATIVE_SCALE,
+                        optional: true,
+                        defaultValue: 1,
+                        isValid: _hasCountAndTopParentIsNotMissile
                     }
                 }
             },

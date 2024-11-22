@@ -1,5 +1,5 @@
 {
-    "version": "0.5.5-dev:1224 (2024.11.21.)",
+    "version": "0.5.5-dev:1225 (2024.11.22.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "platform": "web",
@@ -420,6 +420,7 @@
                     "maxLevel": "veryLow"
                 },
                 "showMissilesInLaunchers": false, 
+                "createLightSourcesForThrusters": false,
                 "particleAmount": {
                     "amount": "low"
                 },
@@ -445,6 +446,7 @@
                     "maxLevel": "medium"
                 },
                 "showMissilesInLaunchers": false, 
+                "createLightSourcesForThrusters": false,
                 "particleAmount": {
                     "amount": "medium"
                 },
@@ -474,6 +476,7 @@
                     "maxLevel": "veryHigh"
                 },
                 "showMissilesInLaunchers": false, 
+                "createLightSourcesForThrusters": false,
                 "particleAmount": {
                     "amount": "maximum"
                 },
@@ -503,6 +506,7 @@
                     "maxLevel": "veryHigh"
                 },
                 "showMissilesInLaunchers": true, 
+                "createLightSourcesForThrusters": true,
                 "particleAmount": {
                     "amount": "maximum"
                 },
@@ -532,6 +536,7 @@
                     "maxLevel": "veryHigh"
                 },
                 "showMissilesInLaunchers": true, 
+                "createLightSourcesForThrusters": true,
                 "particleAmount": {
                     "amount": "maximum"
                 },

@@ -830,6 +830,7 @@
         "backgroundQuality": "Háttér részletessége:",
         "modelDetails": "Modellek részletessége:",
         "missilesInLaunchers": "Rakéták a vetőcsövekben:",
+        "thrusterLightSources": "Fényforrások a hajtóművekhez:",
         "shaders": "Árnyalók részletessége:",
         "shadows": "Árnyékok:",
         "shadowQuality": "Árnyékok felbontása:",

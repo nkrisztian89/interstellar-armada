@@ -131,6 +131,11 @@ define([
              */
             THRUSTER_SOUND_VOLUME_RAMP_DURATION = 0.020,
             /**
+             * The intensity of point lights created for thrusters is always multiplied by this factor.
+             * @type Number
+             */
+            THRUSTER_LIGHT_INTENSITY_FACTOR = 0.35,
+            /**
              * When mapping potential targets to numerical values for ordering, the bearing angle of the target will be multiplied by this
              * factor
              * @type Number
@@ -1241,7 +1246,7 @@ define([
         this._initVisualModel(wireframe, lod, shaderName, trail);
         scene.addObject(this._visualModel, true);
         for (i = 0; i < this._thrusters.length; i++) {
-            this._thrusters[i].addToScene(this._visualModel.getNode(), true);
+            this._thrusters[i].addToScene(this._visualModel.getNode(), true, false);
         }
         if (_dynamicLights && this._class.getLightColor()) {
             if (!this._lightSource) {
@@ -3489,6 +3494,10 @@ define([
          * @type Number
          */
         this._maxMoveBurnLevel = this._propulsionClass.getMaxMoveBurnLevel();
+        /**
+         * @type PointLightSource
+         */
+        this._lightSource = null;
     }
     /**
      * @type PropulsionClass~ResourceParams
@@ -3503,8 +3512,12 @@ define([
      * @param {Boolean} [replaceVisualModel=false] Whether to set the newly created
      * renderable node as the visual model of the thruster even if one already
      * existed before
+     * @param {Boolean} [addLightSource=true] Whether to add a point light source
+     * emitting with the same color as the burn particle at the position of the particle,
+     * with strength based on the thruster slot's size and lightFactor and the current
+     * burn rate
      */
-    Thruster.prototype.addToScene = function (parentNode, replaceVisualModel) {
+    Thruster.prototype.addToScene = function (parentNode, replaceVisualModel, addLightSource) {
         var visualModel;
         this._propulsionClass.acquireResources(Thruster.PROPULSION_RESOURCE_PARAMS);
         resources.executeWhenReady(function () {
@@ -3518,6 +3531,14 @@ define([
                     this._propulsionClass.getThrusterBurnParticle().getInstancedShader());
             visualModel.setRelativeSize(0);
             parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel, false, false, true));
+            if (_dynamicLights && (addLightSource !== false) && (this._slot.lightFactor > 0)) {
+                this._lightSource = new lights.PointLightSource(
+                        this._propulsionClass.getThrusterBurnParticle().getColor(),
+                        0,
+                        this._slot.positionVector,
+                        [parentNode.getRenderableObject()]);
+                parentNode.getScene().addPointLightSource(this._lightSource, constants.THRUSTER_LIGHT_PRIORITY);
+            }
             if (!this._visualModel || replaceVisualModel) {
                 if (this._visualModel) {
                     this._visualModel.markAsReusable(true);
@@ -3539,6 +3560,9 @@ define([
                     _luminosityFactorsArrayName,
                     this._slot.group,
                     Math.min(1.0, this._burnLevel / this._maxMoveBurnLevel));
+        }
+        if (this._lightSource) {
+            this._lightSource.setObjectIntensity(THRUSTER_LIGHT_INTENSITY_FACTOR * this._burnLevel * this._slot.size * this._slot.size * this._slot.lightFactor);
         }
     };
     /**
@@ -3565,6 +3589,7 @@ define([
         }
         this._visualModel = null;
         this._shipModel = null;
+        this._lightSource = null;
     };
     // #########################################################################
     /**
@@ -3725,11 +3750,12 @@ define([
      * Adds all necessary renderable objects under the passed parent node that
      * can be used to render the propulsion system (and its thrusters).
      * @param {RenderableNode} parentNode
+     * @param {Boolean} [addLightSources=true]
      */
-    Propulsion.prototype.addToScene = function (parentNode) {
+    Propulsion.prototype.addToScene = function (parentNode, addLightSources) {
         var i;
         for (i = 0; i < this._thrusters.length; i++) {
-            this._thrusters[i].addToScene(parentNode, false);
+            this._thrusters[i].addToScene(parentNode, false, addLightSources);
         }
     };
     /**
