@@ -2005,12 +2005,12 @@ define([
                     result.addQuad(((i + 1) * 4), ((i + 1) * 4) + 1, ((i + 1) * 4) + 2, ((i + 1) * 4) + 3,
                             {
                                 texCoords:
-                                        [[tLeft, tBottom], [tRight, tBottom], [tRight, tTop], [tLeft, tTop]]
+                                        [[tRight, tTop], [tLeft, tTop], [tLeft, tBottom], [tRight, tBottom]]
                             });
                     result.addQuad(((i + 1) * 4) + 3, ((i + 1) * 4) + 2, ((i + 1) * 4) + 1, ((i + 1) * 4),
                             {
                                 texCoords:
-                                        [[tLeft, tBottom], [tRight, tBottom], [tRight, tTop], [tLeft, tTop]]
+                                        [[tRight, tTop], [tLeft, tTop], [tLeft, tBottom], [tRight, tBottom]]
                             });
                 }
             }
