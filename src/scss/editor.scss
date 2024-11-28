@@ -185,7 +185,9 @@ select.withJumpButton, select.withUnsetButton {
     padding-top: 0.2em;
     padding-bottom: 0.2em;
 
-    cursor: move;
+    &.movable {
+        cursor: move;
+    }
 }
 
 .popup, .dialog {

@@ -64,6 +64,7 @@ define([
             RANGE_CHECKBOX_CLASS = "rangeCheckbox",
             RANGE_NUMERIC_INPUT_CLASS = "rangeNumericInput",
             POPUP_CLASS = "popup",
+            MOVABLE_CLASS = "movable",
             POPUP_START_Z_INDEX = 1000,
             POPUP_RIGHT_MARGIN = 4,
             POPUP_BOTTOM_MARGIN = 4,
@@ -482,8 +483,9 @@ define([
      * @param {Element} invoker The element under which this popup should show up (at the same left position and directly under it)
      * @param {Popup} [parent] If given, this popup will be added as a child of the given popup
      * @param {Object} [eventHandlers] The fuctions to execute as events happen to the popup, by the names of the events.
+     * @param {Boolean} [movable=true] Whether or not the popup should be able to be dragged with the mouse
      */
-    function Popup(invoker, parent, eventHandlers) {
+    function Popup(invoker, parent, eventHandlers, movable) {
         /**
          * If the user manually positions the popup, this property holds the left coordinate, in pixels.
          * Otherwise set to -1.
@@ -502,28 +504,31 @@ define([
          */
         this._element = document.createElement("div");
         this._element.classList.add(POPUP_CLASS);
-        this._element.onmousedown = function (event) {
-            if (event.target === this._element) {
-                var startX, startY, startLeft, startTop;
-                if (event.which === utils.MouseButton.LEFT) {
-                    startX = event.screenX;
-                    startY = event.screenY;
-                    startLeft = parseFloat(this._element.style.left);
-                    startTop = parseFloat(this._element.style.top);
-                    document.body.onmousemove = function (moveEvent) {
-                        this.alignPosition(true, startLeft + moveEvent.screenX - startX, startTop + moveEvent.screenY - startY);
-                        moveEvent.preventDefault();
-                    }.bind(this);
-                    document.body.onmouseup = function (event) {
-                        if (event.which === utils.MouseButton.LEFT) {
-                            document.body.onmousemove = null;
-                            this._setLeft = parseFloat(this._element.style.left);
-                            this._setTop = parseFloat(this._element.style.top);
-                        }
-                    }.bind(this);
+        if (movable !== false) {
+            this._element.classList.add(MOVABLE_CLASS);
+            this._element.onmousedown = function (event) {
+                if (event.target === this._element) {
+                    var startX, startY, startLeft, startTop;
+                    if (event.which === utils.MouseButton.LEFT) {
+                        startX = event.screenX;
+                        startY = event.screenY;
+                        startLeft = parseFloat(this._element.style.left);
+                        startTop = parseFloat(this._element.style.top);
+                        document.body.onmousemove = function (moveEvent) {
+                            this.alignPosition(true, startLeft + moveEvent.screenX - startX, startTop + moveEvent.screenY - startY);
+                            moveEvent.preventDefault();
+                        }.bind(this);
+                        document.body.onmouseup = function (event) {
+                            if (event.which === utils.MouseButton.LEFT) {
+                                document.body.onmousemove = null;
+                                this._setLeft = parseFloat(this._element.style.left);
+                                this._setTop = parseFloat(this._element.style.top);
+                            }
+                        }.bind(this);
+                    }
                 }
-            }
-        }.bind(this);
+            }.bind(this);
+        }
         this._element.hidden = true;
         /**
          * The children of this popup.

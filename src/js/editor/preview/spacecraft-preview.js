@@ -400,7 +400,7 @@ define([
     function _createEngineEditor() {
         var
                 button = document.createElement("button"),
-                popup = new common.Popup(button, null, {}),
+                popup = new common.Popup(button, null, {}, false),
                 values = utils.getEnumValues(descriptors.ThrusterUse),
                 table, row, cell, propertyEditor, i,
                 elementChangeHandler = function (index, value) {

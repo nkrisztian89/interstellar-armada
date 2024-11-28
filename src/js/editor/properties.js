@@ -227,9 +227,10 @@ define([
      * @param {String} topName The name of the top level property this popup belongs to
      * @param {Function} [showHandler] A function to be executed next to to notifying the preview whenever the popup is shown
      * @param {Function} [hideHandler] A function to be executed next to to notifying the preview whenever the popup is hidden
+     * @param {Boolean} [movable=true] Whether or not the popup should be able to be dragged with the mouse
      * @returns {Popup}
      */
-    function _createPopup(invoker, parentPopup, topName, showHandler, hideHandler) {
+    function _createPopup(invoker, parentPopup, topName, showHandler, hideHandler, movable) {
         return new common.Popup(invoker, parentPopup, {
             show: function () {
                 if (_preview && !parentPopup) {
@@ -252,7 +253,7 @@ define([
                     _preview.handleStopEdit(topName);
                 }
             }
-        });
+        }, movable);
     }
     /**
      * Returns a short, preview excerpt from a longer text to show
@@ -888,7 +889,7 @@ define([
     function _createSetControl(topName, typeDescriptor, data, parentPopup, changeHandler) {
         var
                 button = document.createElement("button"),
-                popup = _createPopup(button, parentPopup, topName),
+                popup = _createPopup(button, parentPopup, topName, undefined, undefined, false),
                 values = new descriptors.Type(typeDescriptor).getValues(true) || [],
                 table, i,
                 typeName = new descriptors.Type(typeDescriptor).getDisplayName(),
@@ -1099,7 +1100,7 @@ define([
     function _createConfinesControl(topName, data, parentPopup) {
         var
                 button = document.createElement("button"),
-                popup = _createPopup(button, parentPopup, topName),
+                popup = _createPopup(button, parentPopup, topName, undefined, undefined, false),
                 table, i, axis;
         table = document.createElement("table");
         for (i = 0; i < data.length; i++) {
