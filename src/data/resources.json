@@ -903,8 +903,12 @@
             }
         }, {
             "name": "billboard-instanced",
+            "variants": {
+                "high": "billboard-fade-parallel-instanced",
+                "veryHigh": "billboard-fade-parallel-instanced"
+            },
             "vertexShaderSource": "billboard/billboard-instanced.vert",
-            "fragmentShaderSource": "billboard/billboard-instanced.frag",
+            "fragmentShaderSource": "billboard/billboard.frag",
             "blendMode": "add",
             "instanceAttributeRoles": {
                 "i_position": "u_position",
@@ -917,9 +921,36 @@
         }, {
             "name": "billboard",
             "variants": {
-                "instanced": "billboard-instanced"
+                "instanced": "billboard-instanced",
+                "high": "billboard-fade-parallel",
+                "veryHigh": "billboard-fade-parallel"
             },
             "vertexShaderSource": "billboard/billboard.vert",
+            "fragmentShaderSource": "billboard/billboard.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        }, {
+            "name": "billboard-fade-parallel-instanced",
+            "vertexShaderSource": "billboard/billboard-fade-parallel-instanced.vert",
+            "fragmentShaderSource": "billboard/billboard.frag",
+            "blendMode": "add",
+            "instanceAttributeRoles": {
+                "i_position": "u_position",
+                "i_direction": "u_direction"
+            },
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        }, {
+            "name": "billboard-fade-parallel",
+            "variants": {
+                "instanced": "billboard-fade-parallel-instanced"
+            },
+            "vertexShaderSource": "billboard/billboard-fade-parallel.vert",
             "fragmentShaderSource": "billboard/billboard.frag",
             "blendMode": "add",
             "vertexAttributeRoles": {
