@@ -211,6 +211,11 @@ define([
              */
             FIRE_THRESHOLD_ANGLE_FACTOR = 0.25,
             /**
+             * Fighters will reset their roll timer if they are not able to aim within the fire threshold angle multiplied by this factor.
+             * @type Number
+             */
+            ROLL_RESET_THRESHOLD_ANGLE_FACTOR = 3,
+            /**
              * Fighters will initiate a rolling maneuver after missing their target for this many shots.
              * @type Number
              */
@@ -1884,35 +1889,40 @@ define([
                                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                                     // if we are not hitting the target despite not being blocked and firing in the right direction, roll the spacecraft
                                     if (!this._isBlockedBy) {
-                                        this._timeSinceLastRoll += dt;
-                                        this._timeSinceLastTargetHit += dt;
-                                        this._timeSinceLastClosingIn += dt;
                                         // starting roll if needed
                                         rollWaitTime = targetHitTime + ROLL_CORRECTION_TRIGGERING_MISS_COUNT * weaponCooldown;
                                         if ((this._timeSinceLastRoll > rollWaitTime) && (this._timeSinceLastTargetHit > rollWaitTime)) {
-                                            this._rollTime = 0;
-                                        }
-                                        // performing coll
-                                        if (this._rollTime >= 0) {
-                                            this._spacecraft.rollLeft();
-                                            this._timeSinceLastRoll = 0;
-                                            this._rollTime += dt;
                                             // calculating the duration of rolling based on the angle we would like to roll (in seconds)
                                             angularAcceleration = this._spacecraft.getMaxAngularAcceleration();
                                             maxAngularVelocity = angularAcceleration * _turnAccelerationDuration;
                                             rollDuration = (ROLL_CORRECTION_ANGLE > maxAngularVelocity * _turnAccelerationDuration) ?
-                                                    _turnAccelerationDuration + (ROLL_CORRECTION_ANGLE - (maxAngularVelocity * _turnAccelerationDuration)) / maxAngularVelocity :
-                                                    Math.sqrt(4 * ROLL_CORRECTION_ANGLE / angularAcceleration) / 2;
-                                            // stopping roll (converting to milliseconds)
-                                            if (this._rollTime > rollDuration * 1000) {
-                                                this._rollTime = -1;
-                                            }
+                                                _turnAccelerationDuration + (ROLL_CORRECTION_ANGLE - (maxAngularVelocity * _turnAccelerationDuration)) / maxAngularVelocity :
+                                                Math.sqrt(4 * ROLL_CORRECTION_ANGLE / angularAcceleration) / 2;
+                                            this._rollTime = rollDuration * 1000; // converting to milliseconds
                                         }
+                                    } else {
+                                        this._timeSinceLastTargetHit = 0;
+                                        this._timeSinceLastRoll = 0;
+                                        this._timeSinceLastClosingIn = 0;
                                     }
                                 }
                             } else {
-                                this._timeSinceLastRoll = 0;
                                 this._fireDelayLeft = this._fireDelay;
+                                if ((Math.abs(_angles.yaw) > fireThresholdAngle * ROLL_RESET_THRESHOLD_ANGLE_FACTOR) ||
+                                        (Math.abs(_angles.pitch) > fireThresholdAngle * ROLL_RESET_THRESHOLD_ANGLE_FACTOR)) {
+                                    this._timeSinceLastRoll = 0;
+                                }
+                            }
+                            if (this._engagedTarget === target) {
+                                this._timeSinceLastRoll += dt;
+                                this._timeSinceLastTargetHit += dt;
+                                this._timeSinceLastClosingIn += dt;
+                            }
+                            // performing coll
+                            if (this._rollTime > 0) {
+                                this._spacecraft.rollLeft();
+                                this._timeSinceLastRoll = 0;
+                                this._rollTime -= dt;
                             }
                         } else {
                             this._timeSinceLastRoll = 0;
