@@ -719,7 +719,7 @@ define([
          * @type SpacecraftEvents~RadioData
          */
         this._radioData = {
-            voice: (params && params.voice) ? config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES).indexOf(params.voice) : -1,
+            voice: (params && params.voice) ? (params.voice === "random") ? getAvailableVoice() : config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES).indexOf(params.voice) : -1,
             messageType: -1
         };
         // attaching handlers to the spacecraft events

@@ -4610,7 +4610,7 @@ define([
             AI_VOICE = {
                 baseType: BaseType.ENUM,
                 getValues: function () {
-                    return ["none"].concat(config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES));
+                    return ["none"].concat(config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES)).concat(["random"]);
                 }
             },
             _mapAiPreset = function (aiPreset) {
@@ -4653,6 +4653,15 @@ define([
             _parentHasFighterAI = function (data, parent) {
                 return parent.ai === "fighter";
             },
+            _craftIsMulti = function (data) {
+                return data.count && (data.count > 1);
+            },
+            _aiCanHaveVoice = function (data) {
+                return data.voices === undefined;
+            },
+            _aiCanHaveVoices = function (data, parent) {
+                return _craftIsMulti(parent) && !data.voice;
+            },
             AI_PARAMS = {
                 baseType: BaseType.OBJECT,
                 name: "aiParams",
@@ -4666,15 +4675,28 @@ define([
                     if (instance.preset) {
                         result = (result ? result + " " : "") + instance.preset;
                     }
-                    return (result ? result + "; " : "") + "voice: " + (instance.voice || _getDefaultVoice(instance, parent, itemName, topParent));
+                    return (result ? result + "; " : "") + "voice: " + (instance.voices ? instance.voices[0] + "..." : instance.voice || _getDefaultVoice(instance, parent, itemName, topParent));
                 },
                 properties: {
+                    VOICES: {
+                        name: "voices",
+                        description: "Which voices to use when playing radio messages transmitted by these AI.",
+                        type: _createTypedArrayType(AI_VOICE, {min: 1}, function (data) {
+                            return (data.length <= 2) ? data.join(", ") : data[0] + " + " + (data.length - 1) + " more";
+                        }),
+                        optional: true,
+                        isValid: _aiCanHaveVoices,
+                        getDerivedDefault: _getDefaultVoice,
+                        updateOnValidate: true
+                    },
                     VOICE: {
                         name: "voice",
                         description: "Which voice to use when playing radio messages transmitted by this AI.",
                         type: AI_VOICE,
                         optional: true,
-                        getDerivedDefault: _getDefaultVoice
+                        isValid: _aiCanHaveVoice,
+                        getDerivedDefault: _getDefaultVoice,
+                        updateOnValidate: true
                     },
                     PRESET: {
                         name: "preset",
@@ -4766,9 +4788,6 @@ define([
             },
             _craftIsSingle = function (data) {
                 return !data.count || (data.count === 1);
-            },
-            _craftIsMulti = function (data) {
-                return data.count && (data.count > 1);
             },
             _craftCanBePiloted = function (data) {
                 return _craftIsSingle(data) && !data.away;

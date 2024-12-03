@@ -195,7 +195,7 @@ define([
      * @returns {Array}
      */
     function getIndividualSpacecraftDescriptors(spacecrafts) {
-        var i, j, squad, names, loadouts, pilotedIndex, positions, formation, orientation, initialBlinkTime, initialBlinkTimeDelta,
+        var i, j, squad, names, loadouts, pilotedIndex, positions, formation, orientation, initialBlinkTime, initialBlinkTimeDelta, aiVoices,
                 spacecraftDataTemplate, spacecraftData,
                 result = [], squads = {}, index;
         for (i = 0; i < spacecrafts.length; i++) {
@@ -211,7 +211,12 @@ define([
                 orientation = mat.rotation4FromJSON(spacecrafts[i].rotations);
                 initialBlinkTime = spacecrafts[i].initialBlinkTime;
                 initialBlinkTimeDelta = spacecrafts[i].initialBlinkTimeDelta;
-                // creating a template to be copied for individual spacecraft data objects, without the proprties that don't refer to individual spacecrafts
+                if (spacecrafts[i].aiParams) {
+                    aiVoices = spacecrafts[i].aiParams.voices;
+                } else {
+                    aiVoices = null;
+                }
+                // creating a template to be copied for individual spacecraft data objects, without the properties that don't refer to individual spacecrafts
                 spacecraftDataTemplate = utils.deepCopy(spacecrafts[i]);
                 delete spacecraftDataTemplate.count;
                 delete spacecraftDataTemplate.names;
@@ -219,6 +224,9 @@ define([
                 delete spacecraftDataTemplate.pilotedIndex;
                 delete spacecraftDataTemplate.positions;
                 delete spacecraftDataTemplate.formation;
+                if (spacecraftDataTemplate.aiParams) {
+                    delete spacecraftDataTemplate.aiParams.voices;
+                }
                 for (j = 0; j < spacecrafts[i].count; j++) {
                     spacecraftData = utils.deepCopy(spacecraftDataTemplate);
                     if (squad) {
@@ -245,6 +253,9 @@ define([
                     }
                     if (initialBlinkTime !== undefined) {
                         spacecraftData.initialBlinkTime = initialBlinkTime + (j * (initialBlinkTimeDelta || 0));
+                    }
+                    if (aiVoices) {
+                        spacecraftData.aiParams.voice = aiVoices[j % aiVoices.length];
                     }
                     result.push(spacecraftData);
                 }
