@@ -486,10 +486,10 @@ define([
              */
             _vectorToTarget = [0, 0, 0],
             /**
-             * The default AI context (storing the actual AIs) the methods of which are exposed by this module.
-             * @type AIContext
+             * The list of managed AIs.
+             * @type SpacecraftAI[]
              */
-            _context;
+            _ais = [];
     // ##############################################################################
     /**
      * Returns a list of all the valid AI types
@@ -2330,23 +2330,12 @@ define([
     SentryAI.prototype.constructor = SentryAI;
     // ##############################################################################
     /**
-     * @class
-     * Stores and manages a list of AIs that belong to the same battle simulation.
-     */
-    function AIContext() {
-        /**
-         * The list of managed AIs.
-         * @type Array
-         */
-        this._ais = [];
-    }
-    /**
      * Removes all the stored AIs.
      */
-    AIContext.prototype.clearAIs = function () {
-        this._ais = [];
+    function clearAIs() {
+        _ais = [];
         _availableVoices = [];
-    };
+    }
     /**
      * Adds a new AI of the type associated with the passed type name and sets it up to control the passed spacecraft.
      * @param {String} aiTypeName
@@ -2354,104 +2343,102 @@ define([
      * @param {Mission} mission 
      * @param {AIParams} params
      */
-    AIContext.prototype.addAI = function (aiTypeName, spacecraft, mission, params) {
-        this._ais.push(new _aiConstructors[aiTypeName](spacecraft, mission, params));
-    };
+    function addAI(aiTypeName, spacecraft, mission, params) {
+        _ais.push(new _aiConstructors[aiTypeName](spacecraft, mission, params));
+    }
     /**
      * Returns the index of the voice (within the array settings.json/logic.battle.pilotVoices) corresponding to the AI
      * that controls the passed spacecraft. If no AI controls the craft, returns -1.
      * @param {Spacecraft} spacecraft
      * @returns {Number}
      */
-    AIContext.prototype.getVoiceOfSpacecraft = function (spacecraft) {
+    function getVoiceOfSpacecraft(spacecraft) {
         var i;
-        for (i = 0; i < this._ais.length; i++) {
-            if (this._ais[i].getSpacecraft() === spacecraft) {
-                return this._ais[i].getVoice();
+        for (i = 0; i < _ais.length; i++) {
+            if (_ais[i].getSpacecraft() === spacecraft) {
+                return _ais[i].getVoice();
             }
         }
         return -1;
-    };
+    }
     /**
      * Returns if the pilot voice with the passed index (within the array settings.json/logic.battle.pilotVoices) is
      * corresponding to one of the currently added spacecraft AIs.
      * @param {Number} voiceIndex
      * @returns {Boolean}
      */
-    AIContext.prototype.isVoiceUsed = function (voiceIndex) {
+    function isVoiceUsed(voiceIndex) {
         var i;
-        for (i = 0; i < this._ais.length; i++) {
-            if (this._ais[i].getVoice() === voiceIndex) {
+        for (i = 0; i < _ais.length; i++) {
+            if (_ais[i].getVoice() === voiceIndex) {
                 return true;
             }
         }
         return false;
-    };
+    }
     /**
      * Returns the AI that controls the passed spacecraft (null if there is no AI associated with the passed spacecraft).
      * @param {Boolean} silence
      * @param {Spacecraft[]} [spacecrafts] If null or undefined, will be set for all spacecrafts.
      */
-    AIContext.prototype.setRadioSilenceForSpacecrafts = function (silence, spacecrafts) {
+    function setRadioSilenceForSpacecrafts(silence, spacecrafts) {
         var i;
-        for (i = 0; i < this._ais.length; i++) {
-            if (!spacecrafts || (spacecrafts.indexOf(this._ais[i].getSpacecraft()) >= 0)) {
-                this._ais[i].setRadioSilence(silence);
+        for (i = 0; i < _ais.length; i++) {
+            if (!spacecrafts || (spacecrafts.indexOf(_ais[i].getSpacecraft()) >= 0)) {
+                _ais[i].setRadioSilence(silence);
             }
         }
-    };
+    }
     /**
      * Performs the control step for all the stored AIs.
      * @param {Number} dt the time elapsed since the last control step, in milliseconds.
      */
-    AIContext.prototype.control = function (dt) {
+    function control(dt) {
         var i;
-        for (i = 0; i < this._ais.length; i++) {
-            this._ais[i].control(dt);
+        for (i = 0; i < _ais.length; i++) {
+            _ais[i].control(dt);
         }
-    };
+    }
     /**
      * Executes the reactions of the AIs to general spacecraft events (e.g. transmitting radio
      * message to the player when a new enemy arrives or a friendly ship is destroyed)
      * @param {String} eventID (enum SpacecraftEvents) The type of event that happened
      * @param {Spacecraft} craft The spacecraft the event happened to / with
      */
-    AIContext.prototype.broadcastSpacecraftEvent = function (eventID, craft) {
+    function broadcastSpacecraftEvent(eventID, craft) {
         var i;
-        for (i = 0; i < this._ais.length; i++) {
-            if (this._ais[i].handleSpacecraftEvent(eventID, craft)) {
+        for (i = 0; i < _ais.length; i++) {
+            if (_ais[i].handleSpacecraftEvent(eventID, craft)) {
                 return;
             }
         }
-    };
+    }
     /**
      * Executes the reactions of the AIs to the player destroying an enemy.
      */
-    AIContext.prototype.handlePlayerGainKill = function () {
+    function handlePlayerGainKill() {
         var i;
-        for (i = 0; i < this._ais.length; i++) {
-            this._ais[i].handlePlayerGainKill();
+        for (i = 0; i < _ais.length; i++) {
+            _ais[i].handlePlayerGainKill();
         }
-    };
+    }
     /**
      * Updates the state of all the stored AIs for the case when the scene where the battle simulation happens (all the object in it) has 
      * been moved by the given vector.
      * @param {Number[3]} vector
      */
-    AIContext.prototype.handleSceneMoved = function (vector) {
+    function handleSceneMoved(vector) {
         var i;
-        for (i = 0; i < this._ais.length; i++) {
-            this._ais[i].handleSceneMoved(vector);
+        for (i = 0; i < _ais.length; i++) {
+            _ais[i].handleSceneMoved(vector);
         }
-    };
+    }
     // setting up the associative array of AI constructors
     _aiConstructors = {};
     _aiConstructors[FIGHTER_AI_NAME] = FighterAI;
     _aiConstructors[SHIP_AI_NAME] = ShipAI;
     _aiConstructors[STATION_AI_NAME] = StationAI;
     _aiConstructors[SENTRY_AI_NAME] = SentryAI;
-    // creating the default context
-    _context = new AIContext(_aiConstructors);
     // caching frequently used configuration values
     config.executeWhenReady(function () {
         var voiceMessages = config.getBattleSetting(config.BATTLE_SETTINGS.VOICE_MESSAGES);
@@ -2493,14 +2480,14 @@ define([
         resetJumpInPositionSeed: resetJumpInPositionSeed,
         resetRandomSeeds: resetRandomSeeds,
         positionForInwardJump: positionForInwardJump,
-        clearAIs: _context.clearAIs.bind(_context),
-        addAI: _context.addAI.bind(_context),
-        getVoiceOfSpacecraft: _context.getVoiceOfSpacecraft.bind(_context),
-        isVoiceUsed: _context.isVoiceUsed.bind(_context),
-        setRadioSilenceForSpacecrafts: _context.setRadioSilenceForSpacecrafts.bind(_context),
-        control: _context.control.bind(_context),
-        broadcastSpacecraftEvent: _context.broadcastSpacecraftEvent.bind(_context),
-        handlePlayerGainKill: _context.handlePlayerGainKill.bind(_context),
-        handleSceneMoved: _context.handleSceneMoved.bind(_context)
+        clearAIs: clearAIs,
+        addAI: addAI,
+        getVoiceOfSpacecraft: getVoiceOfSpacecraft,
+        isVoiceUsed: isVoiceUsed,
+        setRadioSilenceForSpacecrafts: setRadioSilenceForSpacecrafts,
+        control: control,
+        broadcastSpacecraftEvent: broadcastSpacecraftEvent,
+        handlePlayerGainKill: handlePlayerGainKill,
+        handleSceneMoved: handleSceneMoved
     };
 });
