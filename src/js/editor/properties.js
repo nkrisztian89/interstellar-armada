@@ -31,9 +31,10 @@ define([
             SET_PROPERTY_BUTTON_CLASS = "setProperty",
             UNSET_PROPERTY_BUTTON_CLASS = "unsetProperty",
             JUMP_TO_REFERENCE_BUTTON_CLASS = "jumpReference",
+            LONG_STRING_EDIT_BUTTON_CLASS = "longString",
             TEXT_AREA_ROWS = 5,
             TEXT_AREA_COLS = 100,
-            LONG_TEXT_PREVIEW_LENGTH = 16,
+            LONG_TEXT_PREVIEW_LENGTH = 30,
             EMPTY_LIST_TEXT = "empty list",
             INHERITED_PROPERTY_TEXT = "inherited",
             DEFAULT_PROPERTY_TEXT = "default",
@@ -277,12 +278,17 @@ define([
         var
                 textarea = document.createElement("textarea"),
                 button, popup;
-        button = common.createButton(_getStringPreview(data), function () {
+        button = common.createButton({
+            caption: _getStringPreview(data),
+            class: LONG_STRING_EDIT_BUTTON_CLASS,
+            title: data
+        }, function () {
             popup.toggle();
         });
         popup = _createPopup(button, parentPopup, topName, null, function () {
             _changeData(topName, textarea.value, parent, name, onChange);
             button.textContent = _getStringPreview(textarea.value);
+            button.title = textarea.value;
             if (parentPopup) {
                 parentPopup.alignPosition();
             }
@@ -408,8 +414,10 @@ define([
             }
             return NEW_OBJECT_NAME_PREFIX + typeName;
         }
-        if ((undefinedIfOptionalWithNoDefault && optional && (propertyDescriptor.defaultValue === undefined) && (propertyDescriptor.getDerivedDefault === undefined)) ||
-                (undefinedIfOptionalOrHasDefault && (optional || (propertyDescriptor.defaultValue !== undefined) || (propertyDescriptor.getDerivedDefault !== undefined)))) {
+        if ((undefinedIfOptionalWithNoDefault &&
+                optional && (propertyDescriptor.defaultValue === undefined) && (propertyDescriptor.getDerivedDefault === undefined)) ||
+            (undefinedIfOptionalOrHasDefault &&
+                (optional || (propertyDescriptor.defaultValue !== undefined) || ((propertyDescriptor.getDerivedDefault !== undefined) && (propertyDescriptor.getDerivedDefault(parent, grandParent, _item.name, topParent) !== undefined))))) {
             return undefined;
         }
         if (basedOn) {

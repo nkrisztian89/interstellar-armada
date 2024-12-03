@@ -2737,6 +2737,7 @@ define([
                     name: "description",
                     type: LONG_STRING,
                     isValid: _shownInDatabase,
+                    isRequired: _shownInDatabase,
                     newValue: "-"
                 },
                 HITPOINTS: {
@@ -4183,7 +4184,7 @@ define([
                     TEXT: {
                         name: "text",
                         type: LONG_STRING,
-                        newValue: "Test",
+                        newValue: "Hello, pilot!",
                         isRequired: _requiresMessage,
                         isValid: _parentIsMessageAction,
                         getDerivedDefault: _getMessageText,

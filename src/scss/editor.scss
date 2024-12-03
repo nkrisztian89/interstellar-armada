@@ -615,8 +615,9 @@ span.propertyControl {
 
 div.propertyControl {
     width: 100%;
-    display: inline-block;
+    display: flex;
     vertical-align: middle;
+    white-space: nowrap;
     tr.property.unset:hover & {
         cursor: pointer;
     }
@@ -655,6 +656,13 @@ tr:not(:hover) button.unsetProperty {
 
 button.jumpReference {
     margin: 0;
+    padding: 0;
+}
+
+button.longString {
+    max-width: 12.5em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 /* -------------------------------------------------------------------- */

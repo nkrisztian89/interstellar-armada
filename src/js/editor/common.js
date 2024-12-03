@@ -159,7 +159,7 @@ define([
     /**
      * Creates and returns a button.
      * @param {String|Object} captionOrParams The text to show on the button (textContent),
-     * or an object with optional class (CSS class name) and caption properties
+     * or an object with optional class (CSS class name), title and caption properties
      * @param {Function} clickHandler The handler for the click event on the button
      * @param {String} [tooltip] The tooltip to display when hovering over the button
      * @returns {Element}
@@ -171,6 +171,9 @@ define([
         } else {
             if (captionOrParams.class) {
                 result.className = captionOrParams.class;
+            }
+            if (captionOrParams.title) {
+                result.title = captionOrParams.title;
             }
             if (captionOrParams.caption) {
                 result.textContent = captionOrParams.caption;
