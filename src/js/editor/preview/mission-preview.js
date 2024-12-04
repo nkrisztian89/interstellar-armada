@@ -185,6 +185,11 @@ define([
              */
             _gridVisible = true,
             /**
+             * The value of the setting of whether the markers should be visible in the preview
+             * @type Boolean
+             */
+            _markersVisible = true,
+            /**
              * The value of the setting of whether the environment should be visible in the preview
              * @type Boolean
              */
@@ -287,6 +292,7 @@ define([
      */
     function _updateForOptions() {
         _mission.setGridVisibility(_gridVisible);
+        _mission.setMarkerVisibility(_markersVisible);
         _mission.setEnvironmentVisibility(_environmentVisible);
     }
     /**
@@ -376,6 +382,11 @@ define([
             _mission.setGridVisibility(_gridVisible);
             preview.requestRender();
         }), "Show grid: "));
+        _elements.options.appendChild(common.createSetting(common.createBooleanInput(_markersVisible, function (value) {
+            _markersVisible = value;
+            _mission.setMarkerVisibility(_markersVisible);
+            preview.requestRender();
+        }), "Show markers: "));
         _elements.options.appendChild(common.createSetting(common.createBooleanInput(_environmentVisible, function (value) {
             _environmentVisible = value;
             _mission.setEnvironmentVisibility(_environmentVisible);

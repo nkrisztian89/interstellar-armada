@@ -729,6 +729,11 @@ define([
          */
         this._grids = null;
         /**
+         * The list of nodes under which the position and jump markers (used for mission preview in the editor) are added to the scene.
+         * @type RenderableNode[]
+         */
+        this._markers = null;
+        /**
          * Whether this mission has an own environment created by itself (described in the mission JSON)
          * or just refers one from the common environments. (if the latter is the case, the referred environment cannot be destroyed when
          * this mission is destroyed)
@@ -1732,6 +1737,7 @@ define([
                         ] :
                         color;
             };
+            this._markers = [];
             callback = function (spacecraft, color, model) {
                 var marker, position = model.getPositionMatrix(), ownColor = getSpacecraftColor(spacecraft, color);
                 model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
@@ -1743,7 +1749,7 @@ define([
                     marker.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
                         return (position[14] > 0) ? markerColorPositive : markerColorNegative;
                     });
-                    battleScene.addObject(marker, false);
+                    this._markers.push(battleScene.addObject(marker, false));
                 }
                 if (jumpMarkers.has(spacecraft)) {
                     marker = new renderableObjects.ShadedLODMesh(resources.getModel(LINE_MODEL_NAME).getEgomModel(), graphics.getManagedShader(previewParams.markerShaderName), {},
@@ -1752,7 +1758,7 @@ define([
                         return jumpMarkerColor;
                     });
                     marker.setModelSize(vec.length3(jumpMarkers.get(spacecraft)) / Math.max(Math.abs(jumpMarkers.get(spacecraft)[0]), Math.abs(jumpMarkers.get(spacecraft)[1]), Math.abs(jumpMarkers.get(spacecraft)[2])));
-                    battleScene.addObject(marker, false);
+                    this._markers.push(battleScene.addObject(marker, false));
                 }
                 addedSpacecrafts++;
                 if ((addedSpacecrafts === spacecraftCount) && previewParams.callback) {
@@ -1882,6 +1888,18 @@ define([
         if (this._grids) {
             for (i = 0; i < this._grids.length; i++) {
                 this._grids[i].setVisibility(value);
+            }
+        }
+    };
+    /**
+     * Set the visibility of the (position and jump) markers added to the scene for the mission visualization (in the editor)
+     * @param {Boolean} value 
+     */
+    Mission.prototype.setMarkerVisibility = function (value) {
+        var i;
+        if (this._markers) {
+            for (i = 0; i < this._markers.length; i++) {
+                this._markers[i].setVisibility(value);
             }
         }
     };
@@ -2129,6 +2147,12 @@ define([
                 this._grids[i].destroy();
             }
             this._grids = null;
+        }
+        if (this._markers) {
+            for (i = 0; i < this._markers.length; i++) {
+                this._markers[i].destroy();
+            }
+            this._markers = null;
         }
         this._pilotedCraft = null;
         this._hitObjects = null;
