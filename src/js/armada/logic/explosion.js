@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file Implementation of the Explosion game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -379,6 +379,15 @@ define([
                 scene.addResourcesOfObject(this._visualModel, resourceID);
             }
         }.bind(this));
+    };
+    /**
+     * If the explosion is added to a scene, changes its visibility.
+     * @param {Boolean} value 
+     */
+    Explosion.prototype.setVisibility = function (value) {
+        if (this._visualModel) {
+            this._visualModel.getNode().setVisibility(value);
+        }
     };
     /**
      * Cancels the explosion without deleting the already created particles.

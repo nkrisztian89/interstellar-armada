@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 Krisztián Nagy
+ * Copyright 2020-2024 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for missions within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -12,6 +12,7 @@
  * @param resources
  * @param camera
  * @param renderableObjects
+ * @param common
  * @param preview
  */
 define([
@@ -21,8 +22,9 @@ define([
     "modules/media-resources",
     "modules/scene/camera",
     "modules/scene/renderable-objects",
+    "editor/common",
     "editor/preview/webgl-preview"
-], function (utils, vec, mat, resources, camera, renderableObjects, preview) {
+], function (utils, vec, mat, resources, camera, renderableObjects, common, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -160,6 +162,11 @@ define([
             // ----------------------------------------------------------------------
             // Private variables
             /**
+             * A reference to the object storing the HTML elements to be used for the preview
+             * @type Object
+             */
+            _elements,
+            /**
              * @type MissionDescriptor
              */
             _missionDescriptor,
@@ -172,6 +179,16 @@ define([
              * @type WebGLPreviewContext
              */
             _previewContext,
+            /**
+             * The value of the setting of whether the grids should be visible in the preview
+             * @type Boolean
+             */
+            _gridVisible = true,
+            /**
+             * The value of the setting of whether the environment should be visible in the preview
+             * @type Boolean
+             */
+            _environmentVisible = true,
             /**
              * The index of the currently edited spacecraft entry from the mission
              * descriptor JSON
@@ -266,6 +283,13 @@ define([
         return -1;
     }
     /**
+     * Update the preview for the current option settings
+     */
+    function _updateForOptions() {
+        _mission.setGridVisibility(_gridVisible);
+        _mission.setEnvironmentVisibility(_environmentVisible);
+    }
+    /**
      * Update the preview for the current spacecraft selection (and highlight)
      */
     function _updateForSpacecraftSelection() {
@@ -326,7 +350,10 @@ define([
                 smallestSizeWhenDrawn: SMALLEST_SIZE_WHEN_DRAWN,
                 awayColorFactor: AWAY_COLOR_FACTOR,
                 awayAlphaFactor: AWAY_ALPHA_FACTOR,
-                callback: _updateForSpacecraftSelection
+                callback: function () {
+                    _updateForOptions();
+                    _updateForSpacecraftSelection();
+                }
             });
         }
     }
@@ -344,7 +371,16 @@ define([
      * Currently does nothing, no preview options are yet implemented for mission previews.
      */
     function _createOptions() {
-        return true;
+        _elements.options.appendChild(common.createSetting(common.createBooleanInput(_gridVisible, function (value) {
+            _gridVisible = value;
+            _mission.setGridVisibility(_gridVisible);
+            preview.requestRender();
+        }), "Show grid: "));
+        _elements.options.appendChild(common.createSetting(common.createBooleanInput(_environmentVisible, function (value) {
+            _environmentVisible = value;
+            _mission.setEnvironmentVisibility(_environmentVisible);
+            preview.requestRender();
+        }), "Show environment: "));
     }
     /**
      * For the WebGL preview context.
@@ -468,6 +504,7 @@ define([
         var sameClass = (_missionDescriptor === missionDescriptor);
         preview.setContext(_previewContext);
         _tooltip = elements.tooltip;
+        _elements = elements;
         _missionDescriptor = missionDescriptor;
         if (sameClass) {
             if (!params) {

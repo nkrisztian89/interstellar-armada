@@ -281,7 +281,7 @@ define([
     function _createEngineEditor() {
         var
                 button = document.createElement("button"),
-                popup = new common.Popup(button, null, {}),
+                popup = new common.Popup(button, null, {}, false),
                 values = [
                     descriptors.ThrusterUse.FORWARD,
                     descriptors.ThrusterUse.YAW_LEFT,

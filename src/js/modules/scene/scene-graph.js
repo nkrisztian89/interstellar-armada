@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2023 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2024 Krisztián Nagy
  * @file A general purpose WebGL scene engine building on the functionality of ManagedGL.
  * Create a Scene, add background and main scene objects and light sources, then add it to a ManagedGLContext (or several ones), and it can
  * be rendered on them.
@@ -588,6 +588,13 @@ define([
      */
     RenderableNode.prototype.isVisible = function () {
         return this._visible && (!this._parent || this._parent.isVisible());
+    };
+    /**
+     * Sets the visibility of the node (ands its visible subnodes) to the passed value.
+     * @param {Boolean} value 
+     */
+    RenderableNode.prototype.setVisibility = function (value) {
+        this._visible = value;
     };
     /**
      * Sets the node (and its visible subnodes) to be rendered from now on.

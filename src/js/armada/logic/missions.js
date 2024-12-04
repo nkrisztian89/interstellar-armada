@@ -724,6 +724,11 @@ define([
          */
         this._environment = null;
         /**
+         * The list of nodes under which the grids of various sizes (used for mission preview in the editor) are added to the scene.
+         * @type RenderableNode[]
+         */
+        this._grids = null;
+        /**
          * Whether this mission has an own environment created by itself (described in the mission JSON)
          * or just refers one from the common environments. (if the latter is the case, the referred environment cannot be destroyed when
          * this mission is destroyed)
@@ -1701,6 +1706,7 @@ define([
                         shader = graphics.getManagedShader(previewParams.gridShaderName),
                         model = graphics.getModel(GRID_MODEL_NAME).getEgomModel();
                 size = previewParams.smallestGridSize;
+                this._grids = [];
                 for (i = 0; i < previewParams.gridCount; i++) {
                     grid = new renderableObjects.ShadedLODMesh(model, shader, {}, mat.identity4(), mat.identity4(), mat.scaling4(size), true, 0, previewParams.smallestSizeWhenDrawn);
                     grid.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
@@ -1709,10 +1715,10 @@ define([
                     grid.setUniformValueFunction(_groupTransformsArrayName, function () {
                         return graphics.getGroupTransformIdentityArray();
                     });
-                    battleScene.addObject(grid, false);
+                    this._grids.push(battleScene.addObject(grid, false));
                     size *= previewParams.smallestGridSize;
                 }
-            });
+            }.bind(this));
             // set up the callback to be used on added spacecrafts
             friendlyColor = previewParams.friendlyColor;
             hostileColor = previewParams.hostileColor;
@@ -1865,6 +1871,27 @@ define([
         var i;
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].toggleHitboxVisibility();
+        }
+    };
+    /**
+     * Set the visibility of the grids added to the scene for the mission visualization (in the editor)
+     * @param {Boolean} value 
+     */
+    Mission.prototype.setGridVisibility = function (value) {
+        var i;
+        if (this._grids) {
+            for (i = 0; i < this._grids.length; i++) {
+                this._grids[i].setVisibility(value);
+            }
+        }
+    };
+    /**
+     * Set the visibility of the environment of the mission added to the scene.
+     * @param {Boolean} value 
+     */
+    Mission.prototype.setEnvironmentVisibility = function (value) {
+        if (this._environment) {
+            this._environment.setVisibility(value);
         }
     };
     /**
@@ -2096,6 +2123,12 @@ define([
                 }
             }
             this._spacecrafts = null;
+        }
+        if (this._grids) {
+            for (i = 0; i < this._grids.length; i++) {
+                this._grids[i].destroy();
+            }
+            this._grids = null;
         }
         this._pilotedCraft = null;
         this._hitObjects = null;

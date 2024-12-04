@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2024 Krisztián Nagy
  * @file Implementation of loading and managing environments
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -51,6 +51,8 @@ define([
              * @type String
              */
             ENVIRONMENTS_CATEGORY_NAME = "environments",
+            BLACK_COLOR_RGBA = [0, 0, 0, 1],
+            BLACK_COLOR_RGB = [0, 0, 0],
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -86,6 +88,11 @@ define([
          * @type SkyboxClass
          */
         this._class = skyboxClass;
+        /**
+         * The node under which the skybox was last added to a scene.
+         * @type RenderableNode
+         */
+        this._node = null;
     }
     /**
      * Adds a background FVQ object to the passed scene and sets it up according
@@ -95,7 +102,7 @@ define([
     Skybox.prototype.addToScene = function (scene) {
         this._class.acquireResources();
         resources.executeWhenReady(function () {
-            scene.addBackgroundObject(new renderableObjects.CubemapSampledFVQ(
+            this._node = scene.addBackgroundObject(new renderableObjects.CubemapSampledFVQ(
                     this._class.getModel(),
                     this._class.getShader(),
                     this._class.getShader().getCubemapNames()[0],
@@ -104,9 +111,22 @@ define([
         }.bind(this));
     };
     /**
+     * If the skybox is added to a scene, changes its visibility.
+     * @param {Boolean} value 
+     */
+    Skybox.prototype.setVisibility = function (value) {
+        if (this._node) {
+            this._node.setVisibility(value);
+        }
+    };
+    /**
      * Removes all references to other objects for proper cleanup of memory.
      */
     Skybox.prototype.destroy = function () {
+        if (this._node) {
+            this._node.destroy();
+            this._node = null;
+        }
         this._class = null;
     };
     // ##############################################################################
@@ -149,6 +169,11 @@ define([
          * @type Number
          */
         this._angle = Math.radians(degreesGamma) || 0;
+        /**
+         * The list of nodes under which the layers of this object were last added to a scene.
+         * @type RenderableNode[]
+         */
+        this._nodes = null;
     }
     /**
      * Adds the layered texture object and the light source belonging to this
@@ -164,6 +189,7 @@ define([
         resources.executeWhenReady(function () {
             var i, layers, layerParticle;
             layers = this._class.getLayers();
+            this._nodes = [];
             for (i = 0; i < layers.length; i++) {
                 layerParticle = new renderableObjects.BackgroundBillboard(
                         layers[i].getModel(),
@@ -174,16 +200,35 @@ define([
                         mat.translation4v(vec.scaled3Aux(this._direction, config.getSetting(config.BATTLE_SETTINGS.BACKGROUND_OBJECT_DISTANCE))),
                         this._angle);
                 layerParticle.setRelativeSize(1.0);
-                scene.addBackgroundObject(layerParticle);
+                this._nodes.push(scene.addBackgroundObject(layerParticle));
             }
         }.bind(this));
+    };
+    /**
+     * If the background object is added to a scene, changes its visibility.
+     * @param {Boolean} value 
+     */
+    BackgroundObject.prototype.setVisibility = function (value) {
+        var i;
+        if (this._nodes) {
+            for (i = 0; i < this._nodes.length; i++) {
+                this._nodes[i].setVisibility(value);
+            }
+        }
     };
     /**
      * Removes all references to other objects for proper cleanup of memory.
      */
     BackgroundObject.prototype.destroy = function () {
+        var i;
         this._class = null;
         this._direction = null;
+        if (this._nodes) {
+            for (i = 0; i < this._nodes.length; i++) {
+                this._nodes[i].destroy();
+            }
+            this._nodes = null;
+        }
     };
     // ##############################################################################
     /**
@@ -323,6 +368,15 @@ define([
         }.bind(this));
     };
     /**
+     * If the dust cloud is added to a scene, changes its visibility.
+     * @param {Boolean} value 
+     */
+    DustCloud.prototype.setVisibility = function (value) {
+        if (this._visualModel) {
+            this._visualModel.getNode().setVisibility(value);
+        }
+    };
+    /**
      * Updates the position of the particles in the cloud.
      * @param {Camera} camera The camera around which the cloud should be rendered.
      */
@@ -411,6 +465,13 @@ define([
      */
     ParticleEffect.prototype.addToScene = function (scene) {
         this._effect.addToScene(scene.getRootNode());
+    };
+    /**
+     * If the particle effect is added to a scene, changes its visibility.
+     * @param {Boolean} value 
+     */
+    ParticleEffect.prototype.setVisibility = function (value) {
+        this._effect.setVisibility(value);
     };
     /**
      * Updates the position and orientation of the effect based on the current state of the
@@ -520,6 +581,10 @@ define([
          * @type Camera
          */
         this._camera = null;
+        /**
+         * The scene the environment was last added to.
+         */
+        this._scene = null;
         /**
          * Stores the object this environment was initialized from.
          * @type Object
@@ -664,6 +729,7 @@ define([
         }
         this._camera = scene.getCamera();
         scene.setAmbientColor(this._ambientColor);
+        this._scene = scene;
     };
     /**
      * This needs to be called after all loading is done and we are ready to start
@@ -680,6 +746,29 @@ define([
         return this._particleEffects.length > 0;
     };
     /**
+     * If the environment is added to a scene, changes its visibility.
+     * @param {Boolean} value 
+     */
+    Environment.prototype.setVisibility = function (value) {
+        var i;
+        if (this._scene) {
+            this._scene.setClearColor(value ? this._color : BLACK_COLOR_RGBA);
+            for (i = 0; i < this._skyboxes.length; i++) {
+                this._skyboxes[i].setVisibility(value);
+            }
+            for (i = 0; i < this._backgroundObjects.length; i++) {
+                this._backgroundObjects[i].setVisibility(value);
+            }
+            for (i = 0; i < this._dustClouds.length; i++) {
+                this._dustClouds[i].setVisibility(value);
+            }
+            for (i = 0; i < this._particleEffects.length; i++) {
+                this._particleEffects[i].setVisibility(value);
+            }
+            this._scene.setAmbientColor(value ? this._ambientColor : BLACK_COLOR_RGB);
+        }
+    };
+    /**
      * Performs a simulation step to update the state of the environment.
      */
     Environment.prototype.simulate = function () {
@@ -694,10 +783,11 @@ define([
         }
     };
     /**
-     * Removes references that are only neded while the environment is added to a scene
+     * Removes references that are only needed while the environment is added to a scene
      */
     Environment.prototype.removeFromScene = function () {
         this._camera = null;
+        this._scene = null;
     };
     /*
      * Removes all references held by this environment.
@@ -733,6 +823,7 @@ define([
             this._particleEffects = null;
         }
         this._camera = null;
+        this._scene = null;
     };
     // #########################################################################
     /**
