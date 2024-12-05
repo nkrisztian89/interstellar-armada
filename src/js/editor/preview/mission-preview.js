@@ -35,6 +35,7 @@ define([
              */
             CANVAS_UPDATE_PROPERTIES = [
                 "environment",
+                "teams",
                 "spacecrafts",
                 "events"
             ],
@@ -195,6 +196,11 @@ define([
              */
             _environmentVisible = true,
             /**
+             * The value of the setting of whether the spacecraft models should be visible with textures in the preview
+             * @type Boolean
+             */
+            _texturedSpacecraftsVisible = false,
+            /**
              * The index of the currently edited spacecraft entry from the mission
              * descriptor JSON
              * @type Number
@@ -342,6 +348,7 @@ define([
             }
             _mission.addToScene(preview.getScene(), null, {
                 spacecraftShaderName: SPACECRAFT_SHADER_NAME,
+                showTexturedSpacecrafts: _texturedSpacecraftsVisible,
                 gridShaderName: GRID_SHADER_NAME,
                 markerShaderName: MARKER_SHADER_NAME,
                 gridColor: GRID_COLOR,
@@ -392,6 +399,10 @@ define([
             _mission.setEnvironmentVisibility(_environmentVisible);
             preview.requestRender();
         }), "Show environment: "));
+        _elements.options.appendChild(common.createSetting(common.createBooleanInput(_texturedSpacecraftsVisible, function (value) {
+            _texturedSpacecraftsVisible = value;
+            preview.refresh(_elements, {preserve: true, reload: true, clearScene: true});
+        }), "Show textures: "));
     }
     /**
      * For the WebGL preview context.

@@ -1987,6 +1987,7 @@ define([
      * @typedef {Object} Weapon~AddToSceneParams
      * @property {Boolean} [skipResources=false] If true, resources will not be acquired
      * @property {String} [shaderName] If given, the original shader of this weapon will be substituted by the shader with this name.
+     * @property {Boolean} [skipTextures=false]
      * @property {Float32Array} [orientationMatrix]
      * @property {Boolean} [projectileResources=false] Whether to acquire resources for firing projectiles
      * @property {Boolean} [sound=false] Whether to acquire resources for sound effects
@@ -2022,7 +2023,7 @@ define([
         visualModel = new renderableObjects.ParameterizedMesh(
                 this._class.getModel(),
                 shader,
-                this._class.getTexturesOfTypes(shader.getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                params.skipTextures ? {} : this._class.getTexturesOfTypes(shader.getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                 this._slot ? this.getOrigoPositionMatrix() : mat.identity4(),
                 params.orientationMatrix || (this._slot ? this._slot.orientationMatrix : mat.identity4()),
                 mat.scaling4(scale),
@@ -2076,15 +2077,13 @@ define([
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe, params, callback) {
         if (!params.skipResources) {
             this.acquireResources({
-                omitShader: !!params.shaderName,
+                overrideShaderName: params.shaderName,
+                omitTextures: params.skipTextures,
                 projectileResources: params.projectileResources,
                 sound: params.sound,
                 barrelMarkers: params.barrelMarkers,
                 barrelMarkerShaderName: params.barrelMarkerShaderName
             });
-            if (params.shaderName) {
-                graphics.getShader(params.shaderName);
-            }
         }
         resources.executeWhenReady(this.addToSceneNow.bind(this, parentNode, lod, wireframe, params, callback));
     };
@@ -2692,6 +2691,7 @@ define([
     /**
      * @typedef {Object} MissileLauncher~AddToSceneParams
      * @property {String} [shaderName]
+     * @property {Boolean} [skipTextures=false]
      * @property {Boolean} [allMissiles] Whether to add all the loaded missiles, not
      * just the first ones for each tube - use all missiles to display them in wireframe
      * inside the spacecraft, use the first missile only for displaying in solid mode
@@ -2712,7 +2712,7 @@ define([
         application.log_DEBUG("Adding missile launcher (" + this._class.getName() + ") to scene...", 2);
         scale = this._class.getModel().getScale() / parentNode.getRenderableObject().getScalingMatrix()[0];
         shader = params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader();
-        textures = this._class.getTexturesOfTypes(shader.getTextureTypes(), graphics.getTextureQualityPreferenceList());
+        textures = params.skipTextures ? {} : this._class.getTexturesOfTypes(shader.getTextureTypes(), graphics.getTextureQualityPreferenceList());
         if (!this._visualModels) {
             this._visualModels = [];
             newVisualModel = true;

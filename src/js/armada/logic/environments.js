@@ -52,7 +52,6 @@ define([
              */
             ENVIRONMENTS_CATEGORY_NAME = "environments",
             BLACK_COLOR_RGBA = [0, 0, 0, 1],
-            BLACK_COLOR_RGB = [0, 0, 0],
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -765,7 +764,6 @@ define([
             for (i = 0; i < this._particleEffects.length; i++) {
                 this._particleEffects[i].setVisibility(value);
             }
-            this._scene.setAmbientColor(value ? this._ambientColor : BLACK_COLOR_RGB);
         }
     };
     /**

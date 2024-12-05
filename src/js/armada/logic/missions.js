@@ -1665,6 +1665,7 @@ define([
     /**
      * @typedef {Object} PreviewParams
      * @property {String} spacecraftShaderName
+     * @property {Boolean} showTexturedSpacecrafts
      * @property {String} gridShaderName
      * @property {String} markerShaderName
      * @property {Number[4]} gridColor
@@ -1805,6 +1806,16 @@ define([
                         }
                     }
                 }
+                if (previewParams.showTexturedSpacecrafts) {
+                    this._spacecrafts[i].addToScene(battleScene, undefined, false, {
+                        weapons: true,
+                        missilesInLaunchers: graphics.areMissilesInLaunchersVisible()
+                    }, {
+                        replaceVisualModel: false,
+                        randomAnimationTime: true,
+                        smallestSizeWhenDrawn: previewParams.smallestSizeWhenDrawn
+                    });
+                }
             }
             this._spacecrafts[i].addToScene(battleScene, undefined, preview, {
                 hitboxes: application.isDebugVersion(),
@@ -1826,7 +1837,8 @@ define([
                 replaceVisualModel: preview,
                 randomAnimationTime: true,
                 smallestSizeWhenDrawn: preview ? previewParams.smallestSizeWhenDrawn : undefined,
-                shaderName: preview ? previewParams.spacecraftShaderName : null
+                shaderName: preview ? previewParams.spacecraftShaderName : null,
+                skipTextures: preview
             }, preview ? callback.bind(this, this._spacecrafts[i], friendly ? friendlyColor : hostileColor) : null);
             if (targetScene) {
                 this._spacecrafts[i].addToScene(targetScene, graphics.getMaxLoadedLOD(), true, {

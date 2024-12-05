@@ -675,19 +675,19 @@ define([
     };
     /**
      * @typedef {Object} ShadedClass~ResourceParams
-     * @property {Boolean} [omitShader=false]
+     * @property {String} [overrideShaderName]
      */
     /**
      * @param {ShadedClass~ResourceParams} params
      */
     ShadedClass.prototype.acquireResources = function (params) {
+        var shaderName;
         params = params || utils.EMPTY_OBJECT;
-        if (!params.omitShader) {
-            this._shader = graphics.getShader(this._shaderName);
-            this._instancedShaderName = resources.getShader(this._shaderName).getVariantShaderName(SHADER_VARIANT_INSTANCED_NAME);
-            if (this._instancedShaderName) {
-                this._instancedShader = graphics.getShader(this._instancedShaderName);
-            }
+        shaderName = params.overrideShaderName || this._shaderName;
+        this._shader = graphics.getShader(shaderName);
+        this._instancedShaderName = resources.getShader(shaderName).getVariantShaderName(SHADER_VARIANT_INSTANCED_NAME);
+        if (this._instancedShaderName) {
+            this._instancedShader = graphics.getShader(this._instancedShaderName);
         }
     };
     /**
@@ -918,12 +918,16 @@ define([
         return true;
     };
     /**
+     * @typedef {ShadedModelClass~ResourceParams} TexturedModelClass~ResourceParams
+     * @property {Boolean} [omitTextures=false]
+     */
+    /**
      * @override
-     * @param {ShadedModelClass~ResourceParams} params
+     * @param {TexturedModelClass~ResourceParams} params
      */
     TexturedModelClass.prototype.acquireResources = function (params) {
         ShadedModelClass.prototype.acquireResources.call(this, params);
-        if (this._texture === null) {
+        if ((this._texture === null) && (!params || !params.omitTextures)) {
             this._texture = graphics.getTexture(this._textureName);
         }
     };
@@ -2100,7 +2104,7 @@ define([
         return true;
     };
     /**
-     * @typedef {ShadedModelClass~ResourceParams} MissileClass~ResourceParams
+     * @typedef {TexturedModelClass~ResourceParams} MissileClass~ResourceParams
      * @property {Boolean} [missileOnly=false] Whether to load resources for
      * displaying the missile itself only (not its thrusters or it hitting things 
      * or being launched)
@@ -2603,7 +2607,7 @@ define([
         return true;
     };
     /**
-     * @typedef {ShadedModelClass~ResourceParams} WeaponClass~ResourceParams
+     * @typedef {TexturedModelClass~ResourceParams} WeaponClass~ResourceParams
      * @property {Boolean} [projectileResources=false] Whether to load resources
      * for this weapon firing its projectiles (and them hitting things) as well
      * @property {Boolean} [sound=false] Whether to load resources for sound effects
@@ -5096,7 +5100,7 @@ define([
         return this._lockingTimeFactor;
     };
     /**
-     * @typedef {ShadedModelClass~ResourceParams} SpacecraftClass~ResourceParams
+     * @typedef {TexturedModelClass~ResourceParams} SpacecraftClass~ResourceParams
      * @property {Boolean} [explosion=false]
      * @property {Boolean} [damageIndicators=false]
      * @property {Boolean} [blinkers=false]

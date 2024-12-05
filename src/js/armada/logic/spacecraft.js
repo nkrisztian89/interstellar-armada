@@ -1905,6 +1905,7 @@ define([
      * @typedef {Object} Spacecraft~AddToSceneParams
      * @property {Boolean} [skipResources=false] If true, resources will not be acquired
      * @property {String} [shaderName]
+     * @property {Boolean} [skipTextures=false]
      * @property {Float32Array} [positionMatrix]
      * @property {Float32Array} [orientationMatrix]
      * @property {Float32Array} [scalingMatrix]
@@ -1941,7 +1942,7 @@ define([
             visualModel = new renderableObjects.ParameterizedMesh(
                     this._class.getModel(),
                     shader,
-                    this._class.getTexturesOfTypes(shader.getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                    params.skipTextures ? {} : this._class.getTexturesOfTypes(shader.getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                     params.positionMatrix || this._physicalModel.getPositionMatrix(),
                     params.orientationMatrix || this._physicalModel.getOrientationMatrix(),
                     params.scalingMatrix || mat.scaling4(this._class.getModel().getScale()),
@@ -1998,14 +1999,14 @@ define([
         }
         // add the weapons
         if (addSupplements.weapons === true) {
-            weaponParams = {shaderName: params.shaderName};
+            weaponParams = {shaderName: params.shaderName, skipTextures: params.skipTextures};
             for (i = 0; i < this._weapons.length; i++) {
                 this._weapons[i].addToSceneNow(node, lod, wireframe, weaponParams, weaponCallback);
             }
         }
         // add missiles into the launchers
         if (addSupplements.missilesInLaunchers === true) {
-            missileParams = {shaderName: params.shaderName, allMissiles: addSupplements.allMissilesInLaunchers};
+            missileParams = {shaderName: params.shaderName, skipTextures: params.skipTextures, allMissiles: addSupplements.allMissilesInLaunchers};
             for (i = 0; i < this._missileLaunchers.length; i++) {
                 this._missileLaunchers[i].addToSceneNow(node, lod, wireframe, missileParams, missileCallback);
             }
@@ -2101,60 +2102,59 @@ define([
      * @param {logic~addToSceneCallback} [missileCallback]
      */
     Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, params, callback, weaponCallback, missileCallback) {
-        var i, blinkerDescriptors, weaponParams, missileParams;
+        var i, blinkerDescriptors, weaponParams, missileParams, resourceParams;
         // getting resources
         if (!params.skipResources) {
             this.acquireResources((addSupplements.hitboxes === true), {
-                omitShader: !!params.shaderName,
+                overrideShaderName: params.shaderName,
+                omitTextures: params.skipTextures,
                 explosion: addSupplements.explosion,
                 damageIndicators: addSupplements.damageIndicators,
                 blinkers: addSupplements.blinkers,
                 sound: addSupplements.sound
             });
-            if (params.shaderName) {
-                graphics.getShader(params.shaderName);
-            }
             if (addSupplements.weapons === true) {
-                weaponParams = {omitShader: !!params.shaderName, projectileResources: addSupplements.projectileResources, sound: addSupplements.sound};
+                weaponParams = {overrideShaderName: params.shaderName, omitTextures: params.skipTextures, projectileResources: addSupplements.projectileResources, sound: addSupplements.sound};
                 for (i = 0; i < this._weapons.length; i++) {
                     this._weapons[i].acquireResources(weaponParams);
                 }
             }
             if (addSupplements.missileResources === true) {
-                missileParams = {omitShader: !!params.shaderName, missileOnly: false, sound: addSupplements.sound, trail: true};
+                missileParams = {overrideShaderName: params.shaderName, omitTextures: params.skipTextures, missileOnly: false, sound: addSupplements.sound, trail: true};
                 for (i = 0; i < this._missileLaunchers.length; i++) {
                     this._missileLaunchers[i].acquireResources(missileParams);
                 }
             } else if (addSupplements.missilesInLaunchers === true) {
-                missileParams = {omitShader: !!params.shaderName, missileOnly: true, sound: addSupplements.sound};
+                missileParams = {overrideShaderName: params.shaderName, omitTextures: params.skipTextures, missileOnly: true, sound: addSupplements.sound};
                 for (i = 0; i < this._missileLaunchers.length; i++) {
                     this._missileLaunchers[i].acquireResources(missileParams);
                 }
             }
+            resourceParams = {sound: addSupplements.sound, omitTextures: params.skipTextures};
             // add the thruster particles
             if (addSupplements.thrusterParticles === true) {
                 if (this._propulsion) {
                     this._propulsion.addThrusters(this._class.getThrusterSlots());
-                    this._propulsion.acquireResources({sound: addSupplements.sound});
+                    this._propulsion.acquireResources(resourceParams);
                 }
             }
             if (addSupplements.jumpEngine === true) {
                 if (this._jumpEngine) {
-                    this._jumpEngine.acquireResources({sound: addSupplements.sound});
+                    this._jumpEngine.acquireResources(resourceParams);
                 }
             }
             if (addSupplements.shield === true) {
                 if (this._shield) {
-                    this._shield.acquireResources({sound: addSupplements.sound});
+                    this._shield.acquireResources(resourceParams);
                 }
             }
             if (addSupplements.explosion === true) {
-                this._class.getExplosionClass().acquireResources({sound: addSupplements.sound});
+                this._class.getExplosionClass().acquireResources(resourceParams);
             }
             if (addSupplements.blinkers === true) {
                 blinkerDescriptors = this._class.getBlinkerDescriptors();
                 for (i = 0; i < blinkerDescriptors.length; i++) {
-                    blinkerDescriptors[i].acquireResources();
+                    blinkerDescriptors[i].acquireResources(resourceParams);
                 }
             }
         }
