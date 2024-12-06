@@ -77,6 +77,7 @@ define([
                 COLOR3: "color3", // [r, g, b]
                 COLOR4: "color4", // [r, g, b, a]
                 VECTOR3: "vector3", // [x, y, z]
+                DIRECTION: "direction", // [x, y, z], unit vector
                 RANGE: "range", // [min, max]
                 PAIRS: "pairs", // [[a, b], [a, b], ...]
                 ROTATIONS: "rotations", // [{axis: "X"/"Y"/"Z", degrees: x}, ...]
@@ -1642,8 +1643,7 @@ define([
                 properties: {
                     AXIS: {
                         name: "axis",
-                        type: BaseType.VECTOR3,
-                        newValue: [0, 0, 1]
+                        type: BaseType.DIRECTION
                     },
                     CENTER: {
                         name: "center",
@@ -2627,7 +2627,7 @@ define([
                     },
                     SPOT_DIRECTION: {
                         name: "spotDirection",
-                        type: BaseType.VECTOR3,
+                        type: BaseType.DIRECTION,
                         optional: true,
                         newValue: [0, 1, 0],
                         defaultText: "point light"
@@ -3002,7 +3002,7 @@ define([
                     },
                     DIRECTION: {
                         name: "direction",
-                        type: BaseType.VECTOR3,
+                        type: BaseType.DIRECTION,
                         defaultValue: [0, 0, 1]
                     },
                     RELATIVE_DIRECTION: {
@@ -3024,8 +3024,7 @@ define([
                     },
                     DIRECTION: {
                         name: "direction",
-                        type: BaseType.VECTOR3,
-                        newValue: [0, 0, 1]
+                        type: BaseType.DIRECTION
                     }
                 }
             },

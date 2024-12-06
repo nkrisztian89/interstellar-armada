@@ -365,12 +365,13 @@ define([
      * Creates and returns a control that can be used to edit numeric vector properties.
      * @param {String} name Name of the property to edit
      * @param {Number[]} data The reference to the property to edit
+     * @param {Boolean} [isUnitVector=false] Whether or not the edited vector is a unit vector
      * @returns {Element}
      */
-    function _createVectorControl(name, data) {
+    function _createVectorControl(name, data, isUnitVector) {
         return common.createVectorEditor(data, function () {
             _updateData(name);
-        });
+        }, isUnitVector);
     }
     /**
      * Creates and returns a control that can be used to edit numeric range properties.
@@ -491,6 +492,8 @@ define([
             case descriptors.BaseType.COLOR3:
             case descriptors.BaseType.VECTOR3:
                 return [0, 0, 0];
+            case descriptors.BaseType.DIRECTION:
+                return [0, 0, 1];
             case descriptors.BaseType.COLOR4:
                 return [0, 0, 0, 1];
             case descriptors.BaseType.RANGE:
@@ -1449,6 +1452,9 @@ define([
                     break;
                 case descriptors.BaseType.VECTOR3:
                     result = _createVectorControl(topName, data);
+                    break;
+                case descriptors.BaseType.DIRECTION:
+                    result = _createVectorControl(topName, data, true);
                     break;
                 case descriptors.BaseType.RANGE:
                     result = _createRangeControl(topName, propertyDescriptor.type, data);

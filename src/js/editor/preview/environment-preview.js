@@ -120,7 +120,7 @@ define([
         if (_environment.addParticleEffectsToScene(preview.getScene())) {
             resources.executeWhenReady(preview.startAnimating);
         }
-        _cameraSpeed = params.cameraSpeed;
+        _cameraSpeed = params.cameraSpeed || 0;
     }
     /**
      * Resets the preview settings (those handled through the optionns, not the ones connected to the canvas) to their default values.
@@ -148,7 +148,7 @@ define([
      * @param {Number} dt The time elapsed since the last animation step
      */
     function _animate(dt) {
-        if (_environment) {
+        if (_environment && _environment._scene && (dt > 0)) {
             _cameraController.executeActions((_cameraSpeed > 0) ? [[{
                         name: "cameraMoveForward",
                         intensity: _cameraSpeed / _cameraController.getMaxSpeed()

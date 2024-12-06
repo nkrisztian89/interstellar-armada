@@ -372,9 +372,10 @@ define([
      * Creates and returns a control that can be used to edit numeric vectors
      * @param {Number[]} data A reference to the vector the control should affect
      * @param {Function} [changeHandler]
+     * @param {Boolean} [isUnitVector=false] Whether or not the edited vector is a unit vector
      * @returns {Element}
      */
-    function createVectorEditor(data, changeHandler) {
+    function createVectorEditor(data, changeHandler, isUnitVector) {
         var component, i, components,
                 result = document.createElement("div"),
                 componentChangeHander = function (index, value) {
@@ -382,11 +383,34 @@ define([
                     if (changeHandler) {
                         changeHandler();
                     }
-                };
+                },
+                blurHandler = isUnitVector ? function (event) {
+                    var i, l;
+                    // normalize the vector when focus is away from all of the element editors
+                    if (components.indexOf(event.relatedTarget) < 0) {
+                        l = 0;
+                        for (i = 0; i < data.length; i++) {
+                            l += data[i] * data[i];
+                        }
+                        if (l === 0) {
+                            l = 1;
+                            data[0] = 1;
+                        }
+                        l = 1 / Math.sqrt(l);
+                        for (i = 0; i < data.length; i++) {
+                            data[i] = Math.round(data[i] * l * 10e4) * 10e-6;
+                            components[i].value = data[i];   
+                        }
+                        if (changeHandler) {
+                            changeHandler();
+                        }
+                    }
+                } : null;
         components = [];
         for (i = 0; i < data.length; i++) {
             component = createNumericInput(data[i], {}, componentChangeHander.bind(this, i));
             component.classList.add(VECTOR_COMPONENT_CLASS);
+            component.addEventListener("blur", blurHandler);
             result.appendChild(component);
             components.push(component);
         }

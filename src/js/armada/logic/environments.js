@@ -657,6 +657,8 @@ define([
         this._angularDrag = dataJSON.angularDrag || 0;
         this._sensorRangeFactor = (dataJSON.sensorRangeFactor !== undefined) ? dataJSON.sensorRangeFactor : 1;
         this._lockingTimeFactor = (dataJSON.lockingTimeFactor !== undefined) ? dataJSON.lockingTimeFactor : 1;
+        this._scene = null;
+        this._camera = null;
     };
     /**
      * Returns a string that can be displayed to the player to represent this environment as a location for a mission.
