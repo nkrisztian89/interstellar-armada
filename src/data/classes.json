@@ -188,14 +188,6 @@
                     "shader": "backgroundNebula",
                     "texture": "paleRedNebula"
                 }]
-        }, {
-            "name": "volcanicPlanetLightSource",
-            "lightColor": [0.4, 0.2, 0.05],
-            "layers": [{
-                    "shader": "backgroundBillboard",
-                    "texture": "flare",
-                    "color": [0, 0, 0, 0]
-                }]
         }],
     "dustCloudClasses": [{
             "name": "standard",

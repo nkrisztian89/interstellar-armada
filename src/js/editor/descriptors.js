@@ -3013,6 +3013,22 @@ define([
                     }
                 }
             },
+            DIRECTIONAL_LIGHT = {
+                baseType: BaseType.OBJECT,
+                name: "DirectionalLight",
+                properties: {
+                    COLOR: {
+                        name: "color",
+                        type: BaseType.COLOR3,
+                        newValue: [1, 1, 1]
+                    },
+                    DIRECTION: {
+                        name: "direction",
+                        type: BaseType.VECTOR3,
+                        newValue: [0, 0, 1]
+                    }
+                }
+            },
             /**
              * The descriptor object for spacecraft classes, describing their properties
              * @type Editor~ItemDescriptor
@@ -3064,6 +3080,12 @@ define([
                     name: "ambientColor",
                     type: BaseType.COLOR3,
                     defaultValue: [0, 0, 0]
+                },
+                LIGHTS: {
+                    name: "lights",
+                    type: _createTypedArrayType(DIRECTIONAL_LIGHT, {min: 1}),
+                    optional: true,
+                    defaultText: "none"                    
                 },
                 DRAG: {
                     name: "drag",

@@ -324,17 +324,14 @@
                         "angleBeta": 9.99
                     },
                     "size": 400
-                }, {
-                    "class": "volcanicPlanetLightSource",
-                    "size": 1,
-                    "position": {
-                        "angleAlpha": 104.76,
-                        "angleBeta": -60
-                    }
                 }],
             "dustClouds": [{
                     "class": "standard"
                 }],
-            "ambientColor": [0.2, 0.1, 0.1]
+            "ambientColor": [0.2, 0.1, 0.1],
+            "lights": [{
+                "color": [0.4, 0.2, 0.05],
+                "direction": [-0.1274, 0.4835, -0.866]
+            }]
         }]
 }

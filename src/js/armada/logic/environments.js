@@ -556,6 +556,12 @@ define([
          */
         this._ambientColor = null;
         /**
+         * The list of directional light sources for this environment (in addition to the directional light sources
+         * belonging to the background objects in this environment)
+         * @type DirectionalLight[]
+         */
+        this._lights = null;
+        /**
          * The coefficient to use for drag forces reducing the velocity of objects in this environment over time.
          * @type Number
          */
@@ -641,6 +647,12 @@ define([
         }
         this._shadows = (dataJSON.shadows !== false);
         this._ambientColor = dataJSON.ambientColor || [0, 0, 0];
+        this._lights = [];
+        if (dataJSON.lights) {
+            for (i = 0; i < dataJSON.lights.length; i++) {
+                this._lights.push(new lights.DirectionalLightSource(dataJSON.lights[i].color, dataJSON.lights[i].direction));
+            }
+        }
         this._drag = dataJSON.drag || 0;
         this._angularDrag = dataJSON.angularDrag || 0;
         this._sensorRangeFactor = (dataJSON.sensorRangeFactor !== undefined) ? dataJSON.sensorRangeFactor : 1;
@@ -728,6 +740,9 @@ define([
         }
         this._camera = scene.getCamera();
         scene.setAmbientColor(this._ambientColor);
+        for (i = 0; i < this._lights.length; i++) {
+            scene.addDirectionalLightSource(this._lights[i]);
+        }
         this._scene = scene;
     };
     /**
@@ -819,6 +834,9 @@ define([
                 this._particleEffects[i] = null;
             }
             this._particleEffects = null;
+        }
+        if (this._lights) {
+            this._lights = null;
         }
         this._camera = null;
         this._scene = null;
