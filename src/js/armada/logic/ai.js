@@ -1709,7 +1709,7 @@ define([
                 i,
                 targetHitTime, hitpoints,
                 ownSize, targetSize,
-                fireThresholdAngle,
+                fireThresholdAngle, aimed,
                 acceleration, minDistance, maxDistance, speed, blockAvoidanceSpeed, baseDistance,
                 weaponCooldown,
                 rollDuration, rollWaitTime,
@@ -1871,6 +1871,7 @@ define([
                             this._hitCountByNonTarget = 0;
                         }
                         range = weapons[0].getRange(speed);
+                        aimed = false;
                         if (vec.length3Squared(vec.diff3Aux(this._spacecraft.getTargetHitPosition(), positionVector)) <= range * range) {
                             // within range...
                             this._attackingTarget = true;
@@ -1878,6 +1879,7 @@ define([
                                     (Math.abs(_angles.pitch) < fireThresholdAngle) &&
                                     (!this._isBlockedBy || this._isBlockedBy.isHostile(this._spacecraft))) {
                                 // finished aiming...
+                                aimed = true;
                                 if (this._fireDelayLeft > 0) {
                                     this._fireDelayLeft -= dt;
                                 } else {
@@ -1945,10 +1947,13 @@ define([
                                     hitpoints -= this._missilesOnTarget[i].getClass().getDamage(0);
                                 }
                                 if (hitpoints > 0) {
-                                    missile = this._spacecraft.launchMissile();
-                                    if (missile) {
-                                        this._missilesOnTarget.push(missile);
-                                        this._sendRadio(_radioMessageMissiles, RADIO_MESSAGE_MISSILES_DELAY, RADIO_MESSAGE_MISSILES_PRIORITY);
+                                    if ((this._spacecraft.getActiveMissileLauncher().getMissileClass().getHomingMode() !== classes.MissileHomingMode.NONE) ||
+                                            (aimed && (this._spacecraft.isInLockingRange()))) {
+                                        missile = this._spacecraft.launchMissile();
+                                        if (missile) {
+                                            this._missilesOnTarget.push(missile);
+                                            this._sendRadio(_radioMessageMissiles, RADIO_MESSAGE_MISSILES_DELAY, RADIO_MESSAGE_MISSILES_PRIORITY);
+                                        }
                                     }
                                 }
                             }

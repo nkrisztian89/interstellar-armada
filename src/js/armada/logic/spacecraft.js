@@ -2642,6 +2642,14 @@ define([
         return this._targetingComputer.getMissileLockRatio();
     };
     /**
+     * Whether the current target is within missile locking range (or in case of unguided missiles, within the reach
+     * of the missile in a straight line)
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.isInLockingRange = function () {
+        return this._targetingComputer.isInLockingRange();
+    };
+    /**
      * 
      * @returns {Propulsion}
      */

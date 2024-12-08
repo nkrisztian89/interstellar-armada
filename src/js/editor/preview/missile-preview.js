@@ -46,7 +46,7 @@ define([
              */
             CANVAS_UPDATE_PROPERTIES = [
                 "model", "modelScale", "shader", "texture",
-                "trail", "propulsion", "thrusterSlots"
+                "trail", "explosion", "startSound", "propulsion", "thrusterSlots"
             ],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options
@@ -91,6 +91,11 @@ define([
              */
             _activeEngineUses = [],
             /**
+             * Whether the missile is currently destructed (explosion playing / played, missile not showing)
+             * @type Boolean
+             */
+            _destructed = false,
+            /**
              * Stores the WebGL preview context information for missile class previews
              * @type WebGLPreviewContext
              */
@@ -103,7 +108,9 @@ define([
                 addTrailButton: null,
                 environmentSelector: null,
                 engineStateEditor: null,
-                engineStatePopup: null
+                engineStatePopup: null,
+                playSoundButton: null,
+                explodeButton: null
             };
     // ----------------------------------------------------------------------
     // Private Functions
@@ -141,6 +148,13 @@ define([
         _optionElements.engineStateEditor.innerHTML = _activeEngineUses.length > 0 ?
                 (_activeEngineUses[0] + ((_activeEngineUses.length > 1) ? "..." : "")) :
                 ENGINE_STATE_OFF;
+    }
+    /**
+     * Updates the caption and enabled state of the "Explode" button to reflect the current state of the missile
+     */
+    function _updateExplodeButton(disabled) {
+        _optionElements.explodeButton.innerHTML = (_missile && !_destructed) ? "Explode" : "Respawn";
+        _optionElements.explodeButton.disabled = !_missile || !!disabled;
     }
     /**
      * Adds a trail based on the current orientation of the missile to show how it would look
@@ -225,13 +239,14 @@ define([
             _clear();
             _missile = new equipment.Missile(_missileClass);
             _wireframeMissile = new equipment.Missile(_missileClass);
+            _destructed = false;
         }
         if (orientationMatrix) {
             _missile.getPhysicalModel().updateOrientationMatrix(orientationMatrix);
             _wireframeMissile.getPhysicalModel().updateOrientationMatrix(_missile.getPhysicalModel().getOrientationMatrix());
         }
         if (params.clearScene || shouldReload) {
-            _missileClass.acquireResources({missileOnly: false, sound: true, trail: true});
+            _missile.addResourcesToScene(preview.getScene(), false, undefined, undefined, true);
             graphics.getShader(preview.getWireframeShaderName());
             _missile.addToScene(preview.getScene(), false, undefined,
                     undefined,
@@ -239,7 +254,6 @@ define([
                     shouldReload ?
                     function (model) {
                         preview.setModel(model);
-                        _missile._trailEmitter.addResourcesToScene(preview.getScene());
                     } :
                     null);
             _wireframeMissile.addToScene(preview.getScene(), true, undefined,
@@ -350,6 +364,33 @@ define([
         // engine state editor
         _optionElements.engineStateEditor = _createEngineEditor();
         _elements.options.appendChild(common.createSetting(_optionElements.engineStateEditor, "Thrusters:"));
+        _optionElements.playSoundButton = common.createButton("Play sound", function () {
+            if (_missile) {
+                _missile.playStartSound();
+            }
+        });
+        _elements.options.appendChild(common.createSetting(_optionElements.playSoundButton));
+        // explode button
+        _optionElements.explodeButton = common.createButton({
+            caption: "Explode",
+            class: "explode"
+        }, function () {
+            if (!_destructed) {
+                _destructed = true;
+                _missile.getPhysicalModel().setVelocity(0, 1, 0);
+                _missile.destruct(true);
+                _updateExplodeButton(true);
+                setTimeout(_updateExplodeButton, _missileClass.getExplosionClass().getTotalDuration());
+                preview.startAnimating();
+            } else {
+                _missile.getVisualModel().getNode().show();
+                _destructed = false;
+                _updateThrusters();
+                _updateExplodeButton();
+                preview.requestRender();
+            }
+        });
+        _elements.options.appendChild(common.createSetting(_optionElements.explodeButton));
     }
     /**
      * The animation step
@@ -364,6 +405,7 @@ define([
      */
     function _updateForRefresh() {
         _updateThrusters();
+        _updateExplodeButton();
     }
     /**
      * Returns additional information to be displayed in the info section of the preview
@@ -427,6 +469,7 @@ define([
         renderModeSetting: true,
         lodSetting: true,
         animateButton: true,
+        muteCheckbox: true,
         canvasUpdateProperties: CANVAS_UPDATE_PROPERTIES,
         optionRefreshProperties: OPTION_REFRESH_PROPERIES,
         infoUpdateProperties: INFO_UPDATE_PROPERTIES

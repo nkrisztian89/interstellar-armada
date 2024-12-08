@@ -1424,6 +1424,26 @@
                     "maxLOD": 4
                 }]
         }, {
+            "name": "smallRocket",
+            "basepath": "missiles/smallRocket",
+            "format": "egm",
+            "files": [{
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }]
+        }, {
             "name": "mediumMissile",
             "basepath": "missiles/mediumMissile",
             "format": "egm",
@@ -1868,11 +1888,17 @@
             "name": "missileStartSmall",
             "samples": ["missile/missile-start-small.ogg"]
         }, {
+            "name": "missileStartSmall2",
+            "samples": ["missile/missile-start-small-2.ogg"]
+        }, {
             "name": "missileStartTorpedo",
             "samples": ["missile/missile-start-torpedo.ogg"]
         }, {
             "name": "hit",
             "samples": ["explosion/hit.ogg"]
+        }, {
+            "name": "largeHit",
+            "samples": ["explosion/large-hit.ogg"]
         }, {
             "name": "shieldHit",
             "samples": ["explosion/shield-hit.ogg"]

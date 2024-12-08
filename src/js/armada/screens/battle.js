@@ -3669,7 +3669,7 @@ define([
                             if (craft.getTarget()) {
                                 lockRatio = craft.getMissileLockRatio();
                             }
-                            targetInRange = lockRatio >= 1;
+                            targetInRange = (lockRatio >= 1) || ((_missileClasses[i].getHomingMode() === classes.MissileHomingMode.NONE) && craft.isInLockingRange());
                             missileLoaded = missileLauncher.isReady();
                             color = missileLoaded ? (targetInRange ? colors.readySelected : colors.lockingSelected) : colors.loadingSelected;
                             if (missileLauncher.isInSalvoMode()) {

@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.5.4-dev:1158 (2023.08.19.)",
-        "creationTime": "Sun Aug 20 2023 00:57:40 GMT+0200 (Central European Summer Time)"
+        "version": "0.5.5-dev:1238 (2024.12.07.)",
+        "creationTime": "Sat Dec 07 2024 17:40:31 GMT+0100 (Central European Standard Time)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -2302,6 +2302,167 @@
                 "name": "largeShipExplosion",
                 "volume": 45
             }
+        }, {
+            "name": "smallMissileExplosion",
+            "particleEmitters": [{
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "dimensions": [1, 1, 1],
+                    "velocity": 20,
+                    "velocitySpread": 6,
+                    "initialNumber": 9,
+                    "shader": "coloredBillboard",
+                    "texture": "spark",
+                    "particleStates": [{
+                            "color": [1, 0.5, 0, 1],
+                            "size": 1
+                        }, {
+                            "color": [1, 1, 0.3, 1],
+                            "size": 2,
+                            "timeToReach": 200
+                        }, {
+                            "color": [1, 0.6, 0, 1],
+                            "size": 0,
+                            "timeToReach": 400
+                        }]
+                }, {
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [1, 1, 0.5, 1],
+                            "size": 7
+                        }, {
+                            "color": [1, 1, 0.4, 1],
+                            "size": 0,
+                            "timeToReach": 450
+                        }]
+                }, {
+                    "dimensions": [1, 1, 1],
+                    "velocity": 2,
+                    "velocitySpread": 1,
+                    "initialNumber": 2,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [1, 0.5, 0, 1],
+                            "size": 1
+                        }, {
+                            "color": [1, 1, 0.3, 1],
+                            "size": 1.5,
+                            "timeToReach": 150
+                        }, {
+                            "color": [1, 0, 0, 0],
+                            "size": 2,
+                            "timeToReach": 300
+                        }]
+                }],
+            "lightStates": [{
+                    "color": [1, 1, 0.5],
+                    "intensity": 35,
+                    "timeToReach": 0
+                }, {
+                    "color": [1, 0.6, 0.2],
+                    "intensity": 0,
+                    "timeToReach": 450
+                }],
+            "soundEffect": {
+                "name": "hit",
+                "volume": 0.5
+            }
+        }, {
+            "name": "mediumMissileExplosion",
+            "particleEmitters": [{
+                    "dimensions": [0.5, 0.5, 0.5],
+                    "velocity": 20,
+                    "velocitySpread": 10,
+                    "initialNumber": 8,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [1, 0.5, 0, 1],
+                            "size": 0.65
+                        }, {
+                            "color": [1, 1, 0.3, 1],
+                            "size": 1.1,
+                            "timeToReach": 200
+                        }, {
+                            "color": [1, 0, 0, 0],
+                            "size": 0.5,
+                            "timeToReach": 400
+                        }]
+                }, {
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "velocity": 30,
+                    "velocitySpread": 15,
+                    "initialNumber": 16,
+                    "spawnNumber": 10,
+                    "spawnTime": 100,
+                    "duration": 200,
+                    "shader": "coloredBillboard",
+                    "texture": "spark",
+                    "particleStates": [{
+                            "color": [1, 0.5, 0, 1],
+                            "size": 0.65
+                        }, {
+                            "color": [1, 1, 0.3, 1],
+                            "size": 1.1,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1, 0, 0, 1],
+                            "size": 0,
+                            "timeToReach": 500
+                        }]
+                }, {
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [1, 1, 0.6, 1],
+                            "size": 10.5
+                        }, {
+                            "color": [1, 1, 0.4, 1],
+                            "size": 0,
+                            "timeToReach": 450
+                        }]
+                }, {
+                    "dimensions": [0.5, 0.5, 0.5],
+                    "velocity": 6,
+                    "velocitySpread": 3,
+                    "spawnNumber": 4,
+                    "spawnTime": 50,
+                    "duration": 100,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [1, 1, 0.1, 1],
+                            "size": 1
+                        }, {
+                            "color": [1, 0, 0, 0],
+                            "size": 6,
+                            "timeToReach": 600
+                        }]
+                }],
+            "lightStates": [{
+                    "color": [1, 1, 0.6],
+                    "intensity": 350,
+                    "timeToReach": 0
+                }, {
+                    "color": [1, 1, 0.1],
+                    "intensity": 200,
+                    "timeToReach": 600
+                }, {
+                    "color": [1, 0, 0],
+                    "intensity": 0,
+                    "timeToReach": 400
+                }],
+            "soundEffect": {
+                "name": "largeHit",
+                "volume": 5
+            }
         }],
     "projectileClasses": [{
             "name": "training",
@@ -3348,6 +3509,59 @@
                         }]
                 }]
         }, {
+            "name": "smallRocket",
+            "fullName": "SR-2 Small rocket",
+            "shortName": "SR-2",
+            "model": "smallRocket",
+            "shader": "ship",
+            "texture": "libra",
+            "damage": 4,
+            "size": "small",
+            "capacity": 2,
+            "length": 0.7,
+            "homingMode": "none",
+            "mass": 10,
+            "dragFactor": 0.1,
+            "launchVelocity": 60,
+            "ignitionTime": 50,
+            "acceleration": 500,
+            "duration": 2000,
+            "cooldown": 350,
+            "salvoCooldown": 250,
+            "proximityRange": 2.5,
+            "kineticFactor": 0.75,
+            "lightColor": [0, 0.5, 1],
+            "lightIntensity": 9,
+            "trail": {
+                "shader": "trail",
+                "texture": "trail",
+                "startColor": [0.1, 0.5, 0.9, 1],
+                "endColor": [1, 0, 0.5, 1],
+                "size": 0.15,
+                "duration": 300,
+                "growthRate": 2.5
+            },
+            "explosion": "smallMissileExplosion",
+            "shieldExplosion": "smallMissileExplosion",
+            "scoreValue": 1,
+            "launchSound": {
+                "name": "missileLaunch",
+                "volume": 0.2
+            },
+            "startSound": {
+                "name": "missileStartSmall2",
+                "volume": 0.4
+            },
+            "propulsion": "missile",
+            "thrusterSlots": [{
+                    "group": 1,
+                    "uses": ["forward"],
+                    "thrusters": [{
+                            "position": [0, -0.43, 0],
+                            "size": 0.5
+                        }]
+                }]
+        }, {
             "name": "mediumMissile",
             "fullName": "MH-7 Medium homing missile",
             "shortName": "MH-7",
@@ -3382,8 +3596,8 @@
                 "duration": 600,
                 "growthRate": 3
             },
-            "explosion": "mediumHitExplosion",
-            "shieldExplosion": "mediumHitExplosion",
+            "explosion": "mediumMissileExplosion",
+            "shieldExplosion": "mediumMissileExplosion",
             "scoreValue": 5,
             "launchSound": {
                 "name": "missileLaunch",
@@ -4989,6 +5203,46 @@
                         }, {
                             "class": "smallMissile",
                             "amount": 24
+                        }]
+                }, {
+                    "name": "player-tier2-rockets",
+                    "basedOn": "player-tier2",
+                    "missiles": [{
+                            "class": "smallRocket",
+                            "amount": 54,
+                            "launcherIndex": 4
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 54,
+                            "launcherIndex": 5
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 54,
+                            "launcherIndex": 6
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 54,
+                            "launcherIndex": 7
+                        }]
+                }, {
+                    "name": "player-tier2-mixed-small",
+                    "basedOn": "player-tier2",
+                    "missiles": [{
+                            "class": "smallMissile",
+                            "amount": 54,
+                            "launcherIndex": 4
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 54,
+                            "launcherIndex": 5
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 54,
+                            "launcherIndex": 6
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 54,
+                            "launcherIndex": 7
                         }]
                 }, {
                     "name": "multi-tier1",
@@ -8376,6 +8630,18 @@
                         }, {
                             "class": "lightTorpedo",
                             "amount": 1
+                        }]
+                }, {
+                    "name": "pirate-tier3-rockets",
+                    "basedOn": "pirate-tier3",
+                    "missiles": [{
+                            "class": "smallRocket",
+                            "amount": 44,
+                            "launcherIndex": 2
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 44,
+                            "launcherIndex": 3
                         }]
                 }, {
                     "name": "full",

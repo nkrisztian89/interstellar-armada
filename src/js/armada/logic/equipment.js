@@ -1538,20 +1538,25 @@ define([
      * @param {Float32Array} velocityMatrix The velocity matrix to use for the explosion
      * @param {SoundSource} soundSource The sound source to use for the explosion
      * @param {Boolean} isHit Whether the destruction was the result of the missile hitting a spacecraft
+     * @param {Boolean} keepForRespawn Whether to keep the data of the missile arround for respawning it (for the editor)
      */
-    Missile.prototype._destruct = function (explosionClass, positionMatrix, direction, velocityMatrix, soundSource, isHit) {
+    Missile.prototype._destruct = function (explosionClass, positionMatrix, direction, velocityMatrix, soundSource, isHit, keepForRespawn) {
         var exp;
         this._target = null;
         exp = explosion.getExplosion();
         exp.init(explosionClass, positionMatrix, mat.IDENTITY4, direction, true, true, velocityMatrix);
         exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), soundSource, isHit);
-        this._visualModel.markAsReusable(true);
         if (this._startSound) {
             this._startSound.stopPlaying(audio.SOUND_RAMP_DURATION);
             this._startSound = null;
         }
-        if (this._trailEmitter) {
-            this._trailEmitter.detach();
+        if (keepForRespawn) {
+            this._visualModel.getNode().hide();
+        } else {
+            this._visualModel.markAsReusable(true);
+            if (this._trailEmitter) {
+                this._trailEmitter.detach();
+            }
         }
     };
     /**
@@ -1586,7 +1591,7 @@ define([
                     vec.scaled3Aux(relativeVelocityDirectionInWorldSpace, -1),
                     physicalHitObject.getVelocityMatrix(),
                     hitObject.getSoundSource(),
-                    true);
+                    true, false);
             hitObject.damage(this._class.getDamage(0), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, true, offset);
             this._timeLeft = 0;
         } else {
@@ -1598,6 +1603,27 @@ define([
                     -relativeVelocityDirectionInWorldSpace[2],
                     1);
         }
+    };
+    /**
+     * Trigger the explosion of the missile (used in the editor and when the missile times out)
+     * @param {Boolean} keepForRespawn Whether to keep the missile data around for respawning it (for the editor)
+     */
+    Missile.prototype.destruct = function (keepForRespawn) {
+        var matrix = this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera());
+        this._destruct(
+            this._class.getExplosionClass(),
+            this._physicalModel.getPositionMatrix(),
+            vec.scaled3Aux(vec.normalize3(mat.translationVector3(this._physicalModel.getVelocityMatrix())), -1),
+            this._physicalModel.getVelocityMatrix(),
+            audio.createSoundSource(matrix[12], matrix[13], matrix[14]),
+            false,
+            keepForRespawn);
+    };
+    /**
+     * Start playing the engine start sound effect, with the sound source attached to the missile position
+     */
+    Missile.prototype.playStartSound = function () {
+        this._startSound = this._class.playStartSound(this._soundSource);
     };
     /**
      * Simulates the movement of the missile and checks if it hit any objects.
@@ -1646,7 +1672,7 @@ define([
                                 Math.round(matrix[12] * 10) * 0.1,
                                 Math.round(matrix[13] * 10) * 0.1,
                                 Math.round(matrix[14] * 10) * 0.1);
-                        this._startSound = this._class.playStartSound(this._soundSource);
+                        this.playStartSound();
                     }
                 }
                 // use maneuvering thrusters for homing
@@ -1707,14 +1733,7 @@ define([
             // self-destruct if the time has run out
             this._timeLeft = 0;
             if (!this._visualModel.canBeReused()) {
-                matrix = this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera());
-                this._destruct(
-                        this._class.getExplosionClass(),
-                        this._physicalModel.getPositionMatrix(),
-                        vec.scaled3Aux(vec.normalize3(mat.translationVector3(this._physicalModel.getVelocityMatrix())), -1),
-                        this._physicalModel.getVelocityMatrix(),
-                        audio.createSoundSource(matrix[12], matrix[13], matrix[14]),
-                        false);
+                this.destruct(false);
             }
         }
     };
@@ -3033,6 +3052,12 @@ define([
          */
         this._lockTimeLeft = 1;
         /**
+         * Cached value of whether the current target is within missile locking range (updated during each simulate step)
+         * (or in case of unguided missiles, within the reach of the missile in a straight line)
+         * @type Boolean
+         */
+        this._isInLockingRange = false;
+        /**
          * Range is multiplied by this factor
          * @type Number
          */
@@ -3422,6 +3447,14 @@ define([
         return this._targetHitPosition;
     };
     /**
+     * Whether the current target is within missile locking range (or in case of unguided missiles, within the reach
+     * of the missile in a straight line)
+     * @returns {Boolean}
+     */
+    TargetingComputer.prototype.isInLockingRange = function () {
+        return this._isInLockingRange;
+    };
+    /**
      * Updates the internal state of the computer for the current simulation step
      * @param {Number} dt The time elapsed since the last simulation step, in milliseconds
      */
@@ -3439,9 +3472,15 @@ define([
         if (this._timeUntilNonHostileOrderReset > 0) {
             this._timeUntilNonHostileOrderReset -= dt;
         }
-        if (this._target && this._missileLauncher && this._missileLauncher.hasMissilesLeftToLaunch() && (this._missileLauncher.isInLockingRange(this._target))) {
-            this._lockTimeLeft = Math.max(0, this._lockTimeLeft - dt);
+        if (this._target && this._missileLauncher && this._missileLauncher.hasMissilesLeftToLaunch()) {
+            this._isInLockingRange = this._missileLauncher.isInLockingRange(this._target);
+            if (this._isInLockingRange) {
+                this._lockTimeLeft = Math.max(0, this._lockTimeLeft - dt);
+            } else {
+                this._resetMissileLock();    
+            }
         } else {
+            this._isInLockingRange = false;
             this._resetMissileLock();
         }
     };

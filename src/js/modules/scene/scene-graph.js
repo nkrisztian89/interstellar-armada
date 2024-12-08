@@ -1975,16 +1975,13 @@ define([
     };
     /**
      * Adds a new node containing the passed renderable object to be rendered among the main scene objects of this scene. 
-     * If the passed object already has an associated node, uses that one instead.
      * @param {RenderableObject} newObject The object to add.
      * @param {Boolean} [renderedToShadowMap=true] If false, the node for this object and its subnodes will never be rendered to shadow maps
      * @param {Boolean} [instancing=false] When true, the object will be rendered using instancing.
      * @returns {RenderableNode} The node that was created / used to contain the passed object.
      */
     Scene.prototype.addObject = function (newObject, renderedToShadowMap, instancing) {
-        var node = newObject.getNode() || new RenderableNode(newObject, renderedToShadowMap, false, instancing);
-        this._rootNode.addSubnode(node);
-        return node;
+        return this._rootNode.addSubnode(new RenderableNode(newObject, renderedToShadowMap, false, instancing));
     };
     /**
      * Adds the given node to the main scene object nodes of this scene, and returns it for convenience.
