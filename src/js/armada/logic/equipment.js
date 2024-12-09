@@ -2549,6 +2549,11 @@ define([
          */
         this._salvoTarget = null;
         /**
+         * Cached value of the calculated time a missile launched from this launcher would take to hit its target
+         * @type Number
+         */
+        this._targetHitTime = 0;
+        /**
          * The array of meshes representing the missiles loaded into the launch tubes
          * of this missile launcher
          * @type ParameterizedMesh[]
@@ -2913,7 +2918,15 @@ define([
         }
         // consider the phase accelerating towards the target (assuming straight line for simplicity)
         burnTime = 0.001 * this._class.getDuration() - driftTime - turnTime;
-        return this._class.getTargetHitTime(this._spacecraft.getPhysicalPositionMatrix(), targetPosition, relativeTargetVelocity) < burnTime;
+        this._targetHitTime = this._class.getTargetHitTime(this._spacecraft.getPhysicalPositionMatrix(), targetPosition, relativeTargetVelocity);
+        return this._targetHitTime < burnTime;
+    };
+    /**
+     * The calculated time a missile launched from this launcher would take to hit its target
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getTargetHitTime = function () {
+        return this._targetHitTime;
     };
     /**
      * Returns the amount of score points to be added to the total score value of spacecrafts that have this launcher

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2024 Krisztián Nagy
  * @file Provides functions that work on arrays of numbers as mathematical vectors.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -876,6 +876,21 @@ define(function () {
         v[0] = mm[0] * vox + mm[4] * voy + mm[8] * voz + mm[12];
         v[1] = mm[1] * vox + mm[5] * voy + mm[9] * voz + mm[13];
         v[2] = mm[2] * vox + mm[6] * voy + mm[10] * voz + mm[14];
+    };
+    /**
+     * Multiplies the passed 4D vector (a 3D vector in the format of [X, Y, Z ,1]) with the passed
+     * view matrix and the passed (perspective of orthographic) projection matrix, modifying it in-place.
+     * @param {Number[4]} v A 4D vector with W = 1
+     * @param {Float32Array} vm A view matrix (translation-projection-scaling)
+     * @param {Float32Array} pm A perspective or orthographic projection matrix
+     */
+    vec.mulVec3ViewProj = function (v, vm, pm) {
+        var vox = v[0], voy = v[1], voz = v[2], z;
+        v[0] = (vox * vm[0] + voy * vm[4] + voz * vm[8] + vm[12]) * pm[0];
+        v[1] = (vox * vm[1] + voy * vm[5] + voz * vm[9] + vm[13]) * pm[5];
+        z = vox * vm[2] + voy * vm[6] + voz * vm[10] + vm[14];
+        v[2] = z * pm[10] + pm[14];
+        v[3] = z * pm[11] + pm[15];
     };
     /**
      * Sets the given vector to be equal to the product of the given 3D row vector and the top left 3x3 submatrix of the the given 4x4 matrix.

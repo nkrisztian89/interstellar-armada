@@ -1890,6 +1890,18 @@ define([
         }
     };
     /**
+     * Sets a new position for this HUD element and its visual representation, if that exists.
+     * @param {Number} x
+     * @param {Number} y
+     */
+    HUDElement.prototype.setPosition2 = function (x, y) {
+        this._position[0] = x;
+        this._position[1] = y;
+        if (this._visualModel) {
+            this._visualModel.setPosition2(x, y);
+        }
+    };
+    /**
      * Sets a new size for the element to be used for scaling it when rendering.
      * @param {Number[2]} value
      */
@@ -3467,8 +3479,8 @@ define([
             // .....................................................................................................
             // speed bar
             relativeVelocity = craft.getRelativeVelocityMatrix();
+            speed = relativeVelocity[13];
             if (_hudSectionIsVisible(HUDSection.SPEED_BAR)) {
-                speed = relativeVelocity[13];
                 absSpeed = Math.abs(speed);
                 acceleration = craft.getMaxAcceleration();
                 maxSpeed = craft.getMaxSpeed();
@@ -3547,7 +3559,7 @@ define([
                     _driftArrow.show();
                     aspect = _battleScene.getCamera().getAspect();
                     arrowPositionRadius = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? 1 : aspect);
-                    _driftArrow.setPosition(vec.scaled2([direction2D[0] / aspect, direction2D[1]], arrowPositionRadius));
+                    _driftArrow.setPosition2(direction2D[0] / aspect * arrowPositionRadius, direction2D[1] * arrowPositionRadius);
                     _driftArrow.setAngle(Math.acos(direction2D[1]) * ((direction2D[0] < 0) ? -1 : 1));
                     driftArrowMaxSpeed = _driftArrowMaxSpeedFactor * acceleration;
                     if (driftArrowMaxSpeed === 0) {
@@ -3683,6 +3695,11 @@ define([
                                     _missileLoadedSound.play();
                                 }
                                 _missileLocked = true;
+                                if (_missileClasses[i].getHomingMode() === classes.MissileHomingMode.NONE) {
+                                    // this marks that we should use the lock indicators to indicate the position where we need to
+                                    // aim with unguided missiles
+                                    lockRatio = -1;
+                                }
                             } else {
                                 speedRatio = lockRatio * _missileLockingSoundCount;
                                 if (speedRatio <= 0) {
@@ -3733,7 +3750,7 @@ define([
                     } else {
                         _missileIndicator.setColor(colors.ready);
                         _missileIndicator.setClipColor(colors.locking);
-                        _missileIndicator.clipY(0, lockRatio);
+                        _missileIndicator.clipY(0, Math.abs(lockRatio));
                     }
                     _missileIndicator.applyLayout(_missileIndicatorLayout, canvas.width, canvas.height);
                     _missileIndicator.show();
@@ -4415,7 +4432,8 @@ define([
                     _shipArrows.push(_createShipArrow());
                     _shipArrows[i].addToScene(_battleScene);
                 }
-                direction = mat.getRowD4(mat.prod34Aux(ships[i].getPhysicalPositionMatrix(), _battleScene.getCamera().getViewMatrix(), _battleScene.getCamera().getProjectionMatrix()));
+                direction = mat.getRowD4(ships[i].getPhysicalPositionMatrix());
+                vec.mulVec3ViewProj(direction, _battleScene.getCamera().getViewMatrix(), _battleScene.getCamera().getProjectionMatrix());
                 behind = direction[3] < 0;
                 vec.normalize4D(direction);
                 indicator = _shipArrows[i];
@@ -4432,7 +4450,7 @@ define([
                         direction[1] *= -1;
                     }
                     arrowPositionRadius = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? (1 / aspect) : 1);
-                    indicator.setPosition(vec.scaled2([direction[0], direction[1] * aspect], arrowPositionRadius));
+                    indicator.setPosition2(direction[0] * arrowPositionRadius, direction[1] * aspect * arrowPositionRadius);
                     indicator.setAngle(Math.acos(direction[1]) * ((direction[0] < 0) ? -1 : 1));
                     colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors;
                     if (transmissionSource) {
@@ -4519,7 +4537,7 @@ define([
                             for (j = 0; j < _missileLockIndicators.length; j++) {
                                 indicator = _missileLockIndicators[j];
                                 if ((lockRatio < 1) || ((_missileLockIndicatorBlinkTime > 0.25) && (_missileLockIndicatorBlinkTime < 0.75))) {
-                                    indicator.setPosition([direction[0] + Math.cos(angle) * arrowPositionRadius, direction[1] + Math.sin(angle) * aspect * arrowPositionRadius]);
+                                    indicator.setPosition2(direction[0] + Math.cos(angle) * arrowPositionRadius, direction[1] + Math.sin(angle) * aspect * arrowPositionRadius);
                                     indicator.setSize(size2D);
                                     indicator.setAngle(-0.5 * Math.PI - angle);
                                     indicator.setColor(color);
@@ -4530,6 +4548,34 @@ define([
                                 }
                             }
                             missileLockIndicatorsUpdated = true;
+                        } else if ((lockRatio === -1) && !_aimAssistCrosshairs && _hudSectionIsVisible(HUDSection.AIM_ASSIST_INDICATOR)) {
+                            // for unguided missiles, show the lock indicators in a smaller size at the estimated target hit position,
+                            // serving as the aim assist indicator
+                            speed = craft.getActiveMissileLauncher().getTargetHitTime();
+                            futureTargetPosition = [
+                                targetPosition[0] + (target.getPhysicalVelocityMatrix()[12] - craft.getPhysicalVelocityMatrix()[12]) * speed,
+                                targetPosition[1] + (target.getPhysicalVelocityMatrix()[13] - craft.getPhysicalVelocityMatrix()[13]) * speed,
+                                targetPosition[2] + (target.getPhysicalVelocityMatrix()[14] - craft.getPhysicalVelocityMatrix()[14]) * speed,
+                                1];
+                            vec.mulVec3ViewProj(futureTargetPosition, _battleScene.getCamera().getViewMatrix(), _battleScene.getCamera().getProjectionMatrix());
+                            if (futureTargetPosition[3] > 0) {
+                                vec.normalize4D(futureTargetPosition);
+                                arrowPositionRadius = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_AIM_INDICATOR_RADIUS) * (utils.yScalesWithHeight(_shipIndicators[i].getScaleMode(), canvas.width, canvas.height) ? (1 / aspect) : 1);
+                                angle = Math.radians(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR_ANGLE));
+                                colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR).colors;
+                                color = (targetIsHostile ? colors.hostileTarget : colors.friendlyTarget);
+                                scale = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_AIM_INDICATOR_SIZE);
+                                for (j = 0; j < _missileLockIndicators.length; j++) {
+                                    indicator = _missileLockIndicators[j];
+                                    indicator.setPosition2(futureTargetPosition[0] + Math.cos(angle) * arrowPositionRadius, futureTargetPosition[1] + Math.sin(angle) * aspect * arrowPositionRadius);
+                                    indicator.setSize([scale, scale]);
+                                    indicator.setAngle(-0.5 * Math.PI - angle);
+                                    indicator.setColor(color);
+                                    indicator.show();
+                                    angle += 2 * Math.PI / config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR_COUNT);
+                                }
+                                missileLockIndicatorsUpdated = true;
+                            }
                         }
                     }
                 }
@@ -4571,10 +4617,10 @@ define([
                             indicator.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_STATUS_INDICATOR).colors[statusIndicators[j]] || _shipIndicators[i].getColor());
                             indicator.setScaleMode(_shipIndicators[i].getScaleMode());
                             indicator.setSize(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_STATUS_INDICATOR).sizes.reticle);
-                            indicator.setPosition([
+                            indicator.setPosition2(
                                 position2D[0] - size2D[0] * (1.2 + 2.1 * (statusIndicators.length - 1 - j)),
                                 position2D[1] - size2D[1] * 1.2
-                            ]);
+                            );
                             indicator.setTextureCoordinates(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_STATUS_INDICATOR).mappings[statusIndicators[j]]);
                             indicator.show();
                         }

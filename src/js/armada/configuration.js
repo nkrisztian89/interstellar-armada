@@ -1216,6 +1216,14 @@ define([
                 name: "missileLockIndicatorBlinkInterval",
                 type: "number"
             },
+            MISSILE_AIM_INDICATOR_RADIUS: {
+                name: "missileAimIndicatorRadius",
+                type: "number"
+            },
+            MISSILE_AIM_INDICATOR_SIZE: {
+                name: "missileAimIndicatorSize",
+                type: "number"
+            },
             DISTANCE_TEXT_LAYER_LAYOUT: {
                 name: "distanceTextLayerLayout",
                 type: _customTypes.LAYOUT_DESCRIPTOR

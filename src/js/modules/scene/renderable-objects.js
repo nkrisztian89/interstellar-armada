@@ -2611,6 +2611,15 @@ define([
         this._position = value;
     };
     /**
+     * Sets a new position for this element.
+     * @param {Number} x
+     * @param {Number} y
+     */
+    UIElement.prototype.setPosition2 = function (x, y) {
+        this._position[0] = x;
+        this._position[1] = y;
+    };
+    /**
      * Sets a new size to be used for scaling the element.
      * @param {Number[2]} value
      */

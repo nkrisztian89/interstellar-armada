@@ -290,6 +290,8 @@
                 "missileLockIndicatorAngle": 45,
                 "missileLockIndicatorRotationSpeed": -0.0032,
                 "missileLockIndicatorBlinkInterval": 500,
+                "missileAimIndicatorRadius": 0.02,
+                "missileAimIndicatorSize": 0.015,
                 "distanceTextLayerLayout": {
                     "centerX": 0.0,
                     "centerY": 0.0,
