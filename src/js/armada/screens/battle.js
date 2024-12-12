@@ -445,6 +445,11 @@ define([
              */
             _aimAssistAppearTime,
             /**
+             * The time left from the missile aim assist appear HUD animation (for unguided missiles), in milliseconds
+             * @type Number
+             */
+            _missileAimAssistAppearTime,
+            /**
              * The time left / elapsed from the ship indicator highlight animation, in milliseconds
              * @type Number
              */
@@ -1425,6 +1430,7 @@ define([
         _targetShieldDecreaseTime = 0;
         _targetSwitchTime = 0;
         _aimAssistAppearTime = 0;
+        _missileAimAssistAppearTime = 0;
         _shipIndicatorHighlightTime = 0;
         // other
         _tipText = "";
@@ -4565,6 +4571,14 @@ define([
                                 colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR).colors;
                                 color = (targetIsHostile ? colors.hostileTarget : colors.friendlyTarget);
                                 scale = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_AIM_INDICATOR_SIZE);
+                                if ((_targetSwitchTime > 0) || (_missileAimAssistAppearTime > 0)) {
+                                    animationProgress = Math.max(targetSwitchAnimationProgress, _missileAimAssistAppearTime / _hudAimAssistAppearAnimationDuration);
+                                    color = utils.getMixedColor(
+                                            color,
+                                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.appear,
+                                            animationProgress);
+                                    arrowPositionRadius *= 1 + (_aimAssistIndicatorAppearScale - 1) * animationProgress;
+                                }
                                 for (j = 0; j < _missileLockIndicators.length; j++) {
                                     indicator = _missileLockIndicators[j];
                                     indicator.setPosition2(futureTargetPosition[0] + Math.cos(angle) * arrowPositionRadius, futureTargetPosition[1] + Math.sin(angle) * aspect * arrowPositionRadius);
@@ -4680,9 +4694,12 @@ define([
         if (!missileLockIndicatorsUpdated) {
             _missileLockIndicatorAngle = Math.radians(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR_ANGLE));
             _missileLockIndicatorBlinkTime = 0;
+            _missileAimAssistAppearTime = _hudAimAssistAppearAnimationDuration;
             for (i = 0; i < _missileLockIndicators.length; i++) {
                 _missileLockIndicators[i].hide();
             }
+        } else {
+            _missileAimAssistAppearTime -= dt;
         }
     };
     /**
