@@ -1702,6 +1702,8 @@ define([
                 target,
                 /** @type Missile */
                 missile,
+                /** @type MissileClass */
+                missileClass,
                 /** @type Number[3] */
                 positionVector, newOffset,
                 relativeTargetDirection, relativeBlockerPosition,
@@ -1937,8 +1939,9 @@ define([
                         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                         // launching missiles
                         if (this._spacecraft.getActiveMissileLauncher()) {
+                            missileClass = this._spacecraft.getActiveMissileLauncher().getMissileClass();
                             // do not launch anti-ship missiles against fighters or vice versa
-                            if (this._spacecraft.getActiveMissileLauncher().getMissileClass().isAntiShip() === target.isFighter()) {
+                            if ((missileClass.isAntiFighter() && !target.isFighter()) || (missileClass.isAntiShip() && target.isFighter())) {
                                 this._spacecraft.changeMissile();
                             } else {
                                 // do not launch additional missiles if there are already enough of them on their way to destroy the target (launched by us)
@@ -1947,7 +1950,7 @@ define([
                                     hitpoints -= this._missilesOnTarget[i].getClass().getDamage(0);
                                 }
                                 if (hitpoints > 0) {
-                                    if ((this._spacecraft.getActiveMissileLauncher().getMissileClass().getHomingMode() !== classes.MissileHomingMode.NONE) ||
+                                    if ((missileClass.getHomingMode() !== classes.MissileHomingMode.NONE) ||
                                             (aimed && (this._spacecraft.isInLockingRange()))) {
                                         missile = this._spacecraft.launchMissile();
                                         if (missile) {

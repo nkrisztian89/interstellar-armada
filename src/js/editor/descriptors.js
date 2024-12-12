@@ -1419,6 +1419,12 @@ define([
             _missileNeedsLocking = function (data) {
                 return !!data.lockingTime;
             },
+            _missileCanBeAntiFighter = function (data) {
+                return !data.antiShip;
+            },
+            _missileCanBeAntiShip = function (data) {
+                return !data.antiFighter;
+            },
             /**
              * The descriptor object for missile classes, describing their properties
              * @type Editor~ItemDescriptor
@@ -1460,10 +1466,19 @@ define([
                     name: "texture",
                     type: TEXTURE_REFERENCE
                 },
+                ANTI_FIGHTER: {
+                    name: "antiFighter",
+                    description: "Whether this missile is specifically designed against fighters, and not suitable against ships. (used by the AI to determine when to use the missile)",
+                    type: BaseType.BOOLEAN,
+                    defaultValue: false,
+                    isValid: _missileCanBeAntiFighter
+                },
                 ANTI_SHIP: {
                     name: "antiShip",
+                    description: "Whether this missile is specifically designed against ships, and not suitable against fighters. (used by the AI to determine when to use the missile)",
                     type: BaseType.BOOLEAN,
-                    defaultValue: false
+                    defaultValue: false,
+                    isValid: _missileCanBeAntiShip
                 },
                 DAMAGE: {
                     name: "damage",

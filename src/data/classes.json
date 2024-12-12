@@ -3430,6 +3430,7 @@
             "model": "smallMissile",
             "shader": "ship",
             "texture": "libra",
+            "antiFighter": true,
             "damage": 2,
             "size": "small",
             "capacity": 2,

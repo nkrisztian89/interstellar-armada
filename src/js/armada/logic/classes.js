@@ -1909,7 +1909,12 @@ define([
          */
         this._shortName = dataJSON ? (dataJSON.shortName || (this._fullName && this._fullName.split(" ")[0].substring(0, 5))) : null;
         /**
-         * Whether this missile is supposed to be used against ships (and not fighters)
+         * Whether this missile is supposed to be used against fighters only (and not ships)
+         * @type Boolean
+         */
+        this._antiFighter = dataJSON ? (dataJSON.antiFighter || false) : false;
+        /**
+         * Whether this missile is supposed to be used against ships only (and not fighters)
          * @type Boolean
          */
         this._antiShip = dataJSON ? (dataJSON.antiShip || false) : false;
@@ -2144,6 +2149,12 @@ define([
      */
     MissileClass.prototype.getShortName = function () {
         return this._shortName;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    MissileClass.prototype.isAntiFighter = function () {
+        return this._antiFighter;
     };
     /**
      * @returns {Boolean}
