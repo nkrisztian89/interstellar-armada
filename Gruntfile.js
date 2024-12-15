@@ -683,6 +683,7 @@ module.exports = function (grunt) {
                 ["highlightInterval"],
                 ["targetSwitchAnimationDuration"],
                 ["aimAssistAppearAnimationDuration"],
+                ["aimAssistHitAnimationDuration"],
                 ["hullIntegrityDecreaseAnimationDuration"],
                 ["shieldDecreaseAnimationDuration"],
                 ["targetHullIntegrityDecreaseAnimationDuration"],

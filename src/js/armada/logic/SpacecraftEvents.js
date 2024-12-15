@@ -17,6 +17,7 @@ define(function () {
      * @property {Number[3]} hitPosition The position where the projectile has hit the spacecraft, in model-space.
      * @property {Number} hullDamage The amount of damage the hull suffered as a result of the hit (damage absorbed
      * by the shield and/or armor is not included)
+     * @property {Boolean} missile Whether or not the spacecraft was hit by a missile
      */
     /**
      * @typedef {Object} SpacecraftEvents~AnySpacecraftHitData

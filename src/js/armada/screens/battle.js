@@ -445,10 +445,20 @@ define([
              */
             _aimAssistAppearTime,
             /**
+             * The time left from the aim assist hit HUD animation, in milliseconds
+             * @type Number
+             */
+            _aimAssistHitTime,
+            /**
              * The time left from the missile aim assist appear HUD animation (for unguided missiles), in milliseconds
              * @type Number
              */
             _missileAimAssistAppearTime,
+            /**
+             * The time left from the missile aim assist hit HUD animation (for unguided missiles), in milliseconds
+             * @type Number
+             */
+            _missileAimAssistHitTime,
             /**
              * The time left / elapsed from the ship indicator highlight animation, in milliseconds
              * @type Number
@@ -1171,6 +1181,11 @@ define([
              */
             _hudAimAssistAppearAnimationDuration,
             /**
+             * The duration of the aim assist hit animation, in milliseconds
+             * @type Number
+             */
+            _hudAimAssistHitAnimationDuration,
+            /**
              * The duration of the hull integrity decrease animation (highlighting hull integrity bar), in milliseconds
              * @type Number
              */
@@ -1430,7 +1445,9 @@ define([
         _targetShieldDecreaseTime = 0;
         _targetSwitchTime = 0;
         _aimAssistAppearTime = 0;
+        _aimAssistHitTime = 0;
         _missileAimAssistAppearTime = 0;
+        _missileAimAssistHitTime = 0;
         _shipIndicatorHighlightTime = 0;
         // other
         _tipText = "";
@@ -1643,6 +1660,17 @@ define([
      */
     function _handlePlayerGainKill() {
         ai.handlePlayerGainKill();
+    }
+    /**
+     * Updates HUD timers for the player hitting its current target (for aim assist indicator hit animations)
+     * @param {SpacecraftEvents~BeingHitData}
+     */
+    function _handlePlayerHitTarget(hitData) {
+        if (hitData.missile) {
+            _missileAimAssistHitTime = _hudAimAssistHitAnimationDuration;
+        } else {
+            _aimAssistHitTime = _hudAimAssistHitAnimationDuration;
+        }
     }
     /**
      * Plays and displays the radio message transmitted by an AI piloted spacecraft
@@ -3996,6 +4024,8 @@ define([
                 targetSwitched = true;
                 _targetSwitchTime = _hudTargetSwitchAnimationDuration;
                 targetSwitchAnimationProgress = 1;
+                _aimAssistHitTime = 0;
+                _missileAimAssistHitTime = 0;
             } else if (_targetSwitchTime > 0) {
                 _targetSwitchTime -= dt;
                 targetSwitchAnimationProgress = _targetSwitchTime / _hudTargetSwitchAnimationDuration;
@@ -4036,6 +4066,12 @@ define([
                             _aimAssistIndicator.setSize(vec.scaled2(
                                     _aimAssistIndicatorSize,
                                     1 + (_aimAssistIndicatorAppearScale - 1) * animationProgress));
+                        } else if (_aimAssistHitTime > 0) {
+                            animationProgress = _aimAssistHitTime / _hudAimAssistHitAnimationDuration;
+                            _aimAssistIndicator.setColor(utils.getMixedColor(
+                                    color,
+                                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.hit,
+                                    animationProgress));
                         } else {
                             _aimAssistIndicator.setColor(color);
                             _aimAssistIndicator.setSize(_aimAssistIndicatorSize);
@@ -4578,6 +4614,12 @@ define([
                                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.appear,
                                             animationProgress);
                                     arrowPositionRadius *= 1 + (_aimAssistIndicatorAppearScale - 1) * animationProgress;
+                                } else if (_missileAimAssistHitTime > 0) {
+                                    animationProgress = _missileAimAssistHitTime / _hudAimAssistHitAnimationDuration;
+                                    color = utils.getMixedColor(
+                                            color,
+                                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.hit,
+                                            animationProgress);
                                 }
                                 for (j = 0; j < _missileLockIndicators.length; j++) {
                                     indicator = _missileLockIndicators[j];
@@ -4700,6 +4742,16 @@ define([
             }
         } else {
             _missileAimAssistAppearTime -= dt;
+        }
+        if (_aimAssistHitTime > 0) {
+            _aimAssistHitTime -= dt;
+        } else {
+            _aimAssistHitTime = 0;
+        }
+        if (_missileAimAssistHitTime > 0) {
+            _missileAimAssistHitTime -= dt;
+        } else {
+            _missileAimAssistHitTime = 0;
         }
     };
     /**
@@ -5134,6 +5186,7 @@ define([
                         craft.addEventHandler(SpacecraftEvents.PREPARING_JUMP, _handlePilotedSpacecraftPreparingJump.bind(craft));
                         craft.addEventHandler(SpacecraftEvents.HUD, _handleHUDEvent.bind(craft));
                         craft.addEventHandler(SpacecraftEvents.GAIN_KILL, _handlePlayerGainKill);
+                        craft.addEventHandler(SpacecraftEvents.TARGET_HIT, _handlePlayerHitTarget);
                     } else {
                         craft.addEventHandler(SpacecraftEvents.JUMP_OUT_STARTED, _handleSpacecraftJumpOutStarted.bind(craft));
                         craft.addEventHandler(SpacecraftEvents.ARRIVED, _handleSpacecraftArrived.bind(craft));
@@ -5426,6 +5479,7 @@ define([
         _messageBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).layout);
         _hudTargetSwitchAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_ANIMATION_DURATION);
         _hudAimAssistAppearAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_APPEAR_ANIMATION_DURATION);
+        _hudAimAssistHitAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_HIT_ANIMATION_DURATION);
         _hudHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
         _hudShieldDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_DECREASE_ANIMATION_DURATION);
         _hudTargetHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);

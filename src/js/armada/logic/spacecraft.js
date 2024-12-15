@@ -535,7 +535,8 @@ define([
         this._hitData = {
             spacecraft: null,
             hitPosition: null,
-            hullDamage: 0
+            hullDamage: 0,
+            missile: false
         };
         /**
          * @type SpacecraftEvents~AnySpacecraftHitData
@@ -2819,13 +2820,14 @@ define([
         this._hitData.spacecraft = hitBy;
         this._hitData.hitPosition = damagePosition;
         this._hitData.hullDamage = damage;
+        this._hitData.missile = byMissile;
         if (collision) {
             this.handleEvent(SpacecraftEvents.COLLIDED, this._hitData);
         } else {
             this.handleEvent(SpacecraftEvents.BEING_HIT, this._hitData);
             if (hitBy.isAlive() && !hitBy.isAway()) {
                 if (hitBy.getTarget() === this) {
-                    hitBy.handleEvent(SpacecraftEvents.TARGET_HIT);
+                    hitBy.handleEvent(SpacecraftEvents.TARGET_HIT, this._hitData);
                 }
                 hitBy.handleEvent(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._anySpacecraftHitData);
             }
