@@ -10,6 +10,7 @@
 module.exports = function (grunt) {
     "use strict";
     var
+            config = grunt.file.readJSON("src/config/config.json"),
             settings = grunt.file.readJSON("src/config/settings.json"),
             getConstName = function (string) {
                 var result = "", i;
@@ -90,6 +91,7 @@ module.exports = function (grunt) {
                 ["explosionClass"],
                 ["shieldExplosionClass"],
                 ["shortName"],
+                ["antiFighter", "is"],
                 ["antiShip", "is"],
                 ["lockingAngle"],
                 ["modelScale"],
@@ -233,7 +235,11 @@ module.exports = function (grunt) {
                 ['transformMatrix'],
                 ['barrelMarkers'],
                 ['first'],
-                ['uniformData']
+                ['uniformData'],
+                ['superimposed', "is"],
+                ["resizeable", "is"],
+                ["canvasElement", "get", "canvas"],
+                ["layout", "get", "clipSpaceLayout"]
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [
@@ -300,14 +306,7 @@ module.exports = function (grunt) {
                         replacement: ""
                     }];
             }),
-            methodRemovals = [
-                "showHitbox",
-                "hideHitbox",
-                "toggleHitboxVisibility",
-                "getHitboxTextures",
-                "_addHitboxModel",
-                "getHitbox",
-                "addCuboid",
+            methodsToRemoveCommon = [
                 "log",
                 "logNodes",
                 ["increaseCount", false, "Scene"],
@@ -316,8 +315,6 @@ module.exports = function (grunt) {
                 "getShadowMapDebugStats",
                 ["isShadowMapDebuggingEnabled", true],
                 ["getShadowMapDebuggingSettings", true],
-                "getNumLines",
-                "getNumTriangles",
                 // -------------------------------------------------------------
                 // stereoscopy
                 "setAnaglyphRendering",
@@ -325,9 +322,31 @@ module.exports = function (grunt) {
                 ["isAnaglyphRenderingEnabled", true],
                 ["getAnaglyphRenderingSettings", true],
                 ["isSideBySideRenderingEnabled", true],
-                ["getSideBySideRenderingSettings", true]
-            ].map(
-            function (replacement) {
+                ["getSideBySideRenderingSettings", true],
+                "_updateStereoAngle",
+                "_setStereoscopy",
+                "setLeftEye",
+                "setRightEye",
+                "setInterocularDistance",
+                "setStereoscopicConvergenceDistance",
+                "copyStereoscopy"
+            ],
+            methodsToRemoveGame = [
+                "showHitbox",
+                "hideHitbox",
+                "toggleHitboxVisibility",
+                "getHitboxTextures",
+                "_addHitboxModel",
+                "getHitbox",
+                "addCuboid",
+                "getNumLines",
+                "getNumTriangles",
+                "setVisibility",
+                "setGridVisibility",
+                "setMarkerVisibility",
+                "setEnvironmentVisibility"
+            ],
+            methodRemoval = function (replacement) {
                 var functionName = Array.isArray(replacement) ? replacement[0] : replacement, exported = Array.isArray(replacement) && replacement[1], className = Array.isArray(replacement) && replacement[2],
                         result = [{
                                 // remove the method definition from the prototype (up to 2 levels of curly braces nesting in function body)
@@ -342,7 +361,9 @@ module.exports = function (grunt) {
                     });
                 }
                 return result;
-            }),
+            },
+            methodRemovalsCommon = methodsToRemoveCommon.map(methodRemoval),
+            methodRemovalsGame = methodsToRemoveGame.map(methodRemoval),
             exportedFunctionRemovals = [
                 ["isDebugVersion", null, true],
                 ["resetDebugStats", "egomModel"],
@@ -357,7 +378,17 @@ module.exports = function (grunt) {
                 ["getMatrixCount", "mat", false, true],
                 ["toString3", "mat", false, true],
                 ["toString4", "mat", false, true],
-                ["toHTMLString4", "mat", false, true]
+                ["toHTMLString4", "mat", false, true],
+                // stereoscopy
+                ["getAnaglyphRedShader"],
+                ["getAnaglyphCyanShader"],
+                ["getSideBySideLeftShader"],
+                ["getSideBySideRightShader"],
+                ["getShadowMapDebugShader"],
+                ["getAnaglyphOriginalColorRatio"],
+                ["getAnaglyphGamma"],
+                ["getAnaglyphCyanFactor"],
+                ["setAnaglyphTextRendering"]
             ].map(
             function (replacement) {
                 var
@@ -420,8 +451,14 @@ module.exports = function (grunt) {
                 "_leftShader",
                 "_rightShader",
                 "_sideBySideOriginalAspect",
+                "_interocularHalfDistance",
+                "_stereoscopicConvergenceDistance",
+                "_stereoAngle",
+                "_stereoscopy",
                 "_leftEye",
-                "_rightEye"
+                "_rightEye",
+                "_stereoscopicUniformValueFunctions",
+                "_stereoscopicTextureUnit"
             ].map(
             function (fieldName) {
                 return {
@@ -473,6 +510,7 @@ module.exports = function (grunt) {
                 ["jumpOutViewName", "battle"],
                 ["musicVolumeInMenus", "battle"],
                 ["sfxVolumeInMenus", "battle"],
+                ["voiceVolumeInMenus", "battle"],
                 ["simulationStepsPerSecond", "battle"],
                 ["battleRenderFPS", "battle", "RENDER_FPS"],
                 ["quitDelayAfterJumpOut", "battle"],
@@ -488,11 +526,16 @@ module.exports = function (grunt) {
                 ["debriefingDefeatMusic", "battle"],
                 ["combatThemeDurationAfterFire", "battle"],
                 ["debriefingThemeFadeInDuration", "battle"],
+                ["minVoiceMessageDelayForSameType", "battle"],
+                ["minVoiceMessageDelayForDifferentType", "battle"],
+                ["minVoiceMessageDelayForSameSourceSameType", "battle"],
+                ["minVoiceMessageDelayForSameSourceDifferentType", "battle"],
                 ["useRequestAnimFrame", "general"],
                 ["defaultRandomSeed", "general"],
                 ["luminosityFactorsArrayName", "general", "UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME"],
                 ["useVerticalCameraValues", "general"],
                 ["menuMusic", "general"],
+                ["briefingMusic", "general"],
                 ["musicFadeInDuration", "general"],
                 ["themeCrossfadeDuration", "general"],
                 ["musicFadeOutDuration", "general"],
@@ -547,6 +590,39 @@ module.exports = function (grunt) {
                                 replacement: ""
                             }];
                     }),
+            graphicsConfigToRemove = [
+                ["shadowMapDebugShaderName"],
+                // stereoscopy
+                ["anaglyphRedShaderName"],
+                ["anaglyphCyanShaderName"],
+                ["sideBySideLeftShaderName"],
+                ["sideBySideRightShaderName"],
+                ["anaglyphOriginalColorRatio"],
+                ["anaglyphOriginalColorRatioDefineName"],
+                ["anaglyphGamma"],
+                ["anaglyphGammaDefineName"],
+                ["anaglyphCyanFactor"],
+                ["anaglyphCyanFactorDefineName"]
+            ],
+            graphicsConfigRemovals = graphicsConfigToRemove.map(
+                function (replacement) {
+                    var value = config.graphics.shaders[replacement[0]],
+                        setting = '"' + replacement[0] + '": ' + getValueString(value);
+                    return {
+                        // either remove a comma from before or after the setting (if there is any)
+                        match: new RegExp(",\\s*" + setting + "|" + setting + ",*", "g"),
+                        replacement: ""
+                    };
+                }),
+            graphicsConfigDefinitionRemovals = graphicsConfigToRemove.map(
+                function (replacement) {
+                    var constName = (replacement.length < 3) ? getConstName(replacement[0]) : replacement[2];
+                    return {
+                            // removing the definition of this setting from configuration.js
+                            match: new RegExp("\\s" + constName + ": {\\s*name: \"" + replacement[0] + "\"(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*}[,\\s]", "g"),
+                            replacement: ""
+                        };
+                }),
             databaseSettingsToReplace = [
                 ["showLoadingBoxFirstTime"],
                 ["showLoadingBoxOnItemChange"],
@@ -602,7 +678,76 @@ module.exports = function (grunt) {
                                 match: new RegExp("\\s" + constName + ": {\\s*name: \"" + replacement[0] + "\"(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*}[,\\s]", "g"),
                                 replacement: ""
                             }];
-                    });
+                    }),
+            hudSettingsToReplace = [
+                ["highlightInterval"],
+                ["targetSwitchAnimationDuration"],
+                ["aimAssistAppearAnimationDuration"],
+                ["hullIntegrityDecreaseAnimationDuration"],
+                ["shieldDecreaseAnimationDuration"],
+                ["targetHullIntegrityDecreaseAnimationDuration"],
+                ["targetShieldDecreaseAnimationDuration"],
+                ["shipIndicatorHighlightAnimationInterval"],
+                ["shipArrowPositionRadius"],
+                ["targetArrowSwitchScale"],
+                ["shipIndicatorSizeFactor"],
+                ["targetIndicatorSwitchScale"],
+                ["missileLockIndicatorCount"],
+                ["missileLockIndicatorRadius"],
+                ["missileLockIndicatorSize"],
+                ["missileLockIndicatorAngle"],
+                ["missileLockIndicatorRotationSpeed"],
+                ["missileLockIndicatorBlinkInterval"],
+                ["missileAimIndicatorRadius"],
+                ["missileAimIndicatorSize"],
+                ["aimAssistIndicatorAppearScale"],
+                ["weaponImpactIndicatorSwitchScale"],
+                ["targetViewCameraDistance"],
+                ["targetViewViewDistance"],
+                ["targetViewFOV", "TARGET_VIEW_FOV"],
+                ["targetViewTargetItemShader"],
+                ["speedBarBaseMaxSpeedFactor"],
+                ["speedBarDefaultBaseMaxSpeed"],
+                ["speedBarMaxSpeedStepFactor"],
+                ["speedBarMaxSpeedStepBuffer"],
+                ["missileInfoTextOffset"],
+                ["maxMissileInfoDisplayed"],
+                ["driftArrowPositionRadius"],
+                ["driftArrowMinSpeed"],
+                ["driftArrowMaxSpeedFactor"],
+                ["messageTextMargin"],
+                ["objectivesTextOffset"],
+                ["maxObjectivesDisplayed"],
+                ["escortsTextOffset"],
+                ["maxEscortsDisplayed"],
+                ["missileLockingSoundCount"],
+                ["newHostilesAlertDuration"],
+                ["newHostilesAlertBlinkInterval"]
+            ],
+            hudSettingConfigReplacements = hudSettingsToReplace.map(
+                function (replacement) {
+                    var value = settings.logic.battle.hud[replacement[0]],
+                        setting = '"' + replacement[0] + '": ' + getValueString(value);
+                    return {
+                        // either remove a comma from before or after the setting (if there is any)
+                        match: new RegExp(",\\s*" + setting + "|" + setting + ",*", "g"),
+                        replacement: ""
+                    };
+                }),
+            hudSettingReplacements = hudSettingsToReplace.map(
+                function (replacement) {
+                    var constName = (replacement.length < 2) ? getConstName(replacement[0]) : replacement[1],
+                        value = settings.logic.battle.hud[replacement[0]];
+                    return [{
+                        // replacing usages of this setting
+                        match: new RegExp("config.getHUDSetting\\(config.BATTLE_SETTINGS.HUD." + constName + "\\)", "g"),
+                        replacement: (typeof value === "string") ? '"' + value + '"' : value
+                    }, {
+                        // removing the definition of this setting from configuration.js
+                        match: new RegExp("\\s" + constName + ": {\\s*name: \"" + replacement[0] + "\"(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*}[,\\s]", "g"),
+                        replacement: ""
+                    }];
+                });
     // flatten the replacements arrays
     getterReplacementsCommon.reduce(function (acc, val) {
         return acc.concat(val);
@@ -613,7 +758,10 @@ module.exports = function (grunt) {
     setterReplacements.reduce(function (acc, val) {
         return acc.concat(val);
     }, []);
-    methodRemovals.reduce(function (acc, val) {
+    methodRemovalsCommon.reduce(function (acc, val) {
+        return acc.concat(val);
+    }, []);
+    methodRemovalsGame.reduce(function (acc, val) {
         return acc.concat(val);
     }, []);
     exportedFunctionRemovals.reduce(function (acc, val) {
@@ -623,6 +771,9 @@ module.exports = function (grunt) {
         return acc.concat(val);
     }, []);
     databaseSettingReplacements.reduce(function (acc, val) {
+        return acc.concat(val);
+    }, []);
+    hudSettingReplacements.reduce(function (acc, val) {
         return acc.concat(val);
     }, []);
     // Project configuration.
@@ -726,7 +877,17 @@ module.exports = function (grunt) {
             distConfig: {
                 // removes setting values that have been baked into the game source
                 options: {
-                    patterns: settingConfigReplacements.concat(databaseSettingConfigReplacements),
+                    patterns: graphicsConfigRemovals,
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, cwd: 'config/', src: ['config.json'], dest: 'config/'}
+                ]
+            },
+            distSettings: {
+                // removes setting values that have been baked into the game source
+                options: {
+                    patterns: settingConfigReplacements.concat(databaseSettingConfigReplacements.concat(hudSettingConfigReplacements)),
                     usePrefix: false
                 },
                 files: [
@@ -779,8 +940,8 @@ module.exports = function (grunt) {
                         }, {
                             match: 'graphics.isShadowMapDebuggingEnabled()',
                             replacement: 'false'
-                                    // -------------------------------------------------
-                                    // stereoscopy
+                        // -------------------------------------------------
+                        // stereoscopy
                         }, {
                             match: 'graphics.isAnaglyphRenderingEnabled()',
                             replacement: 'false'
@@ -790,6 +951,18 @@ module.exports = function (grunt) {
                         }, {
                             match: 'if (this._stereoscopicMode !== Scene.StereoscopicMode.NONE) {',
                             replacement: 'if (false) {'
+                        }, {
+                            match: 'result.copyStereoscopy(',
+                            replacement: '//'
+                        }, {
+                            match: 'this._updateStereoAngle();',
+                            replacement: ''
+                        }, {
+                            match: /this._stereoscopicUniformValueFunctions\[[^\n]*\n[^\n]*\n\s+\}.bind\(this\);/g,
+                            replacement: ''
+                        }, {
+                            match: 'replacedDefines[this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_',
+                            replace: '//'
                         }
                     ],
                     usePrefix: false
@@ -830,7 +1003,7 @@ module.exports = function (grunt) {
             // these replacements should be applied to both the game and the editor
             optimizeCommon: {
                 options: {
-                    patterns: getterReplacementsCommon.concat(setterReplacements.concat(settingReplacements.concat(databaseSettingReplacements.concat([
+                    patterns: getterReplacementsCommon.concat(setterReplacements.concat(methodRemovalsCommon.concat(settingReplacements.concat(graphicsConfigDefinitionRemovals.concat(databaseSettingReplacements.concat(hudSettingReplacements.concat([
                         {
                             match: '_scene.getLODContext()',
                             replacement: '_scene._lodContext'
@@ -853,7 +1026,7 @@ module.exports = function (grunt) {
                             match: 'if (this._rightEye) {',
                             replacement: 'if (false) {'
                         }
-                    ])))),
+                    ]))))))),
                     usePrefix: false
                 },
                 files: [
@@ -863,7 +1036,7 @@ module.exports = function (grunt) {
             // these replacements should only be applied to the game, and not the editor (removes hitbox visuals for example)
             optimizeGame: {
                 options: {
-                    patterns: getterReplacementsGame.concat(methodRemovals.concat(exportedFunctionRemovals.concat(objectRemovals.concat(fieldRemovals.concat([
+                    patterns: getterReplacementsGame.concat(methodRemovalsGame.concat(exportedFunctionRemovals.concat(objectRemovals.concat(fieldRemovals.concat([
                         {
                             match: 'addSupplements.hitboxes',
                             replacement: 'false'
@@ -1022,8 +1195,8 @@ module.exports = function (grunt) {
         _concurrent: {
             watch: ['_watch:dev', '_watch:sass'],
             dev: [['_sass:dev'], '_copy:devData', '_copy:js'],
-            build: ['_sass:dist', ['_copy:distData', '_replace:distConfig', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_clean:editor', '_replace:preOptimizeCommon', '_replace:preOptimizeGame', '_replace:optimizeCommon', '_replace:optimizeGame', '_requirejs:game', '_clean:dist', '_replace:postOptimize']],
-            buildWithEditor: ['_sass:dist', ['_copy:distData', '_replace:distConfig', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_replace:preOptimizeCommon', '_replace:optimizeCommon', '_requirejs:editor', '_replace:preOptimizeGame', '_replace:optimizeGame', '_requirejs:game', '_clean:distWithEditor', '_replace:postOptimize']]
+            build: ['_sass:dist', ['_copy:distData', '_replace:distConfig', '_replace:distSettings', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_clean:editor', '_replace:preOptimizeCommon', '_replace:preOptimizeGame', '_replace:optimizeCommon', '_replace:optimizeGame', '_requirejs:game', '_clean:dist', '_replace:postOptimize']],
+            buildWithEditor: ['_sass:dist', ['_copy:distData', '_replace:distConfig', '_replace:distSettings', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_replace:preOptimizeCommon', '_replace:optimizeCommon', '_requirejs:editor', '_replace:preOptimizeGame', '_replace:optimizeGame', '_requirejs:game', '_clean:distWithEditor', '_replace:postOptimize']]
         }
     });
     // Plugins

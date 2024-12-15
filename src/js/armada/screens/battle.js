@@ -1660,8 +1660,8 @@ define([
                 index = -1;
         if (_spacecraft && craft && craft.isAlive() && !craft.isAway() && !craft.isHostile(this)) {
             now = performance.now();
-            if ((_messageSource !== this) && ((now - _lastRadioTime > config.getBattleSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_SAME_TYPE)) ||
-                    ((data.messageType !== _lastRadioType) && (now - _lastRadioTime > config.getBattleSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_DIFFERENT_TYPE))))) {
+            if ((_messageSource !== this) && ((now - _lastRadioTime > config.getSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_SAME_TYPE)) ||
+                    ((data.messageType !== _lastRadioType) && (now - _lastRadioTime > config.getSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_DIFFERENT_TYPE))))) {
                 if (!_playingMissionVoiceSound) {
                     // play the voice sample immediately, regardless of whether or not the text is shown
                     index = _genericVoiceSounds[data.voice][data.messageType].play(resources.SoundCategory.VOICE) + 1;
@@ -2553,8 +2553,8 @@ define([
         if (_multi) {
             resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).name);
         }
-        voices = config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES);
-        _voiceMessages = config.getBattleSetting(config.BATTLE_SETTINGS.VOICE_MESSAGES);
+        voices = config.getSetting(config.BATTLE_SETTINGS.PILOT_VOICES);
+        _voiceMessages = config.getSetting(config.BATTLE_SETTINGS.VOICE_MESSAGES);
         missionVoiceMessages = mission.getMessageParams();
         for (i = 0; i < voices.length; i++) {
             if (ai.isVoiceUsed(i)) {
@@ -5173,7 +5173,7 @@ define([
                             resources.SoundCategory.SOUND_EFFECT,
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).volume);
                 }
-                voices = config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES);
+                voices = config.getSetting(config.BATTLE_SETTINGS.PILOT_VOICES);
                 missionVoiceMessages = mission.getMessageParams();
                 if (!_genericVoiceSounds) {
                     _genericVoiceSounds = [];

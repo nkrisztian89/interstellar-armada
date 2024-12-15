@@ -4647,14 +4647,14 @@ define([
             AI_VOICE = {
                 baseType: BaseType.ENUM,
                 getValues: function () {
-                    return ["none"].concat(config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES)).concat(["random"]);
+                    return ["none"].concat(config.getSetting(config.BATTLE_SETTINGS.PILOT_VOICES)).concat(["random"]);
                 }
             },
             _mapAiPreset = function (aiPreset) {
                 return aiPreset.name;
             },
             _findAiPreset = function (name) {
-                return config.getBattleSetting(config.BATTLE_SETTINGS.AI_PRESETS).find(function (preset) {
+                return config.getSetting(config.BATTLE_SETTINGS.AI_PRESETS).find(function (preset) {
                     return preset.name === name;
                 });
             },
@@ -4671,7 +4671,7 @@ define([
             AI_PRESET = {
                 baseType: BaseType.ENUM,
                 getValues: function () {
-                    return config.getBattleSetting(config.BATTLE_SETTINGS.AI_PRESETS).map(_mapAiPreset);
+                    return config.getSetting(config.BATTLE_SETTINGS.AI_PRESETS).map(_mapAiPreset);
                 }
             },
             _craftIsPiloted = function (data) {

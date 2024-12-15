@@ -719,7 +719,7 @@ define([
          * @type SpacecraftEvents~RadioData
          */
         this._radioData = {
-            voice: (params && params.voice) ? (params.voice === "random") ? getAvailableVoice() : config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES).indexOf(params.voice) : -1,
+            voice: (params && params.voice) ? (params.voice === "random") ? getAvailableVoice() : config.getSetting(config.BATTLE_SETTINGS.PILOT_VOICES).indexOf(params.voice) : -1,
             messageType: -1
         };
         // attaching handlers to the spacecraft events
@@ -2449,14 +2449,14 @@ define([
     _aiConstructors[SENTRY_AI_NAME] = SentryAI;
     // caching frequently used configuration values
     config.executeWhenReady(function () {
-        var voiceMessages = config.getBattleSetting(config.BATTLE_SETTINGS.VOICE_MESSAGES);
+        var voiceMessages = config.getSetting(config.BATTLE_SETTINGS.VOICE_MESSAGES);
         _turnAccelerationDuration = config.getSetting(config.BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S);
         _turnIntensityBaseFactor = 1000 / _turnAccelerationDuration;
         _jumpInPositionSeed = Math.seed(Math.random());
         _aimErrorSeed = Math.seed(Math.random());
         _evasionSeed = Math.seed(Math.random());
         _chargeSeed = Math.seed(Math.random());
-        _radioVoiceCount = config.getBattleSetting(config.BATTLE_SETTINGS.PILOT_VOICES).length;
+        _radioVoiceCount = config.getSetting(config.BATTLE_SETTINGS.PILOT_VOICES).length;
         _radioMessageAttacking = voiceMessages.indexOf("attacking");
         _radioMessageApproaching = voiceMessages.indexOf("approaching");
         _radioMessageClear = voiceMessages.indexOf("clear");
@@ -2472,9 +2472,9 @@ define([
         _radioMessageStandDown = voiceMessages.indexOf("standdown");
         _radioMessageWingmanLost = voiceMessages.indexOf("wingmanlost");
         _radioMessageShipLost = voiceMessages.indexOf("shiplost");
-        _sameRadioMessageDelay = config.getBattleSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_SAME_SOURCE_SAME_TYPE);
-        _differentRadioMessageDelay = config.getBattleSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_SAME_SOURCE_DIFFERENT_TYPE);
-        _aiPresets = config.getBattleSetting(config.BATTLE_SETTINGS.AI_PRESETS);
+        _sameRadioMessageDelay = config.getSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_SAME_SOURCE_SAME_TYPE);
+        _differentRadioMessageDelay = config.getSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_SAME_SOURCE_DIFFERENT_TYPE);
+        _aiPresets = config.getSetting(config.BATTLE_SETTINGS.AI_PRESETS);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module

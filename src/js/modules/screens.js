@@ -162,7 +162,7 @@ define([
          * Whether the screen is currently superimposed on another one
          * @type Boolean
          */
-        this._superImposed = false;
+        this._superimposed = false;
         /**
          * Stores the list of simple components (wrapped HTML elements) on this screen.
          * @type SimpleComponent[]
@@ -439,7 +439,7 @@ define([
                 parentNode.appendChild(this._background);
             }
             parentNode.appendChild(this._container);
-            this._superImposed = true;
+            this._superimposed = true;
         }
         this.show();
     };
@@ -455,7 +455,7 @@ define([
                     this._background.hidden = true;
                 }
                 this._visible = false;
-                this._superImposed = false;
+                this._superimposed = false;
                 this.setActive(false);
                 if (this._onHide) {
                     this._onHide();
@@ -471,7 +471,7 @@ define([
      * @returns {Boolean}
      */
     HTMLScreen.prototype.isSuperimposed = function () {
-        return this._superImposed;
+        return this._superimposed;
     };
     /**
      * Setting the properties that will be used to easier access DOM elements later.
