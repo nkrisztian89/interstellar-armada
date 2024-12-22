@@ -41,6 +41,8 @@ define([
             COMPLETED_CLASS = "completed",
             TITLE_ID = "title",
             BACK_BUTTON_ID = "backButton",
+            CHANGE_SHIP_BUTTON_ID = "changeShipButton",
+            CHANGE_LOADOUT_BUTTON_ID = "changeLoadoutButton",
             DEMO_BUTTON_ID = "demoButton",
             LAUNCH_BUTTON_ID = "launchButton",
             MISSION_TITLE_ID = "missionTitle",
@@ -135,7 +137,34 @@ define([
              * Used to represent the player's spacecraft in the currently selected mission to show information about it
              * @type Spacecraft
              */
-            _spacecraft;
+            _spacecraft,
+            /**
+             * A reference to the mission descriptor corresponding to the currently selected mission.
+             * @type MissionDescriptor
+             */
+            _missionDescriptor,
+            /**
+             * A reference to the (expanded) spacecraft descriptor corresponding to the piloted spacecraft in the currently
+             * selected mission.
+             * @type Object
+             */
+            _pilotedCraftDescriptor,
+            /**
+             * A cached list of the names of the spacecraft classes available to the player to choose for the currently
+             * selected mission.
+             * @type String[]
+             */
+            _availableSpacecraftClasses,
+            /**
+             * The name of the spacecraft class chosen by the player for the currently selected mission.
+             * @type String
+             */
+            _pilotedSpacecraftClass,
+            /**
+             * The name of the loadout chosen by the player for the currently selected mission.
+             * @type String
+             */
+            _pilotedSpacecraftLoadout;
     function _validateString(value, min, max) {
         return (typeof value === "string") && ((min === undefined) || (value.length >= min)) && ((max === undefined) || (value.length <= max));
     }
@@ -238,6 +267,10 @@ define([
         this._fileButton = this.registerSimpleComponent(FILE_BUTTON_ID);
         /** @type SimpleComponent */
         this._submitButton = this.registerSimpleComponent(SUBMIT_BUTTON_ID);
+        /** @type SimpleComponent */
+        this._changeShipButton = this.registerSimpleComponent(CHANGE_SHIP_BUTTON_ID);
+        /** @type SimpleComponent */
+        this._changeLoadoutButton = this.registerSimpleComponent(CHANGE_LOADOUT_BUTTON_ID);
         /** @type SimpleComponent */
         this._demoButton = this.registerSimpleComponent(DEMO_BUTTON_ID);
         /** @type SimpleComponent */
@@ -434,11 +467,80 @@ define([
                 }.bind(this));
     };
     /**
+     * Updates the text of the fields showing the properties of the spacecraft selected for the current mission
+     * to reflect the currently selected spacecraft class and loadout.
+     */
+    MissionsScreen.prototype._updateSpacecraft = function () {
+        if (_spacecraft) {
+            _spacecraft.destroy();
+            _spacecraft = null;
+        }
+        if (_pilotedCraftDescriptor) {
+            _spacecraft = new spacecraft.Spacecraft();
+            _spacecraft.loadFromJSON(Object.assign({}, _pilotedCraftDescriptor, {
+                class: _pilotedSpacecraftClass,
+                loadout: _pilotedSpacecraftLoadout || _pilotedCraftDescriptor.loadout,
+                equipment: _pilotedSpacecraftLoadout ? undefined : _pilotedCraftDescriptor.equipment
+            }));
+        }
+        if (_spacecraft) {
+            this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
+                class: _spacecraft.getClass().getDisplayName()
+            });
+            if (_spacecraft.hasWeapons()) {
+                this._playerSpacecraftWeapons.setContent(strings.get(strings.MISSIONS.SPACECRAFT_WEAPONS), {
+                    weapons: _spacecraft.getWeaponsDisplayText() || "-",
+                    firepower: _spacecraft.getFirepower().toFixed(1),
+                    range: _spacecraft.hasWeapons() ? _spacecraft.getWeaponRangesDisplayText() + " m" : "-"
+                });
+                this._playerSpacecraftWeapons.show();
+            } else {
+                this._playerSpacecraftWeapons.setContent("");
+                this._playerSpacecraftWeapons.hide();
+            }
+            if (_spacecraft.hasMissiles()) {
+                this._playerSpacecraftMissiles.setContent(strings.get(strings.MISSIONS.SPACECRAFT_MISSILES), {
+                    missiles: _spacecraft.getMissilesDisplayText() || "-",
+                    firepower: _spacecraft.getMissileFirepower(),
+                    range: _spacecraft.getMissileRangesDisplayText() + " m"
+                });
+                this._playerSpacecraftMissiles.show();
+            } else {
+                this._playerSpacecraftMissiles.setContent("");
+                this._playerSpacecraftMissiles.hide();
+            }
+            if (_spacecraft.hasShield()) {
+                this._playerSpacecraftShield.setContent(strings.get(strings.MISSIONS.SPACECRAFT_SHIELD), {
+                    shield: _spacecraft.hasShield() ? _spacecraft.getShieldDisplayName() : "-",
+                    shieldCapacity: _spacecraft.hasShield() ? _spacecraft.getShieldCapacity() : "-",
+                    shieldRechargeRate: _spacecraft.hasShield() ? _spacecraft.getShieldRechargeRate() + " / s" : "-"
+                });
+                this._playerSpacecraftShield.show();
+            } else {
+                this._playerSpacecraftShield.setContent("");
+                this._playerSpacecraftShield.hide();
+            }
+            if (_spacecraft.getPropulsion()) {
+                this._playerSpacecraftPropulsion.setContent(strings.get(strings.MISSIONS.SPACECRAFT_PROPULSION), {
+                    propulsion: _spacecraft.getPropulsion() ? _spacecraft.getPropulsionDisplayName() : "-",
+                    speed: _spacecraft.getPropulsion() ? Math.round(_spacecraft.getMaxCombatSpeed()) + " m/s" : "-",
+                    turnRate: _spacecraft.getPropulsion() ? Math.round(_spacecraft.getMaxCombatTurnRate()) + " °/s" : "-"
+                });
+                this._playerSpacecraftPropulsion.show();
+            } else {
+                this._playerSpacecraftPropulsion.setContent("");
+                this._playerSpacecraftPropulsion.hide();
+            }
+        } else {
+            this._playerSpacecraftData.setContent("-");
+        }
+    };
+    /**
      * Requests the data of the selected mission and displays its information once it has been loaded
      * @param {Number} index
      */
     MissionsScreen.prototype._selectMission = function (index) {
-        var missionFilename, missionName, pilotedCraftDescriptor;
+        var missionFilename, missionName;
         if ((index >= 0) && (index < this._missionProvider.getMissionNames(this._custom).length)) {
             missionFilename = this._missionProvider.getMissionNames(this._custom)[index];
             missionName = utils.getFilenameWithoutExtension(missionFilename);
@@ -455,25 +557,34 @@ define([
             this._fileButton.hide();
             this._submitButton.hide();
             this._manageSubmissionsButton.hide();
+            this._changeShipButton.hide();
+            this._changeLoadoutButton.hide();
             this._missionProvider.requestMissionDescriptor(missionFilename, function (missionDescriptor) {
                 var
                         author,
                         /** @type String[] */
                         objectives;
                 if (this._listComponent.getSelectedIndex() === index) {
+                    _missionDescriptor = missionDescriptor;
                     if (missionDescriptor.getTitle()) {
                         this._missionTitle.setTextContent(missionDescriptor.getTitle());
                         this._listComponent.setCaption(index, missionDescriptor.getTitle());
                     }
-                    if (_spacecraft) {
-                        _spacecraft.destroy();
-                        _spacecraft = null;
+                    _pilotedCraftDescriptor = missionDescriptor.getPilotedSpacecraftDescriptor();
+                    _availableSpacecraftClasses = missionDescriptor.getAvailableSpacecraftClasses();
+                    if (_availableSpacecraftClasses.length > 1) {
+                        this._changeShipButton.show();
+                        this._changeLoadoutButton.show();
+                        this._changeLoadoutButton.disable();
                     }
-                    pilotedCraftDescriptor = missionDescriptor.getPilotedSpacecraftDescriptor();
-                    if (pilotedCraftDescriptor) {
-                        _spacecraft = new spacecraft.Spacecraft();
-                        _spacecraft.loadFromJSON(pilotedCraftDescriptor);
+                    if (_pilotedCraftDescriptor) {
+                        _pilotedSpacecraftClass = _pilotedCraftDescriptor.class;
+                        _pilotedSpacecraftLoadout = "";
+                        if (missionDescriptor.getAvailableLoadouts(_pilotedSpacecraftClass).length > 1) {
+                            this._changeLoadoutButton.enable();
+                        }
                     }
+                    this._updateSpacecraft();
                     objectives = missionDescriptor.getMissionObjectives().map(function (objective) {
                         return "<li>" + objective + "</li>";
                     });
@@ -492,57 +603,6 @@ define([
                         components.appendFormattedContent(this._missionDescription.getElement(), missionDescriptor.getDisplayDescription());
                     }
                     this._missionObjectives.setContent(objectives.join(""));
-                    if (_spacecraft) {
-                        this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
-                            class: _spacecraft.getClass().getDisplayName()
-                        });
-                        if (_spacecraft.hasWeapons()) {
-                            this._playerSpacecraftWeapons.setContent(strings.get(strings.MISSIONS.SPACECRAFT_WEAPONS), {
-                                weapons: _spacecraft.getWeaponsDisplayText() || "-",
-                                firepower: _spacecraft.getFirepower().toFixed(1),
-                                range: _spacecraft.hasWeapons() ? _spacecraft.getWeaponRangesDisplayText() + " m" : "-"
-                            });
-                            this._playerSpacecraftWeapons.show();
-                        } else {
-                            this._playerSpacecraftWeapons.setContent("");
-                            this._playerSpacecraftWeapons.hide();
-                        }
-                        if (_spacecraft.hasMissiles()) {
-                            this._playerSpacecraftMissiles.setContent(strings.get(strings.MISSIONS.SPACECRAFT_MISSILES), {
-                                missiles: _spacecraft.getMissilesDisplayText() || "-",
-                                firepower: _spacecraft.getMissileFirepower(),
-                                range: _spacecraft.getMissileRangesDisplayText() + " m"
-                            });
-                            this._playerSpacecraftMissiles.show();
-                        } else {
-                            this._playerSpacecraftMissiles.setContent("");
-                            this._playerSpacecraftMissiles.hide();
-                        }
-                        if (_spacecraft.hasShield()) {
-                            this._playerSpacecraftShield.setContent(strings.get(strings.MISSIONS.SPACECRAFT_SHIELD), {
-                                shield: _spacecraft.hasShield() ? _spacecraft.getShieldDisplayName() : "-",
-                                shieldCapacity: _spacecraft.hasShield() ? _spacecraft.getShieldCapacity() : "-",
-                                shieldRechargeRate: _spacecraft.hasShield() ? _spacecraft.getShieldRechargeRate() + " / s" : "-"
-                            });
-                            this._playerSpacecraftShield.show();
-                        } else {
-                            this._playerSpacecraftShield.setContent("");
-                            this._playerSpacecraftShield.hide();
-                        }
-                        if (_spacecraft.getPropulsion()) {
-                            this._playerSpacecraftPropulsion.setContent(strings.get(strings.MISSIONS.SPACECRAFT_PROPULSION), {
-                                propulsion: _spacecraft.getPropulsion() ? _spacecraft.getPropulsionDisplayName() : "-",
-                                speed: _spacecraft.getPropulsion() ? Math.round(_spacecraft.getMaxCombatSpeed()) + " m/s" : "-",
-                                turnRate: _spacecraft.getPropulsion() ? Math.round(_spacecraft.getMaxCombatTurnRate()) + " °/s" : "-"
-                            });
-                            this._playerSpacecraftPropulsion.show();
-                        } else {
-                            this._playerSpacecraftPropulsion.setContent("");
-                            this._playerSpacecraftPropulsion.hide();
-                        }
-                    } else {
-                        this._playerSpacecraftData.setContent("-");
-                    }
                     this._missionObjectivesTitle.show();
                     this._missionObjectives.show();
                     this._playerSpacecraftTitle.show();
@@ -571,6 +631,8 @@ define([
             this._playerSpacecraftPropulsion.hide();
             this._launchButton.disable();
             this._demoButton.disable();
+            this._changeShipButton.hide();
+            this._changeLoadoutButton.hide();
             this._fileButton.setVisible(this._loadCustom);
             this._submitButton.setVisible(this._community && missionHub.isReady());
             this._manageSubmissionsButton.setVisible(this._community && missionHub.isReady() && missionHub.isSubmitter());
@@ -715,6 +777,8 @@ define([
                 missionSourceFilename: this._community ? undefined : missionName,
                 missionData: this._community ? missionHub.getMissionDescriptor(missionName).getData() : undefined,
                 difficulty: missions.getDifficultyNames()[this._difficultySelector.getSelectedIndex()],
+                spacecraftClass: _pilotedSpacecraftClass,
+                loadout: _pilotedSpacecraftLoadout,
                 demoMode: demoMode});
         }
     };
@@ -884,6 +948,26 @@ define([
         this._difficultySelector.onChange = function () {
             missions.setDifficulty(missions.getDifficultyNames()[this._difficultySelector.getSelectedIndex()]);
             this._updateScores();
+        }.bind(this);
+        this._changeShipButton.getElement().onclick = function () {
+            var index = _availableSpacecraftClasses.indexOf(_pilotedSpacecraftClass), loadouts;
+            _pilotedSpacecraftClass = _availableSpacecraftClasses[(index + 1) % _availableSpacecraftClasses.length];
+            loadouts = _missionDescriptor.getAvailableLoadouts(_pilotedSpacecraftClass);
+            _pilotedSpacecraftLoadout = loadouts[0];
+            if (loadouts.length > 1) {
+                this._changeLoadoutButton.enable();
+            } else {
+                this._changeLoadoutButton.disable();
+            }
+            this._updateSpacecraft();
+            return false;
+        }.bind(this);
+        this._changeLoadoutButton.getElement().onclick = function () {
+            var index, loadouts = _missionDescriptor.getAvailableLoadouts(_pilotedSpacecraftClass);
+            index = loadouts.indexOf(_pilotedSpacecraftLoadout);
+            _pilotedSpacecraftLoadout = loadouts[(index + 1) % loadouts.length];
+            this._updateSpacecraft();
+            return false;
         }.bind(this);
         this._demoButton.getElement().onclick = function () {
             this._launchMission(true);

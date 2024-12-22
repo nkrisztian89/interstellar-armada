@@ -4832,8 +4832,16 @@ define([
             _multiCraftCanBePiloted = function (data) {
                 return _craftIsMulti(data) && !data.away;
             },
+            _craftClassHasLoadouts = function (data) {
+                var spacecraftClass;
+                if (data.class) {
+                    spacecraftClass = classes.getSpacecraftClass(data.class);
+                    return spacecraftClass.getLoadoutNames().length > 0;
+                }
+                return false;
+            },
             _craftCanHaveLoadouts = function (data) {
-                return _craftIsMulti(data) && !data.loadout && !data.equipment;
+                return _craftIsMulti(data) && !data.loadout && !data.equipment && _craftClassHasLoadouts(data);
             },
             _craftHasNoLoadouts = function (data) {
                 return !data.loadouts || (data.loadouts.length === 0);
@@ -4994,7 +5002,7 @@ define([
                     },
                     LOADOUTS: {
                         name: "loadouts",
-                        type: _createTypedArrayType(CLASS_LOADOUT_REFERENCE),
+                        type: _createTypedArrayType(CLASS_LOADOUT_REFERENCE, {min: 1}),
                         optional: true,
                         isValid: _craftCanHaveLoadouts,
                         updateOnValidate: true
@@ -5023,6 +5031,27 @@ define([
                         optional: true,
                         defaultText: "0",
                         isValid: _craftCanHaveInitialBlinkTimeDelta
+                    }
+                }
+            },
+            AVAILABLE_SHIP = {
+                baseType: BaseType.OBJECT,
+                name: "AvailableShip",
+                getName: function (data) {
+                    return data.class;
+                },
+                properties: {
+                    CLASS: {
+                        name: "class",
+                        type: SPACECRAFT_CLASS_REFERENCE
+                    },
+                    LOADOUTS: {
+                        name: "loadouts",
+                        type: _createTypedArrayType(CLASS_LOADOUT_REFERENCE, {min: 1}),
+                        description: "The loadouts the player can choose for this ship.",
+                        updateOnValidate: true,
+                        isValid: _craftClassHasLoadouts,
+                        isRequired: _craftClassHasLoadouts
                     }
                 }
             },
@@ -5092,6 +5121,13 @@ define([
                 SPACECRAFTS: {
                     name: "spacecrafts",
                     type: _createTypedArrayType(SPACECRAFT)
+                },
+                AVAILABLE_SHIPS: {
+                    name: "availableShips",
+                    type: _createTypedArrayType(AVAILABLE_SHIP, {min: 1}),
+                    description: "Alternative ship and loadout choices available to the player to fly with for this mission.",
+                    optional: true,
+                    defaultText: "only the default"
                 }
             };
     /**

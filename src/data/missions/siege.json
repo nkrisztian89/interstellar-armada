@@ -6,6 +6,13 @@
         }, {
             "faction": "pirates"
         }],
+    "availableShips": [{
+        "class": "viper",
+        "loadouts": ["player-tier3", "player-tier3-small-missiles", "player-tier3-rockets", "player-tier3-mixed-small"]
+    }, {
+        "class": "rhino",
+        "loadouts": ["imperial-tier3", "imperial-tier3-rockets"]
+    }],
     "spacecrafts": [{
             "squad": "alpha",
             "team": "empire",

@@ -298,6 +298,16 @@ define([
              */
             _difficulty,
             /**
+             * The name of the spacecraft class selected by the player for this mission.
+             * @type String
+             */
+            _pilotedSpacecraftClass,
+            /**
+             * The name of the loadout selected by the player for this mission.
+             * @type String
+             */
+            _pilotedSpacecraftLoadout,
+            /**
              * Whether the game is in demo mode, in which all spacecrafts are controlled by AI and automatic camera switching is performed.
              * @type Boolean
              */
@@ -5367,6 +5377,8 @@ define([
      * @property {String} [missionData] The mission description JSON data if passed directly. Otherwise the data will be loaded from file based
      * on the missionSourceFilename field, or reloaded again as the last one when restarting the battle
      * @property {String} [difficulty]  The string ID of the difficulty level to use
+     * @property {String} [spacecraftClass] The name of the spacecraft class to override the class of the piloted spacecraft
+     * @property {String} [loadout] The name of the loadout to override the loadout of the piloted spacecraft
      * @property {Boolean} [demoMode] If true, AIs are added to all spacecrafts and the piloted spacecraft is not set, when loading the mission.
      * @property {Boolean} [restart] Whether to restart the same battle that has been loaded last time
      * @property {Boolean} [multi] Whether the game is multiplayer
@@ -5378,7 +5390,7 @@ define([
      * @param {BattleScreen~BattleParams} [params]
      */
     BattleScreen.prototype.startNewBattle = function (params) {
-        var canvas;
+        var canvas, missionParams;
         _loadingStartTime = performance.now();
         canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
         params = params || {};
@@ -5394,6 +5406,12 @@ define([
         if (params.difficulty !== undefined) {
             _difficulty = params.difficulty;
         }
+        if (params.spacecraftClass !== undefined) {
+            _pilotedSpacecraftClass = params.spacecraftClass;
+        }
+        if (params.loadout !== undefined) {
+            _pilotedSpacecraftLoadout = params.loadout;
+        }
         if (params.demoMode !== undefined) {
             _demoMode = params.demoMode;
         }
@@ -5408,10 +5426,16 @@ define([
                 canvas.width / 2,
                 canvas.height / 2);
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_MISSION), 0);
+        missionParams = {
+            difficulty: _difficulty,
+            pilotedSpacecraftClass: _pilotedSpacecraftClass,
+            pilotedSpacecraftLoadout: _pilotedSpacecraftLoadout,
+            demoMode: _demoMode
+        };
         if (_missionSourceFilename) {
-            missions.requestMission(_missionSourceFilename, _difficulty, _demoMode, this._startBattle.bind(this));
+            missions.requestMission(_missionSourceFilename, missionParams, this._startBattle.bind(this));
         } else {
-            this._startBattle(missions.createMission(_missionData, _difficulty, _demoMode));
+            this._startBattle(missions.createMission(_missionData, missionParams));
         }
     };
     /**

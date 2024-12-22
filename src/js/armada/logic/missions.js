@@ -1343,16 +1343,22 @@ define([
         return this._environment.hasShadows();
     };
     /**
+     * @typedef {Object} MissionParams
+     * @param {String} difficulty The string ID of the difficulty level to use
+     * @param {String} [pilotedSpacecraftClass] The name of the spacecraft class to override the class of the piloted spacecraft
+     * @param {String} [pilotedSpacecraftLoadout] The name of the loadout to override the loadout of the piloted spacecraft
+     * @param {Boolean} demoMode If true, the data for the mission is loaded in demo mode, so that the piloted craft is not set
+     * and a suitable AI is added to all spacecrafts if possible. 
+     */
+    /**
      * Loads all the data describing this mission from the passed JSON object.
      * @param {Object} dataJSON
-     * @param {String} difficulty The string ID of the difficulty level to use
-     * @param {Boolean} demoMode If true, the data from the JSON object will be loaded in demo mode, so that the piloted craft is not set
-     * and a suitable AI is added to all spacecrafts if possible.
+     * @param {MissionParams} params
      */
-    Mission.prototype.loadFromJSON = function (dataJSON, difficulty, demoMode) {
-        var i, j, craft, teamID, team, aiType, actions, count, factor, spacecrafts, vibrateCallback;
+    Mission.prototype.loadFromJSON = function (dataJSON, params) {
+        var i, j, craft, teamID, team, aiType, actions, count, factor, spacecrafts, vibrateCallback, craftDescriptor;
         application.log_DEBUG("Loading mission from JSON file...", 2);
-        this._difficultyLevel = _context.getDifficultyLevel(difficulty);
+        this._difficultyLevel = _context.getDifficultyLevel(params.difficulty);
         equipment.handleDifficultySet(this._difficultyLevel);
         formations.resetRandomSeed();
         this._dataJSON = dataJSON;
@@ -1382,8 +1388,20 @@ define([
         // loading spacecrafts from expanded array
         for (i = 0; i < spacecrafts.length; i++) {
             craft = new spacecraft.Spacecraft();
-            craft.loadFromJSON(spacecrafts[i], this._hitObjects, this._environment);
-            if (!demoMode && spacecrafts[i].piloted) {
+            if (spacecrafts[i].piloted) {
+                craftDescriptor = Object.assign({}, spacecrafts[i]);
+                if (params.pilotedSpacecraftClass) {
+                    craftDescriptor.class = params.pilotedSpacecraftClass;
+                }
+                if (params.pilotedSpacecraftLoadout) {
+                    craftDescriptor.loadout = params.pilotedSpacecraftLoadout;
+                    craftDescriptor.equipment = undefined;
+                }
+            } else {
+                craftDescriptor = spacecrafts[i];
+            }
+            craft.loadFromJSON(craftDescriptor, this._hitObjects, this._environment);
+            if (!params.demoMode && spacecrafts[i].piloted) {
                 this._pilotedCraft = craft;
                 craft.multiplyMaxHitpoints(this._difficultyLevel.getPlayerHitpointsFactor());
                 vibrateCallback = function (pilotedCraft, hitData) {
@@ -1407,7 +1425,7 @@ define([
                 } else {
                     application.showError("Invalid team ID '" + teamID + "' specified for " + craft.getClassName() + "!");
                 }
-            } else if (demoMode) {
+            } else if (params.demoMode) {
                 team = new Team({
                     faction: NUMBERED_FACTION_NAME,
                     index: (this._teams.length + 1).toString()
@@ -1448,7 +1466,7 @@ define([
                 }
             }
             aiType = spacecrafts[i].ai;
-            if (!aiType && demoMode) {
+            if (!aiType && params.demoMode) {
                 if (craft.isFighter()) {
                     aiType = config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE);
                 } else {
@@ -2309,6 +2327,48 @@ define([
         return this._pilotedSpacecraftDescriptor;
     };
     /**
+     * Returns the list of names of spacecraft classes available for the player to choose for
+     * this mission (including the default one)
+     * @returns {String[]}
+     */
+    MissionDescriptor.prototype.getAvailableSpacecraftClasses = function () {
+        var result = [], i, ships;
+        if (this.getPilotedSpacecraftDescriptor()) {
+            result.push(this.getPilotedSpacecraftDescriptor().class);
+        }
+        if (this._dataJSON.availableShips) {
+            ships = this._dataJSON.availableShips;
+            for (i = 0; i < ships.length; i++) {
+                if (result.indexOf(ships[i].class) < 0) {
+                    result.push(ships[i].class);
+                }
+            }
+        }
+        return result;
+    };
+    /**
+     * Returns the list of names of loadouts available for the player to choose for
+     * the passed spacecraft class for this mission.
+     * For the default spacececraft class, the list starts with an empty string to mark
+     * the default loadout.
+     * @param {String} spacecraftClass 
+     * @returns {String[]}
+     */
+    MissionDescriptor.prototype.getAvailableLoadouts = function (spacecraftClass) {
+        var ships = this._dataJSON.availableShips, i;
+        if (ships) {
+            for (i = 0; i < ships.length; i++) {
+                if (ships[i].class === spacecraftClass) {
+                    if (this._pilotedSpacecraftDescriptor.class === ships[i].class) {
+                        return [""].concat(ships[i].loadouts);
+                    }
+                    return ships[i].loadouts;
+                }
+            }
+        }
+        return [""];
+    };
+    /**
      * Returns the environment of the described mission.
      * Only works after the mission data has been loaded!
      * @returns {Environment}
@@ -2349,15 +2409,14 @@ define([
     /**
      * Creates and returns a Mission object based on the data stored in this descriptor. Only works if the data has been loaded - either it
      * was given when constructing this object, or it was requested and has been loaded
-     * @param {String} difficulty The string ID of the difficulty level to use
-     * @param {Boolean} demoMode Whether to load the created mission in demo mode
+     * @param {MissionParams} params
      * @returns {Mission}
      */
-    MissionDescriptor.prototype.createMission = function (difficulty, demoMode) {
+    MissionDescriptor.prototype.createMission = function (params) {
         var result = null;
         if (this.isReadyToUse()) {
             result = new Mission(this.getName());
-            result.loadFromJSON(this._dataJSON, difficulty, demoMode);
+            result.loadFromJSON(this._dataJSON, params);
         } else {
             application.showError("Cannot create mission from descriptor that has not yet been initialized!");
         }
@@ -2827,16 +2886,15 @@ define([
      * Requests the data (descriptor) for the mission with the passed name to be loaded (if it is not loaded already), creates a mission based 
      * on it and calls the passed callback with the created mission as its argument when it is loaded
      * @param {String} name
-     * @param {String} difficulty The string ID of the difficulty level to use
-     * @param {Boolean} demoMode Whether to load the created mission in demo mode
+     * @param {MissionParams} params
      * @param {Function} callback
      */
-    MissionContext.prototype.requestMission = function (name, difficulty, demoMode, callback) {
+    MissionContext.prototype.requestMission = function (name, params, callback) {
         var missionDescriptor = this._missionManager.getResource(MISSION_ARRAY_NAME, name);
         if (missionDescriptor) {
             this._missionManager.requestResourceLoad();
             this._missionManager.executeWhenReady(function () {
-                callback(missionDescriptor.createMission(difficulty, demoMode));
+                callback(missionDescriptor.createMission(params));
             });
         } else {
             callback(null);
@@ -2851,12 +2909,11 @@ define([
     /**
      * Creates and returns a new Mission based on the passed data object and settings without saving it into the mission resource manager
      * @param {Object} data The JSON object data describing the mission
-     * @param {String} difficulty The string ID of the difficulty level to use
-     * @param {Boolean} demoMode Whether to load the created mission in demo mode
+     * @param {MissionParams} params
      * @returns {Mission} 
      */
-    MissionContext.prototype.createMission = function (data, difficulty, demoMode) {
-        return new MissionDescriptor(data).createMission(difficulty, demoMode);
+    MissionContext.prototype.createMission = function (data, params) {
+        return new MissionDescriptor(data).createMission(params);
     };
     // initialization
     // obtaining pool references

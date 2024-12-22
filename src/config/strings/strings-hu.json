@@ -97,6 +97,8 @@
         "myMissionsTitle": "Saját küldetések",
         "communityMissionsTitle": "Közösségi küldetések",
         "difficulty": "Választott nehézség:",
+        "changeShipButton": "Hajóváltás",
+        "changeLoadoutButton": "Felszerelésváltás",
         "launchButton": "Indítás",
         "demoButton": "Demo",
         "fileButton": "Fájl kiválasztása",

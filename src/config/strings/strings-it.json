@@ -83,6 +83,8 @@
         "myMissionsTitle": "Le mie missioni",
         "communityMissionsTitle": "Missioni della community",
         "difficulty": "Seleziona difficoltà:",
+        "changeShipButton": "Cambia nave",
+        "changeLoadoutButton": "Cambia carico",
         "launchButton": "Avvia missione",
         "demoButton": "Avvia dimostrazione",
         "fileButton": "Scegli file",

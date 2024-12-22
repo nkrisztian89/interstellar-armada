@@ -5245,6 +5245,102 @@
                             "amount": 54,
                             "launcherIndex": 7
                         }]
+                        
+                }, {
+                    "name": "player-tier3",
+                    "basedOn": "player-tier2",
+                    "propulsion": {
+                        "class": "imperialBomberMk3"
+                    },
+                    "shield": {
+                        "class": "imperialBomberMk3"
+                    },
+                    "missiles": [{
+                            "class": "lightTorpedo",
+                            "amount": 2
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 2
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 2
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 2
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 36
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 36
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 36
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 36
+                        }]
+                }, {
+                    "name": "player-tier3-small-missiles",
+                    "basedOn": "player-tier3",
+                    "missiles": [{
+                            "class": "smallMissile",
+                            "amount": 54,
+                            "launcherIndex": 4
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 54,
+                            "launcherIndex": 5
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 54,
+                            "launcherIndex": 6
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 54,
+                            "launcherIndex": 7
+                        }]
+                }, {
+                    "name": "player-tier3-rockets",
+                    "basedOn": "player-tier3",
+                    "missiles": [{
+                            "class": "smallRocket",
+                            "amount": 54,
+                            "launcherIndex": 4
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 54,
+                            "launcherIndex": 5
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 54,
+                            "launcherIndex": 6
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 54,
+                            "launcherIndex": 7
+                        }]
+                }, {
+                    "name": "player-tier3-mixed-small",
+                    "basedOn": "player-tier3",
+                    "missiles": [{
+                            "class": "smallMissile",
+                            "amount": 54,
+                            "launcherIndex": 4
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 54,
+                            "launcherIndex": 5
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 54,
+                            "launcherIndex": 6
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 54,
+                            "launcherIndex": 7
+                        }]
+                        
                 }, {
                     "name": "multi-tier1",
                     "weapons": [{
@@ -5651,6 +5747,71 @@
                     "shield": {
                         "class": "imperialHeavyFighterMk1"
                     }
+                }, {
+                    "name": "imperial-tier2",
+                    "basedOn": "imperial-tier1",
+                    "missiles": [{
+                            "class": "smallMissile",
+                            "amount": 20
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 20
+                        }],
+                    "propulsion": {
+                        "class": "imperialHeavyFighterMk2"
+                    },
+                    "shield": {
+                        "class": "imperialHeavyFighterMk2"
+                    }
+                }, {
+                    "name": "imperial-tier2-rockets",
+                    "basedOn": "imperial-tier2",
+                    "missiles": [{
+                            "class": "smallRocket",
+                            "amount": 20
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 20
+                        }]
+                }, {
+                    "name": "imperial-tier3",
+                    "basedOn": "imperial-tier2",
+                    "weapons": [{
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "lightRepeaterGun"
+                        }, {
+                            "class": "lightRepeaterGun"
+                        }],
+                    "missiles": [{
+                            "class": "smallMissile",
+                            "amount": 30
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 30
+                        }],
+                    "propulsion": {
+                        "class": "imperialHeavyFighterMk3"
+                    },
+                    "shield": {
+                        "class": "imperialHeavyFighterMk3"
+                    }
+                }, {
+                    "name": "imperial-tier3-rockets",
+                    "basedOn": "imperial-tier3",
+                    "missiles": [{
+                            "class": "smallRocket",
+                            "amount": 30
+                        }, {
+                            "class": "smallRocket",
+                            "amount": 30
+                        }]
                 }, {
                     "name": "multi-tier1",
                     "weapons": [{

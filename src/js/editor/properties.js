@@ -400,7 +400,7 @@ define([
      * not have a default value set
      * @param {Boolean} [undefinedIfOptionalOrHasDefault=false] If true, the function will return undefined for properties marked as optional OR has a default value
      * @param {String} [typeName] The name of the type of the object this property is part of
-     * @param {Number} [arrayIndex] If this value is created for an element an array, this should be the index of the element
+     * @param {Number} [arrayIndex] If this value is created for an element in an array, this should be the index of the element
      * @param {Number} [propertyOfArrayElement=false] If this value is created for a property of an object that is an element in the array, this should be true
      * @returns {}
      */
@@ -458,8 +458,8 @@ define([
                     result.push(_getDefaultValue(
                             {type: propertyDescriptor.type.elementType},
                             null,
-                            result,
                             parent,
+                            grandParent,
                             topParent,
                             true));
                     count--;

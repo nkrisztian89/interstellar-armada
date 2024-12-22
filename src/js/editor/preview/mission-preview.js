@@ -343,7 +343,7 @@ define([
         shouldReload = !params.preserve || params.reload;
         if (params.clearScene || shouldReload) {
             if (shouldReload) {
-                _mission = _missionDescriptor.createMission(DIFFICULTY);
+                _mission = _missionDescriptor.createMission({difficulty: DIFFICULTY});
                 preview.setMission(_mission);
             }
             _mission.addToScene(preview.getScene(), null, {

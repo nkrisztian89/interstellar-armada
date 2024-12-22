@@ -83,6 +83,8 @@
         "myMissionsTitle": "My missions",
         "communityMissionsTitle": "Community missions",
         "difficulty": "Select difficulty:",
+        "changeShipButton": "Change ship",
+        "changeLoadoutButton": "Change loadout",
         "launchButton": "Launch mission",
         "demoButton": "Launch demo",
         "fileButton": "Choose file",
