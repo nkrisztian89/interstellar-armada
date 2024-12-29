@@ -36,9 +36,8 @@ As this is an early version, the performance is subject to changes (and bugs).
 For developers
 ==============
 
-I use [NetBeans](https://netbeans.apache.org/) with its web development (+
-[ESLint](https://github.com/joakim-eriksson/nb-eslint) and GLSL) plugins 
-to develop this game. To build the game, you will need
+I use [Visual Studio Code](https://code.visualstudio.com/) with the RequireJS Module Support,
+ESLint and WebGL GLSL Editor plugins to develop this game. To build the game, you will need
 [npm](https://www.npmjs.com/), [Grunt](https://gruntjs.com/) and 
 [Sass](https://sass-lang.com/).
 

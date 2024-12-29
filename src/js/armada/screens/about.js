@@ -103,6 +103,7 @@ define([
             lmms: _link("https://lmms.io", "LMMS"),
             fontforge: _link("https://fontforge.org/en-US", "FontForge"),
             netbeans: _link("https://netbeans.apache.org", "Netbeans"),
+            vscode: _link("https://code.visualstudio.com", "Visual Studio Code"),
             git: _link("https://git-scm.com/", "git"),
             npm: _link("https://www.npmjs.com/", "npm"),
             grunt: _link("https://gruntjs.com/", "Grunt"),
@@ -111,8 +112,6 @@ define([
             chrome: _link("https://www.google.com/chrome", "Google Chrome"),
             firefox: _link("https://www.mozilla.org/firefox", "Firefox"),
             ubuntu: _link("https://ubuntu.com/desktop", "Ubuntu"),
-            eslint: _link("https://github.com/joakim-eriksson/nb-eslint", "ESLint"),
-            python: _link("https://github.com/albilu/netbeansPython", "Python"),
             elevenlabs: _link("https://elevenlabs.io", "ElevenLabs")
         });
         this._aboutLicenseParagraph.customizeContent({
