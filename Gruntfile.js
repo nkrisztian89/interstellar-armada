@@ -177,6 +177,7 @@ module.exports = function (grunt) {
                 ["locked", "is"],
                 ["alive", "is"],
                 ["away", "is"],
+                ["jumping", "is", "isJumping"],
                 ["readyToUse", "is"],
                 ["playing", "is"],
                 ["measuredFromCenter", "is"],
@@ -285,7 +286,8 @@ module.exports = function (grunt) {
                 ["revealState"],
                 ["piloted"],
                 ["objectIntensity"],
-                ["radioSilence"]
+                ["radioSilence"],
+                ["jumping", "set", "isJumping"]
             ].map(
             function (replacement) {
 // create the replacements for each simple setter

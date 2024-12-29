@@ -761,7 +761,7 @@ define([
      */
     SpacecraftAI.prototype._sendRadio = function (messageType, delay, priority) {
         var now = performance.now(), elapsed = now - this._lastRadioTime;
-        if (!this._radioSilence && (this._radioData.voice >= 0) && (this._spacecraft && this._spacecraft.isAlive() && !this._spacecraft.isAway()) && (
+        if (!this._radioSilence && (this._radioData.voice >= 0) && (this._spacecraft && this._spacecraft.isAlive() && !this._spacecraft.isAway() && (!this._spacecraft.isJumping() || (messageType === _radioMessageLeaving))) && (
                 (messageType !== this._lastRadioType) && (elapsed >= _differentRadioMessageDelay) ||
                 (elapsed > _sameRadioMessageDelay) ||
                 (delay > 0) ||
@@ -799,7 +799,7 @@ define([
     SpacecraftAI.prototype._handleDelayedRadio = function (dt) {
         if (this._radioTimeLeft > 0) {
             this._radioTimeLeft -= dt;
-            if (this._radioTimeLeft <= 0) {
+            if ((this._radioTimeLeft <= 0) && ((this._radioData.messageType !== _radioMessageClear) || !this._target)) {
                 this._sendRadio(this._radioData.messageType, 0, 1);
             }
         }

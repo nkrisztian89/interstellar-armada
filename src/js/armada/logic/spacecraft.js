@@ -2869,6 +2869,13 @@ define([
         this._isJumping = value;
     };
     /**
+     * Whether the jump sequence is currently underway.
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.isJumping = function () {
+        return this._isJumping;
+    };
+    /**
      * Engages jump engines to leave the scene of the mission
      * @param {Boolean} toggle If true, calling the method while the jump out sequence is under way will cancel the jump
      * @returns {Boolean} Whether a jump out was initiated / toggled
