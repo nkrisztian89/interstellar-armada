@@ -7,6 +7,13 @@
         }, {
             "faction": "pirates"
         }],
+    "availableShips": [{
+        "class": "viper",
+        "loadouts": ["player-tier3-small-missiles", "player-tier3-rockets", "player-tier3-mixed-small"]
+    }, {
+        "class": "rhino",
+        "loadouts": ["imperial-tier2", "imperial-tier2-rockets"]
+    }],
     "events": [{
             "trigger": {
                 "conditions": [{
@@ -488,12 +495,18 @@
             },
             "pilotedIndex": 1,
             "ai": "fighter",
+            "aiParams": {
+                "preset": "elite"
+            },
             "loadouts": ["player-tier4", "imperial-tier3", "imperial-tier3"]
         }, {
             "squad": "raider",
             "team": "pirates",
             "class": "piranha",
             "ai": "fighter",
+            "aiParams": {
+                "preset": "elite"
+            },
             "position": [0, 3000, 0],
             "rotations": [{
                     "axis": "Z",

@@ -293,6 +293,9 @@
             "team": "pirates",
             "class": "rubyBlade",
             "ai": "fighter",
+            "aiParams": {
+                "preset": "elite"
+            },
             "name": "Ruby Blade",
             "loadout": "pirate-ruby-blade",
             "away": true

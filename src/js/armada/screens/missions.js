@@ -940,18 +940,24 @@ define([
      * @override
      */
     MissionsScreen.prototype._initializeComponents = function () {
+        var preventDefault = function (event) {
+            event.preventDefault();
+        };
         screens.HTMLScreen.prototype._initializeComponents.call(this);
         this._backButton.getElement().onclick = function () {
             game.closeOrNavigateTo(armadaScreens.SINGLE_PLAYER_SCREEN_NAME);
             return false;
         }.bind(this);
+        this._backButton.getElement().oncontextmenu = preventDefault;
         this._difficultySelector.onChange = function () {
             missions.setDifficulty(missions.getDifficultyNames()[this._difficultySelector.getSelectedIndex()]);
             this._updateScores();
         }.bind(this);
-        this._changeShipButton.getElement().onclick = function () {
+        this._changeShipButton.getElement().onmouseup = function (event) {
             var index = _availableSpacecraftClasses.indexOf(_pilotedSpacecraftClass), loadouts;
-            _pilotedSpacecraftClass = _availableSpacecraftClasses[(index + 1) % _availableSpacecraftClasses.length];
+            _pilotedSpacecraftClass = _availableSpacecraftClasses[((event.which === utils.MouseButton.LEFT) ?
+                (index + 1) :
+                (index - 1 + _availableSpacecraftClasses.length)) % _availableSpacecraftClasses.length];
             loadouts = _missionDescriptor.getAvailableLoadouts(_pilotedSpacecraftClass);
             _pilotedSpacecraftLoadout = loadouts[0];
             if (loadouts.length > 1) {
@@ -960,23 +966,31 @@ define([
                 this._changeLoadoutButton.disable();
             }
             this._updateSpacecraft();
+            event.preventDefault();
             return false;
         }.bind(this);
-        this._changeLoadoutButton.getElement().onclick = function () {
+        this._changeShipButton.getElement().oncontextmenu = preventDefault;
+        this._changeLoadoutButton.getElement().onmouseup = function (event) {
             var index, loadouts = _missionDescriptor.getAvailableLoadouts(_pilotedSpacecraftClass);
             index = loadouts.indexOf(_pilotedSpacecraftLoadout);
-            _pilotedSpacecraftLoadout = loadouts[(index + 1) % loadouts.length];
+            _pilotedSpacecraftLoadout = loadouts[((event.which === utils.MouseButton.LEFT) ?
+                (index + 1) :
+                (index - 1 + loadouts.length)) % loadouts.length];
             this._updateSpacecraft();
+            event.preventDefault();
             return false;
         }.bind(this);
+        this._changeLoadoutButton.getElement().oncontextmenu = preventDefault;
         this._demoButton.getElement().onclick = function () {
             this._launchMission(true);
             return false;
         }.bind(this);
+        this._demoButton.getElement().oncontextmenu = preventDefault;
         this._launchButton.getElement().onclick = function () {
             this._launchMission(false);
             return false;
         }.bind(this);
+        this._launchButton.getElement().oncontextmenu = preventDefault;
         this._fileInput.getElement().onchange = function () {
             var file = this._fileInput.getElement().files[0];
             if (file) {

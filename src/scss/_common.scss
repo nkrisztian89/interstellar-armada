@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2018, 2020-2021, 2023 Krisztián Nagy
+Copyright (C) 2017-2018, 2020-2021, 2023-2024 Krisztián Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -119,8 +119,10 @@ $input-width: $input-label-width + $input-value-width;
 @mixin styled-scrollbar {
     overflow-x: hidden;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: relDarken($highlight-color,0.333) transparent;
+    @media screen and (min--moz-device-pixel-ratio:0) {
+        scrollbar-width: thin;
+        scrollbar-color: relDarken($highlight-color,0.333) transparent;
+    }
     &::-webkit-scrollbar {
         width: 0.2vw;
         min-width: 2px;

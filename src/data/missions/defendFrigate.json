@@ -28,6 +28,13 @@
             "color": [0.2, 0.2, 0.8, 1.0]
         }
     ],
+    "availableShips": [{
+        "class": "falcon",
+        "loadouts": ["player-tier2-repeater"]
+    }, {
+        "class": "viper",
+        "loadouts": ["player-tier1-small-missiles", "player-tier1-rockets", "player-tier1-mixed-small"]
+    }],
     "views": [{
             "name": "free",
             "movable": true,

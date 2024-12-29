@@ -11,13 +11,16 @@
         "loadouts": ["player-tier3", "player-tier3-small-missiles", "player-tier3-rockets", "player-tier3-mixed-small"]
     }, {
         "class": "rhino",
-        "loadouts": ["imperial-tier3", "imperial-tier3-rockets"]
+        "loadouts": ["imperial-tier2", "imperial-tier2-rockets"]
     }],
     "spacecrafts": [{
             "squad": "alpha",
             "team": "empire",
             "class": "falcon",
             "ai": "fighter",
+            "aiParams": {
+                "preset": "elite"
+            },
             "position": [-6500, -1500, 1000],
             "count": 5,
             "pilotedIndex": 1,
@@ -118,6 +121,9 @@
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
+            "aiParams": {
+                "preset": "elite"
+            },
             "position": [-1000, 1000, 0],
             "rotations": [{
                     "axis": "Z",
@@ -133,6 +139,9 @@
             "team": "pirates",
             "class": "piranha",
             "ai": "fighter",
+            "aiParams": {
+                "preset": "elite"
+            },
             "away": true,
             "count": 4,
             "loadouts": ["pirate-elite", "pirate-shielded", "pirate-shielded", "pirate-shielded"]

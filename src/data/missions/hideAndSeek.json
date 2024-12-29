@@ -9,6 +9,16 @@
         }, {
             "faction": "pirates"
         }],
+    "availableShips": [{
+        "class": "falcon",
+        "loadouts": ["player-tier3-repeater"]
+    }, {
+        "class": "viper",
+        "loadouts": ["player-tier2-small-missiles", "player-tier2-rockets", "player-tier2-mixed-small"]
+    }, {
+        "class": "rhino",
+        "loadouts": ["imperial-tier2", "imperial-tier2-rockets"]
+    }],
     "events": [{
             "trigger": {},
             "actions": [{
