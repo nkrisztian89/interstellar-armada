@@ -505,6 +505,13 @@ define([
     function resume() {
         audio.resume();
     }
+    /**
+     * Stops the playback of the last played non-persistent audio clips (the one started with the "long" flag
+     * and the one started without)
+     */
+    function stopLastClips() {
+        audio.stopLastClips();
+    }
     // -------------------------------------------------------------------------
     // Initialization
     _context = new AudioSettingsContext();
@@ -545,6 +552,7 @@ define([
         initMusic: initMusic,
         playMusic: playMusic,
         stopMusic: stopMusic,
-        resume: resume
+        resume: resume,
+        stopLastClips: stopLastClips
     };
 });

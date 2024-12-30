@@ -210,6 +210,11 @@ define([
              */
             _clip,
             /**
+             * A common sound clip that is used to play longer sounds, so that the last one (the one currently playing) can be stopped.
+             * @type SoundClip
+             */
+            _longClip,
+            /**
              * A common sound source that is used to play sounds for which no persistent sound source needs to be created (to avoid creating
              * unnecessary objects) 
              * @type SoundSource
@@ -727,14 +732,25 @@ define([
      * @param {Number[3]} [position] The camera-space position of the sound source, in case the sound should be spatialized
      * @param {Number} [rolloffFactor=1] The rolloff factor of the sound in case it is spatialized. See SoundSource for how the volume is
      * calculated based on it
+     * @param {Boolean} [long=false] Whether the sound effect is longer, so it will be stored separately from the short ones, allowing for
+     * it to be stopped by calling stopLastClips() (as long as no overlapping long sound effects are played)
      */
-    function playSound(sampleName, soundCategory, volume, position, rolloffFactor) {
-        SoundClip.call(_clip, soundCategory || SoundCategory.SOUND_EFFECT, sampleName, volume, false);
+    function playSound(sampleName, soundCategory, volume, position, rolloffFactor, long) {
+        var clip = long ? _longClip : _clip;
+        SoundClip.call(clip, soundCategory || SoundCategory.SOUND_EFFECT, sampleName, volume, false);
         if (position) {
             SoundSource.call(_source, position[0], position[1], position[2], DEFAULT_PANNING_MODEL, rolloffFactor);
-            _clip.setSource(_source);
+            clip.setSource(_source);
         }
-        _clip.play();
+        clip.play();
+    }
+    /**
+     * Stops the playback of the last played non-persistent audio clips (the one started with the "long" flag
+     * and the one started without)
+     */
+    function stopLastClips() {
+        _clip.stopPlaying(DEFAULT_RAMP_DURATION);
+        _longClip.stopPlaying(DEFAULT_RAMP_DURATION);
     }
     /**
      * Sets a master volume applied to all sound effects.
@@ -799,6 +815,7 @@ define([
     _uiGain = _context.createGain();
     _uiGain.connect(_masterGain);
     _clip = new SoundClip();
+    _longClip = new SoundClip();
     _source = new SoundSource(0, 0, 0);
     if (!_context.createPanner().positionX) {
         application.showError("3D audio is not properly supported by your browser!", application.ErrorSeverity.SEVERE, "This game requires 3D positional audio to work properly. Please upgrade to a browser that supports it to play!");
@@ -812,6 +829,7 @@ define([
         SoundSource: SoundSource,
         loadSample: loadSample,
         playSound: playSound,
+        stopLastClips: stopLastClips,
         setEffectVolume: setEffectVolume,
         setMusicVolume: setMusicVolume,
         setVoiceVolume: setVoiceVolume,

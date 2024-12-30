@@ -1274,10 +1274,11 @@ define([
      * @param {Number} [soundCategory=SoundCategory.SOUND_EFFECT] The volume will be affected by the master volume set for this category
      * @param {Number} [volume=1]
      * @param {Number[3]} [position]
-     * @param {Number} [rolloff]
+     * @param {Number} [rolloff=1]
+     * @param {Boolean} [long=false]
      * @returns {Number} The index of the sample that got played (-1 if no sample could be played)
      */
-    SoundEffectResource.prototype.play = function (soundCategory, volume, position, rolloff) {
+    SoundEffectResource.prototype.play = function (soundCategory, volume, position, rolloff, long) {
         var sample, index;
         if (this.isReadyToUse() === false) {
             application.showError("Cannot play sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
@@ -1286,7 +1287,7 @@ define([
         index = Math.floor(Math.random() * this._samples.length);
         sample = this._samples[index];
         if (sample) {
-            audio.playSound(sample, soundCategory, volume, position, rolloff);
+            audio.playSound(sample, soundCategory, volume, position, rolloff, long);
             return index;
         } else {
             application.log_DEBUG("WARNING: cannot play sound sample '" + sample + "', as there was a problem while loading it.", 1);

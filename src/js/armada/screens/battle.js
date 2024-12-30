@@ -1448,6 +1448,7 @@ define([
         _newHostilesAlertTimeLeft = 0;
         _newHostiles = null;
         audio.playMusic(null);
+        audio.stopLastClips();
         // HUD
         _hullIntegrityDecreaseTime = 0;
         _shieldDecreaseTime = 0;
@@ -3912,13 +3913,13 @@ define([
                     _playingMissionVoiceSound = false;
                     // playing the voice-over for this message if it exists
                     if (_missionVoiceSounds[messageQueue[0].id]) {
-                        _missionVoiceSounds[messageQueue[0].id].play(resources.SoundCategory.VOICE);
+                        _missionVoiceSounds[messageQueue[0].id].play(resources.SoundCategory.VOICE, undefined, undefined, undefined, true);
                         _playingMissionVoiceSound = true;
                         messageQueue[0].silent = true;
                     } else if (messageQueue[0].source) {
                         j = ai.getVoiceOfSpacecraft(messageQueue[0].source);
                         if ((j >= 0) && _missionPilotVoiceSounds[j][messageQueue[0].id]) {
-                            _missionPilotVoiceSounds[j][messageQueue[0].id].play(resources.SoundCategory.VOICE);
+                            _missionPilotVoiceSounds[j][messageQueue[0].id].play(resources.SoundCategory.VOICE, undefined, undefined, undefined, true);
                             _playingMissionVoiceSound = true;
                             messageQueue[0].silent = true;
                         }
