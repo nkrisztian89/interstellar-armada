@@ -4,10 +4,21 @@
     margin-top: $page-padding;
     text-align: center;
     height: calc(100% - #{2*$separator-height + 2*$page-padding});
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+div.gameplaySettingsColumn {
+    display: flex; 
+    flex-direction: column;
 }
 
 div.gameplaySettingsContainer {
-    display: inline-block; 
+    display: inline-block;
+    &>div {
+        padding-top: 0.5em;
+    }
 }
 
 h2.settings {

@@ -377,7 +377,9 @@ define([
         MANY: {name: "setting.many"},
         EASY: {name: "setting.easy"},
         HARD: {name: "setting.hard"},
-        CUSTOM: {name: "setting.custom"}
+        CUSTOM: {name: "setting.custom"},
+        MISSION_ONLY: {name: "setting.missionOnly"},
+        ALL: {name: "setting.all"}
     };
     strings.GENERAL_SETTINGS = {
         BACK: {name: "generalSettings.backButton"},
@@ -427,6 +429,8 @@ define([
         PREFERRED_SHIP_VIEW: {name: "gameplaySettings.preferredShipView"},
         DEMO_VIEW_SWITCHING: {name: "gameplaySettings.demoViewSwitching"},
         DEFAULT_SALVO_MODE: {name: "gameplaySettings.defaultSalvoMode"},
+        SHOW_GENERIC_RADIO_MESSAGES: {name: "gameplaySettings.showGenericRadioMessages"},
+        PLAY_RADIO_MESSAGES: {name: "gameplaySettings.playRadioMessages"},
         SHOW_READY_MESSAGE: {name: "gameplaySettings.showReadyMessage"}
     };
     strings.AUDIO = {

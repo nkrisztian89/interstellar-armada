@@ -809,7 +809,9 @@
         "many": "sok",
         "easy": "könnyű",
         "hard": "nehéz",
-        "custom": "egyéni"
+        "custom": "egyéni",
+        "missionOnly": "csak statikus",
+        "all": "mindig"
     },
     "generalSettings": {
         "backButton": "Vissza a menübe",
@@ -855,6 +857,7 @@
         "title": "Játékmenet beállítások",
         "hudTitle": "HUD",
         "cameraTitle": "Kamera",
+        "radioTitle": "Rádióüzenetek",
         "controlsTitle": "Irányítás",
         "otherTitle": "Egyéb",
         "targetHealthAtCenter": "Célpont állapota mindig középen:",
@@ -866,6 +869,8 @@
         "preferredShipView": "Alapértelmezett hadihajó nézet:",
         "demoViewSwitching": "Automatikus nézetváltogatás demo módban:",
         "defaultSalvoMode": "Alapértelmezett sortűz mód rakétákhoz:",
+        "showGenericRadioMessages": "Gépi pilóták dinamikus rádióüzeneteinek kiírása:",
+        "playRadioMessages": "Rádióüzenetek hangjának lejátszása:",
         "showReadyMessage": "Küldetés kezdetén üzenet mutatása:"
     },
     "controller": {

@@ -740,7 +740,9 @@
         "many": "tanti",
         "easy": "facile",
         "hard": "difficile",
-        "custom": "personalizzato"
+        "custom": "personalizzato",
+        "missionOnly": "non dinamici",
+        "all": "tutti"
     },
     "generalSettings": {
         "backButton": "Torna al menu",
@@ -786,6 +788,7 @@
         "title": "Impostazioni di gioco",
         "hudTitle": "HUD",
         "cameraTitle": "Visuale",
+        "radioTitle": "Messaggi radio",
         "controlsTitle": "Controlli",
         "otherTitle": "Altre",
         "targetHealthAtCenter": "Barra di integrità del bersaglio sempre al centro:",
@@ -797,6 +800,8 @@
         "preferredShipView": "Vista dell'astronave preferita:",
         "demoViewSwitching": "Cambio automatico di visuale in modalità dimostrazione:",
         "defaultSalvoMode": "Modalità missile in serie per impostazione predefinita:",
+        "showGenericRadioMessages": "Mostra il testo dei messaggi radio dinamici dei piloti AI:",
+        "playRadioMessages": "Riproduci la voce fuori campo per i messaggi radio:",
         "showReadyMessage": "Mostra messaggio 'pronto' all'inizio delle missioni:"
     },
     "controller": {

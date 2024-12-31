@@ -1269,6 +1269,13 @@ define([
         return false;
     };
     /**
+     * Returns a random integer between 0 and the number of samples associated with this resource minus one.
+     * @returns {Number}
+     */
+    SoundEffectResource.prototype.getRandomSampleIndex = function () {
+        return Math.floor(Math.random() * this._samples.length);
+    };
+    /**
      * Plays back one of the samples (randomly chosen) corresponding to this effect, without saving a reference to it. The samples must be
      * loaded.
      * @param {Number} [soundCategory=SoundCategory.SOUND_EFFECT] The volume will be affected by the master volume set for this category
@@ -1284,7 +1291,7 @@ define([
             application.showError("Cannot play sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
             return -1;
         }
-        index = Math.floor(Math.random() * this._samples.length);
+        index = this.getRandomSampleIndex();
         sample = this._samples[index];
         if (sample) {
             audio.playSound(sample, soundCategory, volume, position, rolloff, long);

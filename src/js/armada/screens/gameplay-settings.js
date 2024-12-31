@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 Krisztián Nagy
+ * Copyright 2017-2024 Krisztián Nagy
  * @file This module manages and provides the gameplay settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -50,6 +50,9 @@ define([
             _getShipViewSettingValues = function () {
                 return _shipViewOptions.map(_getMapToCaptionFunction(strings.OBJECT_VIEW));
             },
+            _getPlayRadioMessagesSettingValues = function () {
+                return [strings.get(strings.SETTING.OFF), strings.get(strings.SETTING.ALL), strings.get(strings.SETTING.MISSION_ONLY)];
+            },
             // ------------------------------------------------------------------------------
             // constants
             BACK_BUTTON_ID = "backButton",
@@ -63,13 +66,18 @@ define([
             PREFERRED_SHIP_VIEW_SELECTOR_ID = "preferredShipViewSelector",
             DEMO_VIEW_SWITCHING_SELECTOR_ID = "demoViewSwitchSelector",
             DEFAULT_SALVO_MODE_SELECTOR_ID = "defaultSalvoModeSelector",
+            SHOW_GENERIC_RADIO_MESSAGES_SELECTOR_ID = "showGenericRadioMessagesSelector",
+            PLAY_RADIO_MESSAGES_SELECTOR_ID = "playRadioMessagesSelector",
             SHOW_READY_MESSAGE_SELECTOR_ID = "showReadyMessage",
             HUD_OPTION_PARENT_ID = "hudSettingsDiv",
             CAMERA_OPTION_PARENT_ID = "cameraSettingsDiv",
             CONTROLS_OPTION_PARENT_ID = "controlsSettingsDiv",
+            RADIO_OPTION_PARENT_ID = "radioSettingsDiv",
             OTHER_OPTION_PARENT_ID = "otherSettingsDiv",
             SETTING_ON_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
-            SETTING_OFF_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
+            SETTING_OFF_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF)),
+            SETTING_ALL_INDEX = _getPlayRadioMessagesSettingValues().indexOf(strings.get(strings.SETTING.ALL)),
+            SETTING_MISSION_ONLY_INDEX = _getPlayRadioMessagesSettingValues().indexOf(strings.get(strings.SETTING.MISSION_ONLY));
     // ##############################################################################
     /**
      * @class Represents the Gameplay settings screen.
@@ -108,6 +116,10 @@ define([
         /** @type Selector */
         this._defaultSalvoModeSelector = null;
         /** @type Selector */
+        this._showGenericRadioMessagesSelector = null;
+        /** @type Selector */
+        this._playRadioMessagesSelector = null;
+        /** @type Selector */
         this._showReadyMessageSelector = null;
         config.executeWhenReady(function () {
             this._targetHullAtCenterSelector = this._registerSelector(TARGET_HULL_AT_CENTER_SELECTOR_ID,
@@ -132,6 +144,12 @@ define([
             this._defaultSalvoModeSelector = this._registerSelector(DEFAULT_SALVO_MODE_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.DEFAULT_SALVO_MODE.name,
                     CONTROLS_OPTION_PARENT_ID);
+            this._showGenericRadioMessagesSelector = this._registerSelector(SHOW_GENERIC_RADIO_MESSAGES_SELECTOR_ID,
+                        strings.GAMEPLAY_SETTINGS.SHOW_GENERIC_RADIO_MESSAGES.name,
+                        RADIO_OPTION_PARENT_ID);
+            this._playRadioMessagesSelector = this._registerSelector(PLAY_RADIO_MESSAGES_SELECTOR_ID,
+                        strings.GAMEPLAY_SETTINGS.PLAY_RADIO_MESSAGES.name,
+                        RADIO_OPTION_PARENT_ID);
             this._showReadyMessageSelector = this._registerSelector(SHOW_READY_MESSAGE_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.SHOW_READY_MESSAGE.name,
                     OTHER_OPTION_PARENT_ID);
@@ -169,6 +187,9 @@ define([
         config.setBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME, _shipViewOptions[this._preferredShipViewSelector.getSelectedIndex()]);
         config.setBattleSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCHING, (this._demoViewSwitchingSelector.getSelectedIndex() === SETTING_ON_INDEX));
         config.setBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE, (this._defaultSalvoModeSelector.getSelectedIndex() === SETTING_ON_INDEX));
+        config.setBattleSetting(config.BATTLE_SETTINGS.SHOW_GENERIC_RADIO_MESSAGES, (this._showGenericRadioMessagesSelector.getSelectedIndex() === SETTING_ON_INDEX));
+        config.setBattleSetting(config.BATTLE_SETTINGS.PLAY_GENERIC_RADIO_MESSAGES, (this._playRadioMessagesSelector.getSelectedIndex() === SETTING_ALL_INDEX));
+        config.setBattleSetting(config.BATTLE_SETTINGS.PLAY_MISSION_RADIO_MESSAGES, (this._playRadioMessagesSelector.getSelectedIndex() !== SETTING_OFF_INDEX));
         config.setBattleSetting(config.BATTLE_SETTINGS.SHOW_READY_MESSAGE, (this._showReadyMessageSelector.getSelectedIndex() === SETTING_ON_INDEX));
         game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
     };
@@ -203,6 +224,8 @@ define([
         this._preferredShipViewSelector.setValueList(_getShipViewSettingValues());
         this._demoViewSwitchingSelector.setValueList(strings.getOnOffSettingValues());
         this._defaultSalvoModeSelector.setValueList(strings.getOnOffSettingValues());
+        this._showGenericRadioMessagesSelector.setValueList(strings.getOnOffSettingValues());
+        this._playRadioMessagesSelector.setValueList(_getPlayRadioMessagesSettingValues());
         this._showReadyMessageSelector.setValueList(strings.getOnOffSettingValues());
         if (config.getGeneralSetting(config.GENERAL_SETTINGS.SHOW_DEMO_BUTTON)) {
             this._demoViewSwitchingSelector.show();
@@ -225,6 +248,8 @@ define([
             this._preferredShipViewSelector.selectValueWithIndex(_shipViewOptions.indexOf(config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME)));
             this._demoViewSwitchingSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCHING) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._defaultSalvoModeSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
+            this._showGenericRadioMessagesSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.SHOW_GENERIC_RADIO_MESSAGES) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
+            this._playRadioMessagesSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.PLAY_GENERIC_RADIO_MESSAGES) === true) ? SETTING_ALL_INDEX : (config.getBattleSetting(config.BATTLE_SETTINGS.PLAY_MISSION_RADIO_MESSAGES) === true) ? SETTING_MISSION_ONLY_INDEX : SETTING_OFF_INDEX);
             this._showReadyMessageSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.SHOW_READY_MESSAGE) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
         }.bind(this));
     };

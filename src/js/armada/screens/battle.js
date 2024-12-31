@@ -623,6 +623,21 @@ define([
              */
             _lastRadioType,
             /**
+             * Cached value of the setting of whether to play the sound effects for generic radio messages.
+             * @type Boolean
+             */
+            _playGenericRadioMessages,
+            /**
+             * Cached value of the setting of whether to play the sound effects for mission radio messages.
+             * @type Boolean
+             */
+            _playMissionRadioMessages,
+            /**
+             * Cached value of the setting of whether to display the text for generic AI radio messages.
+             * @type Boolean
+             */
+            _showGenericRadioMessages,
+            /**
              * Whether the radio message queue has been updated since its message text has been assembled (we display multiple messages in a merged string)
              * @type Boolean
              */
@@ -1696,21 +1711,29 @@ define([
                 /** @type DOMHighResTimeStamp */
                 now,
                 /** @type Number */
-                index = -1;
+                index = -1,
+                /** @type SoundEffectResource */
+                resource;
         if (_spacecraft && craft && craft.isAlive() && !craft.isAway() && !craft.isHostile(this)) {
             now = performance.now();
             if ((_messageSource !== this) && ((now - _lastRadioTime > config.getSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_SAME_TYPE)) ||
                     ((data.messageType !== _lastRadioType) && (now - _lastRadioTime > config.getSetting(config.BATTLE_SETTINGS.MIN_VOICE_MESSAGE_DELAY_FOR_DIFFERENT_TYPE))))) {
                 if (!_playingMissionVoiceSound) {
-                    // play the voice sample immediately, regardless of whether or not the text is shown
-                    index = _genericVoiceSounds[data.voice][data.messageType].play(resources.SoundCategory.VOICE) + 1;
-                    message = {
-                        text: strings.get(strings.RADIO.PREFIX, _voiceMessages[data.messageType] + index),
-                        source: this,
-                        silent: true,
-                        queue: RADIO_QUEUE
-                    };
-                    _battleScreen.queueHUDMessage(message, true);
+                    if (_playGenericRadioMessages || _showGenericRadioMessages) {
+                        resource = _genericVoiceSounds[data.voice][data.messageType];
+                        // play the voice sample immediately, regardless of whether or not the text is shown
+                        index = 1 + (_playGenericRadioMessages ?
+                            resource.play(resources.SoundCategory.VOICE) :
+                            resource.getRandomSampleIndex());
+                        message = {
+                            text: strings.get(strings.RADIO.PREFIX, _voiceMessages[data.messageType] + index),
+                            source: this,
+                            silent: _playGenericRadioMessages,
+                            appearAnimation: !_playGenericRadioMessages,
+                            queue: RADIO_QUEUE
+                        };
+                        _battleScreen.queueHUDMessage(message, true);
+                    }
                     _lastRadioTime = now;
                     _lastRadioType = data.messageType;
                 }
@@ -2806,6 +2829,9 @@ define([
     BattleScreen.prototype.setActive = function (active) {
         screens.HTMLScreen.prototype.setActive.call(this, active);
         if (active) {
+            _playGenericRadioMessages = config.getBattleSetting(config.BATTLE_SETTINGS.PLAY_GENERIC_RADIO_MESSAGES);
+            _playMissionRadioMessages = config.getBattleSetting(config.BATTLE_SETTINGS.PLAY_MISSION_RADIO_MESSAGES);
+            _showGenericRadioMessages = config.getBattleSetting(config.BATTLE_SETTINGS.SHOW_GENERIC_RADIO_MESSAGES);
             if (WAKE_LOCK_SUPPORTED && !_wakeLock) {
                 navigator.wakeLock.request("screen").then(function (wakeLock) {
                     _wakeLock = wakeLock;
@@ -3912,16 +3938,18 @@ define([
                 if (messageQueue[0].new) {
                     _playingMissionVoiceSound = false;
                     // playing the voice-over for this message if it exists
-                    if (_missionVoiceSounds[messageQueue[0].id]) {
-                        _missionVoiceSounds[messageQueue[0].id].play(resources.SoundCategory.VOICE, undefined, undefined, undefined, true);
-                        _playingMissionVoiceSound = true;
-                        messageQueue[0].silent = true;
-                    } else if (messageQueue[0].source) {
-                        j = ai.getVoiceOfSpacecraft(messageQueue[0].source);
-                        if ((j >= 0) && _missionPilotVoiceSounds[j][messageQueue[0].id]) {
-                            _missionPilotVoiceSounds[j][messageQueue[0].id].play(resources.SoundCategory.VOICE, undefined, undefined, undefined, true);
+                    if (_playMissionRadioMessages) {
+                        if (_missionVoiceSounds[messageQueue[0].id]) {
+                            _missionVoiceSounds[messageQueue[0].id].play(resources.SoundCategory.VOICE, undefined, undefined, undefined, true);
                             _playingMissionVoiceSound = true;
                             messageQueue[0].silent = true;
+                        } else if (messageQueue[0].source) {
+                            j = ai.getVoiceOfSpacecraft(messageQueue[0].source);
+                            if ((j >= 0) && _missionPilotVoiceSounds[j][messageQueue[0].id]) {
+                                _missionPilotVoiceSounds[j][messageQueue[0].id].play(resources.SoundCategory.VOICE, undefined, undefined, undefined, true);
+                                _playingMissionVoiceSound = true;
+                                messageQueue[0].silent = true;
+                            }
                         }
                     }
                     // playing the generic short message sound
@@ -3930,6 +3958,7 @@ define([
                     }
                     messageQueue[0].new = false;
                 }
+                skip = false;
                 // setting text
                 if (MESSAGE_QUEUES[i] === RADIO_QUEUE) {
                     // for the radio queue, multiple messages are displayed together
@@ -3944,7 +3973,12 @@ define([
                                 j--;
                             }
                         }
-                        _messageText.setText(text);
+                        if (_showGenericRadioMessages) {
+                            _messageText.setText(text);
+                        } else {
+                            _messageText.setText("");
+                            skip = true;
+                        }
                         _radioQueueChanged = false;
                     }
                 } else {
@@ -3975,9 +4009,8 @@ define([
                 }
                 _messageText.setColor(color);
                 // transmission source
-                _messageSource = messageQueue[0].source;
+                _messageSource = (messageQueue[0].timeLeft > 0) ? messageQueue[0].source : null;
                 // managing timing
-                skip = false;
                 if (!messageQueue[0].permanent) {
                     if ((messageQueue[0] === _newHostilesMessage)) {
                         messageQueue[0].timeLeft = _newHostilesAlertTimeLeft;

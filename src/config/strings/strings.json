@@ -761,7 +761,9 @@
         "many": "many",
         "easy": "easy",
         "hard": "hard",
-        "custom": "custom"
+        "custom": "custom",
+        "missionOnly": "non-dynamic only",
+        "all": "all"
     },
     "generalSettings": {
         "backButton": "Back to menu",
@@ -807,6 +809,7 @@
         "title": "Gameplay settings",
         "hudTitle": "HUD",
         "cameraTitle": "Camera",
+        "radioTitle": "Radio messages",
         "controlsTitle": "Controls",
         "otherTitle": "Other",
         "targetHealthAtCenter": "Target integrity bar always at center:",
@@ -818,6 +821,8 @@
         "preferredShipView": "Preferred ship view:",
         "demoViewSwitching": "Automatic view switching in demo mode:",
         "defaultSalvoMode": "Missile salvo mode by default:",
+        "showGenericRadioMessages": "Show the text of dynamic radio messages by AI pilots:",
+        "playRadioMessages": "Play the voice-over for radio messages:",
         "showReadyMessage": "Show ready message at the start of missions:"
     },
     "controller": {

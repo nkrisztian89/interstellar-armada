@@ -786,6 +786,28 @@ define([
             defaultValue: 60
         },
         /**
+         * Whether to show the text of generic radio messages transmitted by AI pilots in the messages
+         * panel.
+         */
+        SHOW_GENERIC_RADIO_MESSAGES: {
+            name: "showGenericRadioMessages",
+            type: "boolean"
+        },
+        /**
+         * Whether to play the sound samples for the generic radio messages transmitted by AI pilots.
+         */
+        PLAY_GENERIC_RADIO_MESSAGES: {
+            name: "playGenericRadioMessages",
+            type: "boolean"
+        },
+        /**
+         * Whether to play the sound samples for the radio messages defined in the mission file.
+         */
+        PLAY_MISSION_RADIO_MESSAGES: {
+            name: "playMissionRadioMessages",
+            type: "boolean"
+        },
+        /**
          * Whether to show the popup infobox with the ready message at the start of battles
          */
         SHOW_READY_MESSAGE: {

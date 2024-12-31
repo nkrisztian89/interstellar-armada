@@ -163,6 +163,9 @@
         "battle": {
             "battleRenderFPS": 60,
             "simulationStepsPerSecond": 60,
+            "showGenericRadioMessages": true,
+            "playGenericRadioMessages": true,
+            "playMissionRadioMessages": true,
             "showReadyMessage": true,
             "particlePoolPrefillFactor": 0.2,
             "projectilePoolPrefillFactor": 0.75,
