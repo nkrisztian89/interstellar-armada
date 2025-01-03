@@ -2023,6 +2023,24 @@
             "name": "wingman1_mission_destroyCorvette_hostileFightersArrived",
             "samples": ["voice/wingman1/mission/destroyCorvette/hostileFightersArrived_11.ai.ogg"]
         }, {
+            "name": "wingman1_mission_defendCorvette_bomberWave1",
+            "samples": ["voice/wingman1/mission/defendCorvette/bomberWave1_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_defendCorvette_bomberWave2",
+            "samples": ["voice/wingman1/mission/defendCorvette/bomberWave2_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_defendFrigate_fighterWave1",
+            "samples": ["voice/wingman1/mission/defendFrigate/fighterWave1_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_defendFrigate_bomberWave1",
+            "samples": ["voice/wingman1/mission/defendFrigate/bomberWave1_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_defendFrigate_bomberWave2",
+            "samples": ["voice/wingman1/mission/defendFrigate/bomberWave2_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_defendFrigate_allWavesClear",
+            "samples": ["voice/wingman1/mission/defendFrigate/allWavesClear_11.ai.ogg"]
+        }, {
             "name": "wingman1_mission_siege_start",
             "samples": ["voice/wingman1/mission/siege/start_11.ai.ogg"]
         }, {
@@ -2109,6 +2127,24 @@
         }, {
             "name": "wingman2_mission_destroyCorvette_hostileFightersArrived",
             "samples": ["voice/wingman2/mission/destroyCorvette/hostileFightersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_defendCorvette_bomberWave1",
+            "samples": ["voice/wingman2/mission/defendCorvette/bomberWave1_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_defendCorvette_bomberWave2",
+            "samples": ["voice/wingman2/mission/defendCorvette/bomberWave2_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_defendFrigate_fighterWave1",
+            "samples": ["voice/wingman2/mission/defendFrigate/fighterWave1_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_defendFrigate_bomberWave1",
+            "samples": ["voice/wingman2/mission/defendFrigate/bomberWave1_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_defendFrigate_bomberWave2",
+            "samples": ["voice/wingman2/mission/defendFrigate/bomberWave2_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_defendFrigate_allWavesClear",
+            "samples": ["voice/wingman2/mission/defendFrigate/allWavesClear_11.ai.ogg"]
         }, {
             "name": "wingman2_mission_siege_start",
             "samples": ["voice/wingman2/mission/siege/start_11.ai.ogg"]
@@ -2197,6 +2233,24 @@
             "name": "wingman3_mission_destroyCorvette_hostileFightersArrived",
             "samples": ["voice/wingman3/mission/destroyCorvette/hostileFightersArrived_11.ai.ogg"]
         }, {
+            "name": "wingman3_mission_defendCorvette_bomberWave1",
+            "samples": ["voice/wingman3/mission/defendCorvette/bomberWave1_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_defendCorvette_bomberWave2",
+            "samples": ["voice/wingman3/mission/defendCorvette/bomberWave2_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_defendFrigate_fighterWave1",
+            "samples": ["voice/wingman3/mission/defendFrigate/fighterWave1_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_defendFrigate_bomberWave1",
+            "samples": ["voice/wingman3/mission/defendFrigate/bomberWave1_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_defendFrigate_bomberWave2",
+            "samples": ["voice/wingman3/mission/defendFrigate/bomberWave2_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_defendFrigate_allWavesClear",
+            "samples": ["voice/wingman3/mission/defendFrigate/allWavesClear_11.ai.ogg"]
+        }, {
             "name": "wingman3_mission_siege_start",
             "samples": ["voice/wingman3/mission/siege/start_11.ai.ogg"]
         }, {
@@ -2283,6 +2337,24 @@
         }, {
             "name": "wingman4_mission_destroyCorvette_hostileFightersArrived",
             "samples": ["voice/wingman4/mission/destroyCorvette/hostileFightersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_defendCorvette_bomberWave1",
+            "samples": ["voice/wingman4/mission/defendCorvette/bomberWave1_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_defendCorvette_bomberWave2",
+            "samples": ["voice/wingman4/mission/defendCorvette/bomberWave2_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_defendFrigate_fighterWave1",
+            "samples": ["voice/wingman4/mission/defendFrigate/fighterWave1_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_defendFrigate_bomberWave1",
+            "samples": ["voice/wingman4/mission/defendFrigate/bomberWave1_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_defendFrigate_bomberWave2",
+            "samples": ["voice/wingman4/mission/defendFrigate/bomberWave2_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_defendFrigate_allWavesClear",
+            "samples": ["voice/wingman4/mission/defendFrigate/allWavesClear_11.ai.ogg"]
         }, {
             "name": "wingman4_mission_siege_start",
             "samples": ["voice/wingman4/mission/siege/start_11.ai.ogg"]

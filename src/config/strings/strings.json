@@ -462,7 +462,7 @@
             "name": "Defend the frigate",
             "messages": {
                 "fighterWave1": "Enemy fighters incoming! Alpha, take them out! We're proceeding towards the enemy corvette.",
-                "bomberWave1": "Hostile bombers jumped in! Cover me, Alpha squad!",
+                "bomberWave1": "Hostile bombers jumped in! Cover us, Alpha squad!",
                 "bomberWave2": "Another wave of bombers! Alpha, you know what to do!",
                 "allWavesClear": "Good job, Alpha squad! I'm taking care of it from here. Stand clear and watch the show!"
             }

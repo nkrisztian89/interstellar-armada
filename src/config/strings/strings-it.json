@@ -462,7 +462,7 @@
             "name": "Difendere la fregata",
             "messages": {
                 "fighterWave1": "Combattenti nemici in arrivo! Alpha, abbattili! Stiamo procedendo verso la corvette nemica.",
-                "bomberWave1": "Sono intervenuti i bombardieri ostili! Copritemi, squadra Alpha!",
+                "bomberWave1": "Sono intervenuti i bombardieri ostili! Copriteci, squadra Alpha!",
                 "bomberWave2": "Un'altra ondata di bombardieri! Alpha, sai cosa fare!",
                 "allWavesClear": "Ottimo lavoro, squadra Alpha! Me ne sto occupando da qui. State lontani e guardate lo spettacolo!"
             }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2025 Krisztián Nagy
  * @file This module manages and provides the Battle screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -3940,12 +3940,14 @@ define([
                     // playing the voice-over for this message if it exists
                     if (_playMissionRadioMessages) {
                         if (_missionVoiceSounds[messageQueue[0].id]) {
+                            audio.stopLastClips();
                             _missionVoiceSounds[messageQueue[0].id].play(resources.SoundCategory.VOICE, undefined, undefined, undefined, true);
                             _playingMissionVoiceSound = true;
                             messageQueue[0].silent = true;
                         } else if (messageQueue[0].source) {
                             j = ai.getVoiceOfSpacecraft(messageQueue[0].source);
                             if ((j >= 0) && _missionPilotVoiceSounds[j][messageQueue[0].id]) {
+                                audio.stopLastClips();
                                 _missionPilotVoiceSounds[j][messageQueue[0].id].play(resources.SoundCategory.VOICE, undefined, undefined, undefined, true);
                                 _playingMissionVoiceSound = true;
                                 messageQueue[0].silent = true;

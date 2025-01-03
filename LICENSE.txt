@@ -1,5 +1,5 @@
 Interstellar Armada: Galactic Ace license information
-Copyright (C) 2014-2024 Krisztián Nagy
+Copyright (C) 2014-2025 Krisztián Nagy
 
 All files paths given here are relative to the root folder of the game.
 
@@ -18,15 +18,15 @@ The logo of the game features the Audiowide font, the information about which ca
 The text of the Open Font License (the license of the above two fonts) is included at license/OFL.txt for convenience.
 Some minor modifications to the Aldrich font were made by Krisztián Nagy, detailed in assets/fonts/FONTLOG.txt file.
 
-The images, 3D models, textures and music files were all created by Krisztián Nagy (Copyright (C) 2014-2023) and are released under the 
+The images, 3D models, textures and music files were all created by Krisztián Nagy (Copyright (C) 2014-2024) and are released under the 
 CC BY 4.0 license found at license/CC-BY-4.0.txt or at https://creativecommons.org/licenses/by/4.0. 
 
-The sound effects were also created by Krisztián Nagy (Copyright (C) 2016-2023) and are released under the CC BY 4.0 and in some cases
+The sound effects were also created by Krisztián Nagy (Copyright (C) 2016-2024) and are released under the CC BY 4.0 and in some cases
 the CC BY-NC 4.0 licenses, but sound samples from 3rd parties were used in the process. The detailed license and attribution information
 about these can be found at license/sfx-license.txt.
 
 The voice-overs (all files in the assets/sfx/voice folder) were generated using ElevenLabs (https://elevenlabs.io/), some under the free
-and some under a paid license by Krisztián Nagy and subsequently edited using Audacity (2023-2024). You may not use these files for any
+and some under a paid license by Krisztián Nagy and subsequently edited using Audacity (2023-2025). You may not use these files for any
 commercial purpose and must retain the attribution to ElevenLabs (in the form of having 11.ai in the filename and an accompanying license
 note referencing ElevenLabs and their terms of service, such as this one) if you are to republish them (such as by forking the repository)
 as well as comply with the terms of service and Prohibited Use Policy of ElevenLabs (https://elevenlabs.io/terms-of-use-eu), as if you have had
