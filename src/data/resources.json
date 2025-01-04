@@ -2041,6 +2041,36 @@
             "name": "wingman1_mission_defendFrigate_allWavesClear",
             "samples": ["voice/wingman1/mission/defendFrigate/allWavesClear_11.ai.ogg"]
         }, {
+            "name": "wingman1_mission_battle_hostileFrigatesArrived",
+            "samples": ["voice/wingman1/mission/battle/hostileFrigatesArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_battle_betaArrived",
+            "samples": ["voice/wingman1/mission/battle/betaArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_battle_hostileBombersArrived",
+            "samples": ["voice/wingman1/mission/battle/hostileBombersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_battle_danubeDestroyed",
+            "samples": ["voice/wingman1/mission/battle/danubeDestroyed_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_heavy_firstCorvetteArrived",
+            "samples": ["voice/wingman1/mission/heavy/firstCorvetteArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_heavy_bombersArrived",
+            "samples": ["voice/wingman1/mission/heavy/bombersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_holdingOut_start",
+            "samples": ["voice/wingman1/mission/holdingOut/start_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_holdingOut_almostDone",
+            "samples": ["voice/wingman1/mission/holdingOut/almostDone_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_holdingOut_overkill1",
+            "samples": ["voice/wingman1/mission/holdingOut/overkill1_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_holdingOut_overkill2",
+            "samples": ["voice/wingman1/mission/holdingOut/overkill2_11.ai.ogg"]
+        }, {
             "name": "wingman1_mission_siege_start",
             "samples": ["voice/wingman1/mission/siege/start_11.ai.ogg"]
         }, {
@@ -2145,6 +2175,36 @@
         }, {
             "name": "wingman2_mission_defendFrigate_allWavesClear",
             "samples": ["voice/wingman2/mission/defendFrigate/allWavesClear_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_battle_hostileFrigatesArrived",
+            "samples": ["voice/wingman2/mission/battle/hostileFrigatesArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_battle_betaArrived",
+            "samples": ["voice/wingman2/mission/battle/betaArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_battle_hostileBombersArrived",
+            "samples": ["voice/wingman2/mission/battle/hostileBombersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_battle_danubeDestroyed",
+            "samples": ["voice/wingman2/mission/battle/danubeDestroyed_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_heavy_firstCorvetteArrived",
+            "samples": ["voice/wingman2/mission/heavy/firstCorvetteArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_heavy_bombersArrived",
+            "samples": ["voice/wingman2/mission/heavy/bombersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_holdingOut_start",
+            "samples": ["voice/wingman2/mission/holdingOut/start_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_holdingOut_almostDone",
+            "samples": ["voice/wingman2/mission/holdingOut/almostDone_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_holdingOut_overkill1",
+            "samples": ["voice/wingman2/mission/holdingOut/overkill1_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_holdingOut_overkill2",
+            "samples": ["voice/wingman2/mission/holdingOut/overkill2_11.ai.ogg"]
         }, {
             "name": "wingman2_mission_siege_start",
             "samples": ["voice/wingman2/mission/siege/start_11.ai.ogg"]
@@ -2251,6 +2311,36 @@
             "name": "wingman3_mission_defendFrigate_allWavesClear",
             "samples": ["voice/wingman3/mission/defendFrigate/allWavesClear_11.ai.ogg"]
         }, {
+            "name": "wingman3_mission_battle_hostileFrigatesArrived",
+            "samples": ["voice/wingman3/mission/battle/hostileFrigatesArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_battle_betaArrived",
+            "samples": ["voice/wingman3/mission/battle/betaArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_battle_hostileBombersArrived",
+            "samples": ["voice/wingman3/mission/battle/hostileBombersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_battle_danubeDestroyed",
+            "samples": ["voice/wingman3/mission/battle/danubeDestroyed_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_heavy_firstCorvetteArrived",
+            "samples": ["voice/wingman3/mission/heavy/firstCorvetteArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_heavy_bombersArrived",
+            "samples": ["voice/wingman3/mission/heavy/bombersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_holdingOut_start",
+            "samples": ["voice/wingman3/mission/holdingOut/start_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_holdingOut_almostDone",
+            "samples": ["voice/wingman3/mission/holdingOut/almostDone_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_holdingOut_overkill1",
+            "samples": ["voice/wingman3/mission/holdingOut/overkill1_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_holdingOut_overkill2",
+            "samples": ["voice/wingman3/mission/holdingOut/overkill2_11.ai.ogg"]
+        }, {
             "name": "wingman3_mission_siege_start",
             "samples": ["voice/wingman3/mission/siege/start_11.ai.ogg"]
         }, {
@@ -2356,6 +2446,36 @@
             "name": "wingman4_mission_defendFrigate_allWavesClear",
             "samples": ["voice/wingman4/mission/defendFrigate/allWavesClear_11.ai.ogg"]
         }, {
+            "name": "wingman4_mission_battle_hostileFrigatesArrived",
+            "samples": ["voice/wingman4/mission/battle/hostileFrigatesArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_battle_betaArrived",
+            "samples": ["voice/wingman4/mission/battle/betaArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_battle_hostileBombersArrived",
+            "samples": ["voice/wingman4/mission/battle/hostileBombersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_battle_danubeDestroyed",
+            "samples": ["voice/wingman4/mission/battle/danubeDestroyed_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_heavy_firstCorvetteArrived",
+            "samples": ["voice/wingman4/mission/heavy/firstCorvetteArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_heavy_bombersArrived",
+            "samples": ["voice/wingman4/mission/heavy/bombersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_holdingOut_start",
+            "samples": ["voice/wingman4/mission/holdingOut/start_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_holdingOut_almostDone",
+            "samples": ["voice/wingman4/mission/holdingOut/almostDone_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_holdingOut_overkill1",
+            "samples": ["voice/wingman4/mission/holdingOut/overkill1_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_holdingOut_overkill2",
+            "samples": ["voice/wingman4/mission/holdingOut/overkill2_11.ai.ogg"]
+        }, {
             "name": "wingman4_mission_siege_start",
             "samples": ["voice/wingman4/mission/siege/start_11.ai.ogg"]
         }, {
@@ -2385,6 +2505,33 @@
         }, {
             "name": "wingman4_mission_siege_epsilon",
             "samples": ["voice/wingman4/mission/siege/epsilon_11.ai.ogg"]
+        }, {
+            "name": "mission_defendFrigates_caution",
+            "samples": ["voice/mission/defendFrigates/caution_11.ai.ogg"]
+        }, {
+            "name": "mission_hideAndSeek_start1",
+            "samples": ["voice/mission/hideAndSeek/start1_11.ai.ogg"]
+        }, {
+            "name": "mission_hideAndSeek_start2",
+            "samples": ["voice/mission/hideAndSeek/start2_11.ai.ogg"]
+        }, {
+            "name": "mission_hideAndSeek_patrol",
+            "samples": ["voice/mission/hideAndSeek/patrol_11.ai.ogg"]
+        }, {
+            "name": "mission_hideAndSeek_relayDetected",
+            "samples": ["voice/mission/hideAndSeek/relayDetected_11.ai.ogg"]
+        }, {
+            "name": "mission_hideAndSeek_hackingEnd",
+            "samples": ["voice/mission/hideAndSeek/hackingEnd_11.ai.ogg"]
+        }, {
+            "name": "mission_hideAndSeek_almostWin",
+            "samples": ["voice/mission/hideAndSeek/almostWin_11.ai.ogg"]
+        }, {
+            "name": "mission_hideAndSeek_win",
+            "samples": ["voice/mission/hideAndSeek/win_11.ai.ogg"]
+        }, {
+            "name": "mission_holdingOut_threat",
+            "samples": ["voice/mission/holdingOut/threat_11.ai.ogg"]
         }, {
             "name": "mission_siege_elbaDown",
             "samples": ["voice/mission/siege/elbaDown_11.ai.ogg"]

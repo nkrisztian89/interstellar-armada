@@ -472,7 +472,7 @@
             "messages": {
                 "hostileFrigatesArrived": "They've got heavy firepower! Send in the bombers!",
                 "betaArrived": "Beta squad have arrived, engaging frigates! Cover us, Alpha squad!",
-                "hostileBombersArrived": "We're under attack from enemy bombers!",
+                "hostileBombersArrived": "We're under attack by enemy bombers!",
                 "danubeDestroyed": "We've lost the Danube! Alpha squad, we need cover from those bombers!"
             }
         },
@@ -502,7 +502,7 @@
                 "hacking75": "Hacking: 75%...",
                 "hackingEnd": "Hacking successful! Protect the relay until we can locate the pirate base!",
                 "almostWin": "Almost located the base, just 30 more seconds!",
-                "win": "We've got the base coordinates! Well done!"
+                "win": "We've got the base's coordinates! Well done!"
             }
         },
         "holdingOut": {
