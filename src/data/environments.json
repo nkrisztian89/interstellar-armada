@@ -144,10 +144,10 @@
                 }, {
                     "class": "smallRedStar",
                     "position": {
-                        "angleAlpha": 180,
-                        "angleBeta": 15
+                        "angleAlpha": 190,
+                        "angleBeta": 3
                     },
-                    "size": 110
+                    "size": 130
                 }, {
                     "class": "brownPlanet",
                     "position": {
@@ -155,7 +155,7 @@
                         "angleBeta": 0,
                         "angleGamma": 81
                     },
-                    "size": 500
+                    "size": 800
                 }],
             "dustClouds": [{
                     "class": "standard"
@@ -227,9 +227,9 @@
                     "position": {
                         "angleAlpha": 90,
                         "angleBeta": 6,
-                        "angleGamma": 21
+                        "angleGamma": 15
                     },
-                    "size": 600
+                    "size": 1000
                 }],
             "dustClouds": [{
                     "class": "standard"

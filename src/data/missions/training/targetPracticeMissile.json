@@ -1,7 +1,7 @@
 {
     "description": "Practice using different types of missiles for different purposes.",
     "nextMission": "destroyFrigate.json",
-    "environment": "blovell",
+    "environment": "mera",
     "anticipationTheme": "anticipation",
     "combatTheme": "combat",
     "tips": [

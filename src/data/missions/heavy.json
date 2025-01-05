@@ -1,7 +1,7 @@
 {
     "description": "[p]We're tracking two damaged rebel corvettes which escaped the battle. According to our sensors, they are planning to regroup with several squads of heavily armed pirates. We have located their rendezvous point and are sending our own fighters to intercept. We have a pair of Rhinos that have just been fitted for battle, sitting down in the hangar. You will be leading them as [s]Gamma 1[], and your objective is to support [s]Alpha[] squad in taking out the pirates. When the area is clear of fighters, we will send in our bombers, [s]Beta[] squad, to deal with the corvettes before they make their next jump. You will assist them in destroying the ships. You may return to base when there are no more hostiles, either pirate or rebel, present in the area.[p]The heavy fighter you will use for this mission can take many more shots than what you are used to, allowing you to stay on target longer. But beware! If you are caught in a crossfire, it will be much more difficult to escape, and the Rhino is not indestructible.",
     "nextMission": "hideAndSeek.json",
-    "environment": "sheenuba",
+    "environment": "caevas",
     "anticipationTheme": "anticipation2",
     "combatTheme": "combat2",
     "tips": [
