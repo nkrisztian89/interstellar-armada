@@ -107,7 +107,7 @@
                     "params": {
                         "command": "target",
                         "target": {
-                            "single": "Don",
+                            "single": "Ottawa",
                             "priority": true
                         }
                     }
@@ -238,7 +238,7 @@
                     }, {
                         "type": "count",
                         "subjects": {
-                            "spacecrafts": ["Don"]
+                            "spacecrafts": ["Ottawa"]
                         },
                         "params": {
                             "relation": "above",
@@ -290,7 +290,7 @@
             "class": "taurus",
             "name": "Danube",
             "ai": "ship",
-            "initialTarget": "Don",
+            "initialTarget": "Ottawa",
             "position": [0, 50, 0],
             "loadout": "imperial-tier1",
             "excludeFromReferenceScore": true
@@ -342,7 +342,7 @@
         }, {
             "team": "rebels",
             "class": "aries",
-            "name": "Don",
+            "name": "Ottawa",
             "ai": "ship",
             "position": [-15000, 0, -150],
             "rotations": ["z+90"],

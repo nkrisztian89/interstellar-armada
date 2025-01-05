@@ -43,7 +43,7 @@
                     "params": {
                         "command": "target",
                         "target": {
-                            "list": ["Volga", "Thames"],
+                            "list": ["Seine", "Thames"],
                             "priority": true
                         }
                     }
@@ -57,7 +57,7 @@
                         "command": "jump",
                         "jump": {
                             "way": "in",
-                            "anchor": "Volga",
+                            "anchor": "Seine",
                             "relative": "true",
                             "position": [0, -450, 150]
                         }
@@ -213,7 +213,7 @@
                     "params": {
                         "command": "target",
                         "target": {
-                            "list": ["Tigris", "Ganges", "Volga", "Thames"],
+                            "list": ["Tigris", "Ganges", "Seine", "Thames"],
                             "priority": true
                         }
                     }
@@ -251,7 +251,7 @@
                     "params": {
                         "command": "target",
                         "target": {
-                            "list": ["Tigris", "Ganges", "Thames", "Volga"]
+                            "list": ["Tigris", "Ganges", "Thames", "Seine"]
                         }
                     }
                 }, {
@@ -519,7 +519,7 @@
         }, {
             "team": "rebels",
             "class": "aries",
-            "name": "Volga",
+            "name": "Seine",
             "ai": "ship",
             "position": [0, 4150, 0],
             "rotations": ["z+180"],

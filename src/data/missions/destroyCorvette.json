@@ -43,7 +43,7 @@
                     }, {
                         "type": "destroyed",
                         "subjects": {
-                            "spacecrafts": ["Dnieper"]
+                            "spacecrafts": ["Arno"]
                         }
                     }]
             },
@@ -99,7 +99,7 @@
                         "command": "jump",
                         "jump": {
                             "way": "in",
-                            "anchor": "Dnieper",
+                            "anchor": "Arno",
                             "relative": "true",
                             "distance": 6000,
                             "formation": {
@@ -119,7 +119,7 @@
                     "type": "command",
                     "delay": 1500,
                     "subjects": {
-                        "spacecrafts": ["Dnieper"]
+                        "spacecrafts": ["Arno"]
                     },
                     "params": {
                         "command": "target",
@@ -137,7 +137,7 @@
                         "command": "jump",
                         "jump": {
                             "way": "in",
-                            "anchor": "Dnieper",
+                            "anchor": "Arno",
                             "relative": "true",
                             "position": [0, -50, 50],
                             "formation": {
@@ -184,7 +184,7 @@
                 "conditions": [{
                         "type": "destroyed",
                         "subjects": {
-                            "spacecrafts": ["Dnieper"]
+                            "spacecrafts": ["Arno"]
                         }
                     }],
                 "delay": 500
@@ -248,7 +248,7 @@
         }, {
             "team": "rebels",
             "class": "aries",
-            "name": "Dnieper",
+            "name": "Arno",
             "ai": "ship",
             "position": [-135, 3835, -200],
             "rotations": ["z+90"],

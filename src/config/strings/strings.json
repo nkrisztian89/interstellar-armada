@@ -423,7 +423,7 @@
             "name": "The rebel corvette",
             "messages": {
                 "start": "Engaging enemy fighters! Watch out for incoming turret fire!",
-                "deltaArrived": "The cavalry has arrived! We're engaging the Dnieper!",
+                "deltaArrived": "The cavalry has arrived! We're engaging the Arno!",
                 "hostileFightersArrived": "A new group of hostile fighters! Alpha squad, cover us!"
             }
         },
@@ -440,9 +440,9 @@
         "destroyFrigate": {
             "name": "Bomber run",
             "messages": {
-                "hostileFightersArrived": "We're dealing with those escorts! Delta squad, you can proceed to the Dniester!",
-                "dniesterGettingClose": "The Dniester is getting close! Delta squad, you need to engage it quickly! Fly in cruise mode to get there faster.",
-                "dniesterDestroyed": "Great job! Now let's clean up the remaining escorts!"
+                "hostileFightersArrived": "We're dealing with those escorts! Delta squad, you can proceed to the Rhine!",
+                "rhineGettingClose": "The Rhine is getting close! Delta squad, you need to engage it quickly! Fly in cruise mode to get there faster.",
+                "rhineDestroyed": "Great job! Now let's clean up the remaining escorts!"
             }
         },
         "defendCorvette": {

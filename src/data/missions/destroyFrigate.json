@@ -53,7 +53,7 @@
                         "command": "jump",
                         "jump": {
                             "way": "in",
-                            "anchor": "Dniester",
+                            "anchor": "Rhine",
                             "relative": true,
                             "position": [0, -100, -100],
                             "formation": {
@@ -65,7 +65,7 @@
                 }, {
                     "type": "command",
                     "subjects": {
-                        "spacecrafts": ["Dniester"]
+                        "spacecrafts": ["Rhine"]
                     },
                     "params": {
                         "command": "target",
@@ -82,7 +82,7 @@
                     "params": {
                         "command": "target",
                         "target": {
-                            "single": "Dniester"
+                            "single": "Rhine"
                         }
                     }
                 }, {
@@ -108,7 +108,7 @@
                     "type": "message",
                     "delay": 13000,
                     "params": {
-                        "textID": "dniesterGettingClose",
+                        "textID": "rhineGettingClose",
                         "source": "Amazonas"
                     }
                 }]
@@ -117,7 +117,7 @@
                 "conditions": [{
                         "type": "destroyed",
                         "subjects": {
-                            "spacecrafts": ["Dniester"]
+                            "spacecrafts": ["Rhine"]
                         }
                     }, {
                         "type": "count",
@@ -134,7 +134,7 @@
                     "type": "message",
                     "delay": 1000,
                     "params": {
-                        "textID": "dniesterDestroyed",
+                        "textID": "rhineDestroyed",
                         "source": "Amazonas"
                     }
                 }]
@@ -196,7 +196,7 @@
         }, {
             "team": "rebels",
             "class": "taurus",
-            "name": "Dniester",
+            "name": "Rhine",
             "ai": "ship",
             "position": [-135, 5500, -200],
             "rotations": ["z+90"],

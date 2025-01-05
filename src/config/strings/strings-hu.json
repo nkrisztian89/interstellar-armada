@@ -476,7 +476,7 @@
             "description": "Érzékelőink egy sérült felszerelésű Aries korvettet észleltek két vadászkötelék társaságában. Lázadó társaik felé tartanak, ezért el kell őket fogni és megsemmisíteni, mielőtt egyesíthetnék erőiket. Az [s]Alfa[] vadász csapat feladata, hogy megtisztítsa az utat a bombázóink ([s]Delta[]) előtt a jelenlévő ellenséges vadászok semlegesítésével, majd védje a bombázókat, amíg azok célba veszik az ellenséges korvettet. A korvett fegyverei sérültek ugyan, de vadászgépekre még veszélyt jelentenek, ezért legyen óvatos, és maradjon folyamatosan mozgásban!",
             "messages": {
                 "start": "Célba vettük az ellenséges vadászokat! Figyeljetek a korvett lövegére!",
-                "deltaArrived": "Megérkezett a lovasság! Megtámadjuk Dniepert!",
+                "deltaArrived": "Megérkezett a lovasság! Megtámadjuk az Arnót!",
                 "hostileFightersArrived": "Újabb ellenséges vadászok! Alfa csapat, fedezzetek!"
             }
         },
@@ -495,9 +495,9 @@
             "name": "Bombázó bevetés",
             "description": "Egy fregattkapitányunk átállt a lázadók oldalára, és most hajójával az egyik őrjáratunkat fenyegeti a Varanock rendszerben. Egy csapat Vipera bombázót ([s]Delta[]) küldünk a semlegesítésére. Őn fogja vezetni a csapatot. Fogja el és semmisítse meg a hajót, mielőtt elérné az őrjáratunkat, utána pedig segítsen az esetlegesen megmaradó kisérő vadászgépek eltakarításában.",
             "messages": {
-                "hostileFightersArrived": "A kísérettel elbánunk mi! Delta csapat, haladjatok tovább a Dniester felé!",
-                "dniesterGettingClose": "A Dniester egyre közelebb ér! Delta csapat, lőjétek ki gyorsan! Váltsatok cirkáló módra, hogy hamarabb elérjétek!",
-                "dniesterDestroyed": "Szép munka! A kíséretből még maradt, szedjük le őket!"
+                "hostileFightersArrived": "A kísérettel elbánunk mi! Delta csapat, haladjatok tovább a Rhine felé!",
+                "rhineGettingClose": "A Rhine egyre közelebb ér! Delta csapat, lőjétek ki gyorsan! Váltsatok cirkáló módra, hogy hamarabb elérjétek!",
+                "rhineDestroyed": "Szép munka! A kíséretből még maradt, szedjük le őket!"
             }
         },
         "defendCorvette": {

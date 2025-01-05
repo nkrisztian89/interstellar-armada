@@ -423,7 +423,7 @@
             "name": "La corvette ribelle",
             "messages": {
                 "start": "Affrontiamo i combattenti nemici! Fai attenzione al fuoco delle torrette in arrivo!",
-                "deltaArrived": "La cavalleria è arrivata! Stiamo affrontando la Dnieper!",
+                "deltaArrived": "La cavalleria è arrivata! Stiamo affrontando l'Arno!",
                 "hostileFightersArrived": "Un nuovo gruppo di combattenti ostili! Squadra Alfa, copriteci!"
             }
         },
@@ -440,9 +440,9 @@
         "destroyFrigate": {
             "name": "Corsa del bombardiere",
             "messages": {
-                "hostileFightersArrived": "Ci stiamo occupando di quelle scorte! Squadra Delta, potete procedere verso la Dniester!",
-                "dniesterGettingClose": "La Dniester si sta avvicinando! Squadra Delta, dovete affrontarla in fretta! Volate in modalità crociera per raggiungerla più velocemente.",
-                "dniesterDestroyed": "Ottimo lavoro! Ora liberiamoci delle scorte rimaste!"
+                "hostileFightersArrived": "Ci stiamo occupando di quelle scorte! Squadra Delta, potete procedere verso il Rhine!",
+                "rhineGettingClose": "Il Rhine si sta avvicinando! Squadra Delta, dovete affrontarla in fretta! Volate in modalità crociera per raggiungerla più velocemente.",
+                "rhineDestroyed": "Ottimo lavoro! Ora liberiamoci delle scorte rimaste!"
             }
         },
         "defendCorvette": {

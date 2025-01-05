@@ -49,7 +49,7 @@
                     "params": {
                         "command": "target",
                         "target": {
-                            "list": ["Tigris", "Ganges", "Volga"],
+                            "list": ["Tigris", "Ganges", "Seine"],
                             "priority": true
                         }
                     }
@@ -236,7 +236,7 @@
         {
             "team": "rebels",
             "class": "aries",
-            "name": "Volga",
+            "name": "Seine",
             "ai": "ship",
             "position": [0, 4950, 0],
             "rotations": ["z+180"],
