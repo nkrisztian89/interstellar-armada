@@ -2023,6 +2023,15 @@
             "name": "wingman1_mission_destroyCorvette_hostileFightersArrived",
             "samples": ["voice/wingman1/mission/destroyCorvette/hostileFightersArrived_11.ai.ogg"]
         }, {
+            "name": "wingman1_mission_destroyFrigate_hostileFightersArrived",
+            "samples": ["voice/wingman1/mission/destroyFrigate/hostileFightersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_destroyFrigate_rhineGettingClose",
+            "samples": ["voice/wingman1/mission/destroyFrigate/rhineGettingClose_11.ai.ogg"]
+        }, {
+            "name": "wingman1_mission_destroyFrigate_rhineDestroyed",
+            "samples": ["voice/wingman1/mission/destroyFrigate/rhineDestroyed_11.ai.ogg"]
+        }, {
             "name": "wingman1_mission_defendCorvette_bomberWave1",
             "samples": ["voice/wingman1/mission/defendCorvette/bomberWave1_11.ai.ogg"]
         }, {
@@ -2157,6 +2166,15 @@
         }, {
             "name": "wingman2_mission_destroyCorvette_hostileFightersArrived",
             "samples": ["voice/wingman2/mission/destroyCorvette/hostileFightersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_destroyFrigate_hostileFightersArrived",
+            "samples": ["voice/wingman2/mission/destroyFrigate/hostileFightersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_destroyFrigate_rhineGettingClose",
+            "samples": ["voice/wingman2/mission/destroyFrigate/rhineGettingClose_11.ai.ogg"]
+        }, {
+            "name": "wingman2_mission_destroyFrigate_rhineDestroyed",
+            "samples": ["voice/wingman2/mission/destroyFrigate/rhineDestroyed_11.ai.ogg"]
         }, {
             "name": "wingman2_mission_defendCorvette_bomberWave1",
             "samples": ["voice/wingman2/mission/defendCorvette/bomberWave1_11.ai.ogg"]
@@ -2293,6 +2311,15 @@
             "name": "wingman3_mission_destroyCorvette_hostileFightersArrived",
             "samples": ["voice/wingman3/mission/destroyCorvette/hostileFightersArrived_11.ai.ogg"]
         }, {
+            "name": "wingman3_mission_destroyFrigate_hostileFightersArrived",
+            "samples": ["voice/wingman3/mission/destroyFrigate/hostileFightersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_destroyFrigate_rhineGettingClose",
+            "samples": ["voice/wingman3/mission/destroyFrigate/rhineGettingClose_11.ai.ogg"]
+        }, {
+            "name": "wingman3_mission_destroyFrigate_rhineDestroyed",
+            "samples": ["voice/wingman3/mission/destroyFrigate/rhineDestroyed_11.ai.ogg"]
+        }, {
             "name": "wingman3_mission_defendCorvette_bomberWave1",
             "samples": ["voice/wingman3/mission/defendCorvette/bomberWave1_11.ai.ogg"]
         }, {
@@ -2427,6 +2454,15 @@
         }, {
             "name": "wingman4_mission_destroyCorvette_hostileFightersArrived",
             "samples": ["voice/wingman4/mission/destroyCorvette/hostileFightersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_destroyFrigate_hostileFightersArrived",
+            "samples": ["voice/wingman4/mission/destroyFrigate/hostileFightersArrived_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_destroyFrigate_rhineGettingClose",
+            "samples": ["voice/wingman4/mission/destroyFrigate/rhineGettingClose_11.ai.ogg"]
+        }, {
+            "name": "wingman4_mission_destroyFrigate_rhineDestroyed",
+            "samples": ["voice/wingman4/mission/destroyFrigate/rhineDestroyed_11.ai.ogg"]
         }, {
             "name": "wingman4_mission_defendCorvette_bomberWave1",
             "samples": ["voice/wingman4/mission/defendCorvette/bomberWave1_11.ai.ogg"]
