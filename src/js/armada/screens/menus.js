@@ -377,7 +377,9 @@ define([
                                         }, {
                                             caption: strings.get(strings.INGAME_MENU.QUIT_TO_MISSIONS),
                                             action: function () {
+                                                var missionName = battle.getMissionName();
                                                 game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
+                                                game.getScreen().selectMission(missionName);
                                             }
                                         }, {
                                             caption: strings.get(strings.INGAME_MENU.QUIT_TO_MAIN_MENU),

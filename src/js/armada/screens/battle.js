@@ -1491,6 +1491,12 @@ define([
     // ------------------------------------------------------------------------------
     // public functions
     /**
+     * @returns {String}
+     */
+    function getMissionName() {
+        return _mission ? _mission.getName() : null;
+    }
+    /**
      * Stops the time in the battle simulation.
      */
     function stopTime() {
@@ -5592,6 +5598,7 @@ define([
         }
         return _battleScreen;
     };
+    _battle.getMissionName = getMissionName;
     _battle.stopTime = stopTime;
     _battle.resumeTime = resumeTime;
     _battle.toggleTime = toggleTime;
