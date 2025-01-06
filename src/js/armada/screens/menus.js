@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2022 Krisztián Nagy
+ * Copyright 2016-2025 Krisztián Nagy
  * @file Provides the menu screens of the Interstellar Armada game which are simply instances of MenuScreen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -143,7 +143,8 @@ define([
                                 armadaScreens.openDialog({
                                     header: strings.get(strings.FIRST_RUN_NOTE.HEADER),
                                     message: utils.formatString(strings.get(strings.FIRST_RUN_NOTE.MESSAGE), {
-                                        facebook: '<a target="_blank" rel="noopener" href="https://www.facebook.com/interstellar.armada">facebook</a>'
+                                        facebook: '<a target="_blank" rel="noopener" href="https://www.facebook.com/interstellar.armada">facebook</a>',
+                                        patreon: '<a target="_blank" rel="noopener" href="https://www.patreon.com/c/Entian">Patreon</a>'
                                     }) + (application.usesElectron() ? "" : utils.formatString(strings.get(strings.FIRST_RUN_NOTE.MESSAGE_WEB), {
                                         chrome: '<a target="_blank" rel="noopener" href="https://www.google.com/chrome/">Google Chrome</a>'
                                     })),

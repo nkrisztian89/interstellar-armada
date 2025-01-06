@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2024 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2025 Krisztián Nagy
  * @file This module manages and provides the About screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -92,6 +92,7 @@ define([
         this._aboutGameDevParagraph.customizeContent({
             facebook: _link("https://www.facebook.com/interstellar.armada", "facebook"),
             github: _link("https://github.com/nkrisztian89/interstellar-armada", "github"),
+            patreon: _link("https://www.patreon.com/c/Entian", "Patreon"),
             email: _link("mailto:armada.galactic.ace@gmail.com", "email")
         });
         this._aboutUsedSoftwareParagraph.customizeContent({

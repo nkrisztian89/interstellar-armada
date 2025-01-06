@@ -27,6 +27,10 @@ Creating Flatpak builds is a little more complicated, because the build system I
 ## Windows and Max OS
 If you are using these operating systems (or Android, iOS or anything else), just run the web version I linked as the first option, preferably from Chromium or Chrome. Currently I have no plans to add pre-packaged builds for these systems.
 
+# Donation
+
+If you would like to support the development, you can join my [Patreon](https://www.patreon.com/c/Entian) page, where I plan to regularly release exclusive behind-the scenes content for members.
+
 # Performance
 
 If you experience performance issues, adjust the level of graphics detail from the menu.
@@ -122,4 +126,4 @@ With game related questions, suggestions and feedback please contact me at
 
 Krisztián Nagy
 
-02.09.2023.
+06.01.2025.
