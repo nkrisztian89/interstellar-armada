@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2017-2018, 2020-2025 Krisztián Nagy
  * @file This is a simple analytics module that sends requests to an analytics backend
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -164,12 +164,15 @@ define([
      * The request is only executed once (nothing happens on subsequent calls)
      */
     function login() {
-        var newUser = !(_id && _userID);
+        var newUser = !(_id && _userID), platform = application.getPlatform();
         if (_loginSent) {
             return;
         }
         _loginSent = true;
-        _queueRequest("start" + (newUser ? "" : ("/" + _id + "/" + _userID)) + "?version=" + application.getVersion().split(" ")[0] + "&platform=" + application.getPlatform(), 1000, false, function (request) {
+        _queueRequest("start" + (newUser ? "" : ("/" + _id + "/" + _userID)) +
+                "?version=" + application.getVersion().split(" ")[0] +
+                "&platform=" + platform +
+                ((platform === "web") ? "&hostname=" + location.hostname : ""), 1000, false, function (request) {
             var data = JSON.parse(request.responseText);
             if (data.error) {
                 application.log_DEBUG("Creation of new user failed with error: " + data.error, 1);
