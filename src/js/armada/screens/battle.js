@@ -1465,6 +1465,7 @@ define([
         audio.playMusic(null);
         audio.stopLastClips();
         // HUD
+        _spacecraft = null;
         _hullIntegrityDecreaseTime = 0;
         _shieldDecreaseTime = 0;
         _targetHullIntegrityDecreaseTime = 0;
