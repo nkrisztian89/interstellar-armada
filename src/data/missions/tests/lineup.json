@@ -1,6 +1,6 @@
 {
     "description": "A test mission to showcase the full lineup of fighter classes in the game.",
-    "environment": "reddim",
+    "environment": "blovell",
     "teams": [
         "empire",
         "pirates"

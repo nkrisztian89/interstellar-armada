@@ -1,7 +1,6 @@
 {
     "description": "Practice simulation against a single enemy fighter with typical rebel equipment.",
-    "nextMission": "destroyCorvette.json",
-    "environment": "reddim",
+    "environment": "blovell",
     "anticipationTheme": "anticipation",
     "combatTheme": "combat",
     "tips": [

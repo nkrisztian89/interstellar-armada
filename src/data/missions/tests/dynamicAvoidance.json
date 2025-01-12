@@ -1,7 +1,7 @@
 {
     "title": "Dynamic avoidance test",
     "description": "A small test about how fighters avoid dynamic obstacles blocking their path towards their target.",
-    "environment": "reddim",
+    "environment": "blovell",
     "teams": [
         "empire",
         {

@@ -237,7 +237,7 @@
             "position": [-100, -10, 10],
             "formation": {
                 "type": "wedge",
-                "spacing": [35, -40, 10]
+                "spacing": [35, -40, 30]
             },
             "loadouts": ["player-tier2", "imperial-tier1"]
         }, {

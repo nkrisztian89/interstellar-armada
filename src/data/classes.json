@@ -171,6 +171,12 @@
                     "texture": "paleBlueNebula"
                 }]
         }, {
+            "name": "skyBlueNebula",
+            "layers": [{
+                    "shader": "backgroundNebula",
+                    "texture": "skyBlueNebula"
+                }]
+        }, {
             "name": "paleCyanNebula",
             "layers": [{
                     "shader": "backgroundNebula",

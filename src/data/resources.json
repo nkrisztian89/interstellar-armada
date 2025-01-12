@@ -143,6 +143,21 @@
                 "high": "_1024"
             }
         }, {
+            "name": "skyBlueNebula",
+            "basepath": "nebulae/skyBlueNebula",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "",
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "medium": "",
+                "high": "_1024"
+            }
+        }, {
             "name": "paleCyanNebula",
             "basepath": "nebulae/paleCyanNebula",
             "format": "png",

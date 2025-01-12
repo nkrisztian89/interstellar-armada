@@ -167,6 +167,13 @@
             "piloted": true,
             "name": "Ohio",
             "position": [0, 0, 0],
+            "rotations": [{
+                "axis": "Y",
+                "degrees": 70
+            }, {
+                "axis": "X",
+                "degrees": 30
+            }],
             "loadout": "imperial-tier1"
         }, {
             "team": "empire",
@@ -175,6 +182,13 @@
             "count": 2,
             "ai": "fighter",
             "position": [-135, -35, 100],
+            "rotations": [{
+                "axis": "Y",
+                "degrees": 70
+            }, {
+                "axis": "X",
+                "degrees": 30
+            }],
             "formation": {
                 "type": "wedge",
                 "spacing": [35, -35, 0]

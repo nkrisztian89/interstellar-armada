@@ -48,38 +48,6 @@
                 }],
             "ambientColor": [0.1, 0.1, 0.1]
         }, {
-            "name": "reddim",
-            "location": "Reddim",
-            "skyboxes": [{
-                    "class": "stars_sparse"
-                }],
-            "backgroundObjects": [{
-                    "class": "standardSun",
-                    "position": {
-                        "angleAlpha": 90,
-                        "angleBeta": 80
-                    },
-                    "size": 300
-                }, {
-                    "class": "redStar",
-                    "position": {
-                        "angleAlpha": 180,
-                        "angleBeta": -40
-                    },
-                    "size": 220
-                }, {
-                    "class": "paleRedNebula",
-                    "size": 1150,
-                    "position": {
-                        "angleAlpha": 0,
-                        "angleBeta": 0,
-                        "angleGamma": 0
-                    }
-                }],
-            "dustClouds": [{
-                    "class": "standard"
-                }]
-        }, {
             "name": "blovell",
             "location": "Blovell",
             "skyboxes": [{
@@ -99,6 +67,14 @@
                         "angleBeta": 0.5
                     },
                     "size": 220
+                }, {
+                    "class": "paleRedNebula",
+                    "size": 1150,
+                    "position": {
+                        "angleAlpha": 105,
+                        "angleBeta": 0,
+                        "angleGamma": 90
+                    }
                 }],
             "dustClouds": [{
                     "class": "standard"
@@ -181,6 +157,14 @@
                         "angleBeta": -20
                     },
                     "size": 250
+                }, {
+                    "class": "skyBlueNebula",
+                    "size": 1600,
+                    "position": {
+                        "angleAlpha": 90,
+                        "angleBeta": -21,
+                        "angleGamma": 180
+                    }
                 }, {
                     "class": "bluePlanet",
                     "position": {

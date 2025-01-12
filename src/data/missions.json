@@ -13,8 +13,6 @@
         }, {
             "source": "headhunt.json"
         }, {
-            "source": "1v1.json"
-        }, {
             "source": "destroyCorvette.json"
         }, {
             "source": "training/targetPracticeMissile.json"
@@ -71,6 +69,9 @@
             "test": true
         }, {
             "source": "tests/lineup.json",
+            "test": true
+        }, {
+            "source": "tests/1v1.json",
             "test": true
         }, {
             "source": "tests/3v3.json",
