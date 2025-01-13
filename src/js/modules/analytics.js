@@ -172,7 +172,7 @@ define([
         _queueRequest("start" + (newUser ? "" : ("/" + _id + "/" + _userID)) +
                 "?version=" + application.getVersion().split(" ")[0] +
                 "&platform=" + platform +
-                ((platform === "web") ? "&hostname=" + location.hostname : ""), 1000, false, function (request) {
+                ((platform === "web") ? "&hostname=" + encodeURIComponent(location.hostname) + "&referrer=" + encodeURIComponent(document.referrer) : ""), 1000, false, function (request) {
             var data = JSON.parse(request.responseText);
             if (data.error) {
                 application.log_DEBUG("Creation of new user failed with error: " + data.error, 1);
