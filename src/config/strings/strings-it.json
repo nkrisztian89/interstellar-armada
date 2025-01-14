@@ -515,6 +515,26 @@
                 "overkill2": "Devono darci una promozione dopo questo!"
             }
         },
+        "siege": {
+            "name": "Il assedio",
+            "messages": {
+                "start": "Tutto sembra chiaro, solo 4 combattenti che pattugliano la stazione. In attesa dell'Elba.",
+                "elba": "Bene, gente, chi vuole guardare un po' di fuochi d'artificio? Ci avviciniamo alla stazione!",
+                "bombers": "Cosa?! Bombardieri in arrivo! Ingaggiare! Ingaggiare!",
+                "elbaDown": "Abbiamo perso l'Elba! Ci serve un nuovo piano! Alpha, distruggi tutti i caccia e i bombardieri nemici!",
+                "fightersApproach": "I combattenti pirata iniziarono ad avvicinarsi!",
+                "bombersDown": "Tutti i bombardieri sono eliminati!",
+                "moreFighters": "Altri combattenti in arrivo!",
+                "tooClose": "Ti stai avvicinando troppo! Allontanati dalla stazione!",
+                "fightersDown1": "Ottimo lavoro, Alpha! Tutti i caccia e i bombardieri sono distrutti. Abbiamo trovato un nuovo modo di affrontare la stazione.",
+                "fightersDown2": "Abbiamo inviato uno stormo di bombardieri, ma sono a corto di siluri. Dovrai prenderti cura delle sentinelle per dare loro una linea di attacco chiara alla stazione.",
+                "fightersDown3": "Dopo che tutte le sentinelle saranno state distrutte, li manderemo dentro.",
+                "engagingSentries": "Riconosciuto! Stiamo attaccando le sentinelle!",
+                "dontFlyStraight": "Attento a non volare in linea retta!",
+                "sentriesDown": "Tutte le sentinelle abbattuti, allontanatevi dalla stazione!",
+                "epsilon": "Squadra Epsilon a rapporto! Stiamo attaccando la stazione!"
+            }
+        },
         "test": {
             "name": "Test Sandbox",
             "messages": {
