@@ -1,2 +1,2 @@
 #include "mesh/variables/model-tex-frag.glsl"
-varying mediump vec3 v_normal;
+varying highp vec3 v_normal;
