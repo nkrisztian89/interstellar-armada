@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2022 Krisztián Nagy
+ * Copyright 2021-2025 Krisztián Nagy
  * @file This module manages and provides the Multiplayer Lobby screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -557,13 +557,14 @@ define([
             td = document.createElement("td");
             td.textContent = player.name;
             tr.appendChild(td);
-            tr.innerHTML += '<td><div ' + ((player.me && _canChangePlayerColor()) ? 'id="' + colorSelectorId + '"' : '') + ' class="colorIndicator' + ((player.me && !player.ready && _canChangePlayerColor()) ? ' colorSelector' : '') + '" style="background-color: ' + _getPlayerColor(player) + '"></div></td>' +
+            tr.innerHTML += '<td><div ' + ((player.me && _canChangePlayerColor()) ? 'id="' + colorSelectorId + '"' : '') + ' class="colorIndicator' + ((player.me && !player.ready && _canChangePlayerColor()) ? ' colorSelector' : '') + '"></div></td>' +
                     '<td>' + ((player.me && !player.ready) ? '<button id="' + spacecraftSelectorId + '" class="' + SPACECRAFT_SELECTOR_BUTTON_CLASS + '">' : '') + classes.getSpacecraftClass(player.settings.spacecraft).getDisplayName() + ((player.me && !player.ready) ? '</button>' : '') + '</td>' +
                     '<td>' + (player.me ? "" : strings.get(player.peer ? strings.MULTI_LOBBY.CONNECTION_DIRECT : strings.MULTI_LOBBY.CONNECTION_SERVER)) + '</td>' +
                     '<td>' + (player.me ? "" : (player.ping ? Math.round(player.ping) + " ms" : "?")) + '</td>' +
                     '<td>' + (strings.get(((index === 0) || player.ready) ? strings.MULTI_LOBBY.READY_YES : strings.MULTI_LOBBY.READY_NO)) + '</td>' +
                     (networking.isHost() ? '<td>' + (!player.me ? '<button id="' + getKickButtonId(index) + '" class="' + KICK_BUTTON_CLASS + '">' + strings.get(strings.MULTI_LOBBY.KICK_BUTTON) + '</button>' : "") + '</td>' : "") +
                     '</tr>';
+            tr.querySelector(".colorIndicator").style.backgroundColor = _getPlayerColor(player);
             this._playersList.getElement().appendChild(tr);
         }.bind(this));
         if (_canChangePlayerColor()) {
