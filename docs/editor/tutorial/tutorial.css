@@ -10,7 +10,8 @@
 }
 
 html, body {
-    background-color: #aaaaaa;
+    background-color: #444444;
+    color: #eee;
     padding: 0;
     margin: 0;
     border: 0;
@@ -20,29 +21,35 @@ html, body {
 div.main-content {
     margin: 0  auto;
     padding: 2em;
-    background-color: #F5F5F5;
+    background-color: #3d3d3d;
     width: 75em;
     max-width: 90%;
-    box-shadow: #444444 0 0 10em;
+    box-shadow: black 0 0 1em;
     min-height: 100vh;
     box-sizing: border-box;
-    color: #222;
+    color: #eee;
 }
 
-h1,h2,h3 {
-    border-bottom: 1px solid #ccc;
+h1 {
+    border-bottom: 3px solid #555;
+}
+
+h2,h3 {
+    border-bottom: 2px solid #555;
 }
 
 p:not(.hint):not(.note) strong {
-    background-color: #fd2;
+    background-color: #1b498f;
+    border-radius: 3px;
 }
 
 span.ref {
     background-color: #ddd;
-    border-radius: 2px;
+    border-radius: 3px;
     padding-left: 0.3em;
     padding-right: 0.3em;
     border: 1px solid #bbb;
+    color: #222;
 }
 
 strong>span.ref {
@@ -54,22 +61,22 @@ p {
 }
 
 p.hint {
-    background-color: #bfb;
-    color: #050;
+    background-color: #236323;
+    color: #84ff84;
     border: 1px solid #0a0;
     padding: 0.5em;
     border-radius: 4px;
 }
 
 p.note {
-    background-color: #fcb;
-    color: #640;
+    background-color: #8b4229;
+    color: #ffd073;
     border: 1px solid #a60;
     padding: 0.5em;
     border-radius: 4px;
 }
 
-a {
+a, a:visited, a:active {
+    color: #44aaff;
     font-weight: bold;
-    color: #35A7FF;
 }

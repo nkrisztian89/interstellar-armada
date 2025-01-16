@@ -21,7 +21,7 @@
                 <li>make the player the part of a squad</li>
                 <li>add individual ships to squads</li>
             </ul>
-            <p>This tutorial is made for the Interstellar Armada Editor version 0.5.4. We assume you have completed the <a href="01-getting-started.html">first tutorial chapter</a> and we will continue to edit the mission created there.</p>
+            <p>This tutorial is made for the Interstellar Armada Editor version 0.5.5. We assume you have completed the <a href="01-getting-started.html">first tutorial chapter</a> and we will continue to edit the mission created there.</p>
             <ol>
                 <li><h3>Importing the mission</h3>
                     <p>If you do not have the mission open anymore as you restarted the editor since you created it, first you need to import it to continue editing.</p>
@@ -54,7 +54,7 @@
                     <p>Just like for the enemies, <strong>set its <span class="ref">count</span> to 3.</strong></p>
                     <p class="hint">Notice that as you have set the count, the enemies turned to green, as the player's spacecraft lost the "piloted" setting, since only a single ship can be set to be piloted, a group cannot!</p>
                     <p>To fix this, <strong>set the newly appeared <span class="ref">pilotedIndex</span> property</strong>, which will tell which ship in the squad is piloted by the player. <strong>Set it to 1</strong>, giving the first spacecraft in this entry to the player.</p>
-                    <p>Just like for the enemies, <strong>set the <span class="ref">squad</span> property</strong>. Choose <em>"alpha"</em> this time, or come up with your own squad name and type it in, just <strong>make sure it does not have any spaces in it.</strong></p>
+                    <p>Just like for the enemies, <strong>set the <span class="ref">squad</span> property</strong>. Choose <em>"alpha"</em> this time, or come up with your own squad name and type it in. Keep it short to make sure that it fits nicely on the HUD.</p>
                     <p>Just like for the enemies, <strong>set the <span class="ref">formation</span> property</strong> to a <em>"wedge"</em> formation of 50,0,10 <span class="ref">spacing</span>, or to a formation of your choice!</p>
                     <p>Lastly, we will need to set an AI for the player squad, since we want the wingmen of the player to be active. Don't worry, the fighter that is piloted by the player will not be taken over by the AI in this case. <strong>Set <span class="ref">ai</span> to <em>"fighter"</em></strong>.</p>
                 </li>
@@ -63,7 +63,7 @@
                     <p>Let's add a fourth fighter to the enemy squad that is in a further away position.</p>
                     <p><strong>Add a new spacecraft, set its <span class="ref">team</span> to the enemy, its <span class="ref">class</span> to <em>"wolf"</em>, <span class="ref">ai</span> to <em>"fighter"</em>, its <span class="ref">position</span> to 0,200,0 and <span class="ref">rotations</span> to Z+180 degrees!</strong></p>
                     <p>Now this new enemy spacecraft is in a position that doesn't fit the formation of the raider squad, but you can still make it a part of it.</p>
-                    <p><strong>Unset the <span class="ref">name</span> property</strong> (click the <strong><span class="ref">x</span></strong> button), then <strong>set the <span class="ref">squad</span> property to <em>"raider 4"</em></strong>. This will automatically make the fighter join the rest of the raider squad as the fourth spacecraft.</p>
+                    <p><strong>Set the <span class="ref">squad</span> property to <em>"raider 4"</em></strong>. This will automatically make the fighter join the rest of the raider squad as the fourth spacecraft.</p>
                 </li>
                 <li><h3>Exporting the mission</h3>
                     <p>This concludes the second tutorial! At this point, you have a more interesting mission with multiple enemies and wingmen.</p>
