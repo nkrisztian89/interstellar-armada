@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2024 Krisztián Nagy
+ * Copyright 2020-2025 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for missions within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -160,6 +160,11 @@ define([
              * @type Number
              */
             TOOLTIP_OFFSET_Y = 10,
+            /**
+             * A star character that marks the player ship
+             * @type String
+             */
+            PLAYER_SHIP_STAR = "★",
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -431,7 +436,7 @@ define([
             spacecrafts = _mission.getSpacecrafts();
             pilotedCraft = _mission.getPilotedSpacecraft();
             if (pilotedCraft) {
-                result += ", Player ship: " + (pilotedCraft.getDisplayName() || ("unnamed " + pilotedCraft.getClass().getDisplayName()));
+                result += ", " + PLAYER_SHIP_STAR + " Player ship: " + (pilotedCraft.getDisplayName() || ("unnamed " + pilotedCraft.getClass().getDisplayName()));
             }
             for (i = 0; i < spacecrafts.length; i++) {
                 if (pilotedCraft && spacecrafts[i].isHostile(pilotedCraft)) {
@@ -486,6 +491,7 @@ define([
         if (hitIndex !== _tooltipSpacecraftIndex) {
             if (hitIndex >= 0) {
                 _tooltip.textContent = spacecrafts[hitIndex].getDisplayName() || spacecrafts[hitIndex].getClass().getDisplayName();
+                _tooltip.textContent += (spacecrafts[hitIndex] === _mission.getPilotedSpacecraft()) ? " " + PLAYER_SHIP_STAR : "";
                 _tooltip.hidden = false;
             } else {
                 _tooltip.hidden = true;
