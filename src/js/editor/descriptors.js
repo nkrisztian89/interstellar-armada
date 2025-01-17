@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2019-2024 Krisztián Nagy
+ * Copyright 2016-2017, 2019-2025 Krisztián Nagy
  * @file Provides the descriptor objects that outline the structure of properties for the various resource / class categories of 
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -781,7 +781,7 @@ define([
                 },
                 FILES: {
                     name: "files",
-                    type: _createTypedArrayType(MODEL_FILE_DESCRIPTOR)
+                    type: _createTypedArrayType(MODEL_FILE_DESCRIPTOR, {min: 1})
                 }
             },
             /**
@@ -3247,6 +3247,15 @@ define([
                     return [];
                 }
             },
+            _missionHasSpacecrafts = function (data, parent, itemName, topParent) {
+                return !!topParent.spacecrafts && (topParent.spacecrafts.length > 0);
+            },
+            _missionHasSquads = function (data, parent, itemName, topParent) {
+                return !!topParent.spacecrafts && topParent.spacecrafts.some(function (sc) { return !!sc.squad; });
+            },
+            _missionHasTeams = function (data, parent, itemName, topParent) {
+                return !!topParent.teams && (topParent.teams.length > 0);
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -3284,18 +3293,21 @@ define([
                 properties: {
                     SPACECRAFTS: {
                         name: "spacecrafts",
-                        type: _createTypedArrayType(SPACECRAFT_REFERENCE, undefined, undefined, 2),
-                        optional: true
+                        type: _createTypedArrayType(SPACECRAFT_REFERENCE, {min: 1}, undefined, 2),
+                        optional: true,
+                        isValid: _missionHasSpacecrafts
                     },
                     SQUADS: {
                         name: "squads",
-                        type: _createTypedArrayType(SQUAD_REFERENCE, undefined, undefined, 3),
-                        optional: true
+                        type: _createTypedArrayType(SQUAD_REFERENCE, {min: 1}, undefined, 3),
+                        optional: true,
+                        isValid: _missionHasSquads
                     },
                     TEAMS: {
                         name: "teams",
-                        type: _createTypedArrayType(TEAM_REFERENCE, undefined, undefined, 3),
-                        optional: true
+                        type: _createTypedArrayType(TEAM_REFERENCE, {min: 1}, undefined, 3),
+                        optional: true,
+                        isValid: _missionHasTeams
                     }
                 }
             },
@@ -3401,7 +3413,6 @@ define([
                         if (instance.minIntegrity !== undefined) {
                             result += instance.minIntegrity + "% < ";
                         }
-                        result += (parent && (parent.type === ConditionType.SHIELD_INTEGRITY)) ? "shield of " : "hull of ";
                         if (parent && parent.subjects) {
                             result += SUBJECT_GROUP.getPreviewText(parent.subjects, parent);
                         } else {
@@ -3411,6 +3422,7 @@ define([
                                 result += "all subjects";
                             }
                         }
+                        result += (parent && (parent.type === ConditionType.SHIELD_INTEGRITY)) ? " shields" : " hull";
                         if (instance.maxIntegrity !== undefined) {
                             result += " < " + instance.maxIntegrity + "%";
                         }
@@ -3473,6 +3485,7 @@ define([
                     WHICH: {
                         name: "which",
                         type: CONDITION_SUBJECTS_WHICH,
+                        description: "Whether the condition has to apply to all of the subjects or just to any one of them to be considered fulfilled.",
                         isRequired: _hasWhichParam,
                         isValid: _hasWhichParam
                     },
@@ -3640,10 +3653,17 @@ define([
                 switch (data.type) {
                     case ConditionType.DESTROYED:
                         return "all";
+                    case ConditionType.HIT:
+                        return "by any";
+                    case ConditionType.COLLISION:
+                        return "with any";
+                    case ConditionType.GETS_TARGETED:
+                    case ConditionType.IS_TARGETED:
+                        return "by any";
                     case ConditionType.AWAY:
                         return "all away";
                     default:
-                        return "none";
+                        return undefined;
                 }
             },
             /**
@@ -4012,17 +4032,20 @@ define([
                     SINGLE: {
                         name: "single",
                         type: SPACECRAFT_REFERENCE,
-                        optional: true
+                        optional: true,
+                        isValid: _missionHasSpacecrafts
                     },
                     LIST: {
                         name: "list",
-                        type: _createTypedArrayType(SPACECRAFT_REFERENCE),
-                        optional: true
+                        type: _createTypedArrayType(SPACECRAFT_REFERENCE, {min: 1}),
+                        optional: true,
+                        isValid: _missionHasSpacecrafts
                     },
                     SQUADS: {
                         name: "squads",
-                        type: _createTypedArrayType(SQUAD_REFERENCE),
-                        optional: true
+                        type: _createTypedArrayType(SQUAD_REFERENCE, {min: 1}),
+                        optional: true,
+                        isValid: _missionHasSquads
                     },
                     NONE: {
                         name: "none",
@@ -4721,7 +4744,6 @@ define([
                         type: _createTypedArrayType(AI_VOICE, {min: 1}, function (data) {
                             return (data.length <= 2) ? data.join(", ") : data[0] + " + " + (data.length - 1) + " more";
                         }),
-                        optional: true,
                         isValid: _aiCanHaveVoices,
                         getDerivedDefault: _getDefaultVoice,
                         updateOnValidate: true
@@ -4730,7 +4752,6 @@ define([
                         name: "voice",
                         description: "Which voice to use when playing radio messages transmitted by this AI.",
                         type: AI_VOICE,
-                        optional: true,
                         isValid: _aiCanHaveVoice,
                         getDerivedDefault: _getDefaultVoice,
                         updateOnValidate: true
@@ -4746,7 +4767,6 @@ define([
                         name: "evasionDelayFactor",
                         description: "The AI starts evasive maneuvers a certain time after being hit / seeing an incoming shot, influenced by this factor and the set difficulty. The higher this factor, the slower the AI will react to hits.",
                         type: NON_NEGATIVE_SCALE,
-                        optional: true,
                         getDerivedDefault: function (data) {
                             return _getDefaultForAiParam(data, "evasionDelayFactor", 1);
                         },
@@ -4757,7 +4777,6 @@ define([
                         name: "fireDelayFactor",
                         description: "The AI starts firing a certain time after aiming at its target, influenced by this factor and the set difficulty. The higher this factor, the longer it will take for the AI to start to fire.",
                         type: NON_NEGATIVE_SCALE,
-                        optional: true,
                         getDerivedDefault: function (data) {
                             return _getDefaultForAiParam(data, "fireDelayFactor", 1);
                         },
@@ -4768,7 +4787,6 @@ define([
                         name: "aimUpdateInterval",
                         description: "The AI periodically updates the point it is aiming at (trying to estimate the target's upcoming position, with an error). This is the time between two updates. The higher this number, the slower the AI will react to changes in its target's movement.",
                         type: POSITIVE_MILLISECONDS,
-                        optional: true,
                         getDerivedDefault: function (data) {
                             return _getDefaultForAiParam(data, "aimUpdateInterval", ai.DEFAULT_AIM_UPDATE_INTERVAL);
                         },
@@ -4779,7 +4797,6 @@ define([
                         name: "maxAimError",
                         description: "When calculating the point the AI should aim at, a random error is added. This is the maximum amount that error can be. The higher this number, the less accurate the AI will be.",
                         type: NON_NEGATIVE_DEGREES_180,
-                        optional: true,
                         getDerivedDefault: function (data) {
                             return _getDefaultForAiParam(data, "maxAimError", ai.DEFAULT_MAX_AIM_ERROR);
                         },
@@ -4790,7 +4807,6 @@ define([
                         name: "aimErrorResetDistance",
                         description: "While the AI's target doesn't change its course, the aim error is reduced at each aim update. This value determines how much the target's course needs to change for the aim error to be reset to the maximum. The higher this number, the better the AI will track its target's movement.",
                         type: POSITIVE_DISTANCE,
-                        optional: true,
                         getDerivedDefault: function (data) {
                             return _getDefaultForAiParam(data, "aimErrorResetDistance", ai.DEFAULT_AIM_ERROR_RESET_DISTANCE);
                         },
@@ -5015,7 +5031,7 @@ define([
                     },
                     POSITIONS: {
                         name: "positions",
-                        type: _createTypedArrayType(BaseType.VECTOR3),
+                        type: _createTypedArrayType(BaseType.VECTOR3, {min: 1}),
                         optional: true,
                         isValid: _craftCanHavePositions
                     },
