@@ -92,7 +92,7 @@ The project contains the necessary files for the Electron setup, so after this i
 When run this way, the game has some small differences such as a Quit button in the menu to close the application and the
 lack of a fullscreen button (as it will run in fullscreen by default).
 
-The last release of Electron tested with the game: 17.1.2
+The last release of Electron tested with the game: 34.0.0
 
 Snap packaging
 --------------
@@ -126,4 +126,4 @@ With game related questions, suggestions and feedback please contact me at
 
 Krisztián Nagy
 
-06.01.2025.
+18.01.2025.
