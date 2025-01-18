@@ -89,8 +89,7 @@ download a [release](https://github.com/electron/electron/releases) of Electron 
 your computer, make a build of the game (see above), and then copy the project files over to the
 appropriate folder of Electron (the `app` folder, which you will have to create within the `resources` folder).
 The project contains the necessary files for the Electron setup, so after this it can simply be run by starting the Electron executable.
-When run this way, the game has some small differences such as a Quit button in the menu to close the application and the
-lack of a fullscreen button (as it will run in fullscreen by default).
+When run this way, the game has some small differences such as a Quit button in the menu to close the application.
 
 The last release of Electron tested with the game: 34.0.0
 
@@ -118,8 +117,7 @@ License and copyright
 
 Please see the LICENSE.txt file or the About page within the game for the details of licensing.
 In short, most of the source code of the game is released under the [GNU GPLv3](http://www.gnu.org/licenses/gpl-3.0-standalone.html) license
-and most of the assets are released under the [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license, but for exceptions,
-details and attributions please do check LICENSE.txt.
+and most of the assets are released under the [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license, notably except the voice-over files generated using [ElevenLabs.io](https://elevenlabs.io). For other exceptions, details and attributions please do check LICENSE.txt.
 
 With game related questions, suggestions and feedback please contact me at
 <armada.galactic.ace@gmail.com>.
