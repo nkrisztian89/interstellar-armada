@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2025 Krisztián Nagy
  * @file Augments the template provided by the game module to define the basic structure and initialization process of the Interstellar
  * Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -21,6 +21,7 @@
  * @param control Used to load the control configuration and setings of the game and access main functionality
  * @param strings Used to load the game translation strings
  * @param networking Used to initialize multiplayer backend config
+ * @param announcements Used to initialize announcements backend config
  * @param armadaScreens Used for screen constants
  * @param menus Used to create menu screens
  * @param missionsScreen Used to create the mission chooser screen
@@ -53,6 +54,7 @@ define([
     "armada/control",
     "armada/strings",
     "armada/networking",
+    "armada/announcements",
     "armada/screens/shared",
     "armada/screens/menus",
     "armada/screens/missions",
@@ -71,7 +73,7 @@ define([
     "armada/screens/dialog"
 ], function (
         game, components, analytics, lights,
-        constants, graphics, audio, config, environments, missions, missionHub, control, strings, networking,
+        constants, graphics, audio, config, environments, missions, missionHub, control, strings, networking, announcements,
         armadaScreens, menus, missionsScreen, multiGames, multiLobby, battle, debriefing, multiScore, database, generalSettings, graphicsScreen, audioScreen, gameplaySettingsScreen, controlsScreen, aboutScreen, dialogScreen) {
     "use strict";
     // -------------------------------------------------------------------------
@@ -126,6 +128,7 @@ define([
         }
         networking.init(configJSON.multiUrl);
         missionHub.init(configJSON.missionHubUrl);
+        announcements.init(configJSON.announcementsUrl);
         game.showError = function (message, severity, details) {
             analytics.sendEvent("error", undefined, {message: (message.length > 120) ? message.substr(0, 120) + "..." : message});
             showError(message, severity, details);

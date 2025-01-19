@@ -60,6 +60,9 @@ define([
                 SCREEN_CONTAINER_CLASS_NAME: "fullScreenContainer",
                 // welcome message
                 RELEASE_NOTES_CLASS_NAME: "releaseNotes",
+                // announcements
+                ANNOUNCEMENTS_CLASS_NAME: "announcements",
+                ANNOUNCEMENT_CLASS_NAME: "announcement",
                 // screens
                 MAIN_MENU_SCREEN_NAME: "mainMenu",
                 MAIN_MENU_SCREEN_SOURCE: "menu.html",

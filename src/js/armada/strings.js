@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2024 Krisztián Nagy
+ * Copyright 2016-2025 Krisztián Nagy
  * @file Augments the general strings module with constants and functions to conveniently access strings in the game and to verify their 
  * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -37,6 +37,10 @@ define([
         OK_BUTTON: {name: "firstMultiRunNote.okButton"},
         DO_NOT_SHOW_AGAIN_BUTTON: {name: "firstMultiRunNote.doNotShowAgainButton"},
         CANCEL_BUTTON: {name: "firstMultiRunNote.cancelButton"}
+    };
+    strings.ANNOUNCEMENTS = {
+        HEADER: {name: "announcements.header"},
+        BUTTON: {name: "announcements.button"}
     };
     strings.SCREEN = {
         BACK: {name: "screen.back"},

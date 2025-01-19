@@ -16,6 +16,7 @@
  * @param strings Used for translation support.
  * @param audio Used for volume control
  * @param networking Used to check whether we are in a multi game
+ * @param announcements Used to check for new announcements
  * @param battle Used for starting / resuming the battle.
  */
 define([
@@ -29,8 +30,9 @@ define([
     "armada/strings",
     "armada/audio",
     "armada/networking",
+    "armada/announcements",
     "armada/screens/battle"
-], function (utils, application, screens, game, analytics, constants, armadaScreens, strings, audio, networking, battle) {
+], function (utils, application, screens, game, analytics, constants, armadaScreens, strings, audio, networking, announcements, battle) {
     "use strict";
     var
             // --------------------------------------------------------------------------------------------
@@ -41,6 +43,7 @@ define([
             // Private variables
             _releaseNotesShown = false,
             _firstMultiRunNoteShown = false,
+            _announcements,
             _mainMenuOptions = [{
                     id: strings.MAIN_MENU.SINGLE_PLAYER.name,
                     action: function () {
@@ -109,6 +112,31 @@ define([
                         game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
                     }
                 }];
+    /**
+     * Shows the new announcements retrieved from the announcement server to the player,
+     * unless we already have a dialog open or are in a mission.
+     */
+    function showAnnouncements() {
+        if (_announcements && (_announcements.length > 0) &&
+        (game.getScreen() !== game.getScreen(armadaScreens.BATTLE_SCREEN_NAME)) &&
+        (game.getScreen() !== game.getScreen(armadaScreens.DIALOG_SCREEN_NAME))) {
+            armadaScreens.openDialog({
+                header: strings.get(strings.ANNOUNCEMENTS.HEADER),
+                message: _announcements.map(function (announcement) {
+                    return '<div class="' + armadaScreens.ANNOUNCEMENT_CLASS_NAME + '">' + announcement.text + '</div>';
+                }).join(""),
+                messageClass: armadaScreens.ANNOUNCEMENTS_CLASS_NAME,
+                buttons: [{
+                        caption: strings.get(strings.ANNOUNCEMENTS.BUTTON),
+                        action: function () {
+                            announcements.markAnnouncementsAsRead();
+                            game.closeSuperimposedScreen();
+                        }
+                    }]
+            });
+            _announcements = null;
+        }
+    }
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -137,6 +165,14 @@ define([
                             var message, newReleases, i;
                             audio.resetMasterVolume();
                             audio.resetMusicVolume();
+                            if (_announcements !== null) {
+                                announcements.retrieveAnnouncements(function () {
+                                    _announcements = announcements.getAnnouncements();
+                                    showAnnouncements();
+                                }, function (error) {
+                                    application.log_DEBUG("Retrieving announcements failed (" + error.error + ")");
+                                });
+                            }
                             // show first run message
                             if (localStorage[FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID] !== "true") {
                                 localStorage[FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID] = "true";
@@ -155,6 +191,7 @@ define([
                                                 game.closeSuperimposedScreen();
                                                 audio.playMusic(armadaScreens.MENU_THEME);
                                                 analytics.login();
+                                                showAnnouncements();
                                             }
                                         }]
                                 });
@@ -185,12 +222,14 @@ define([
                                                 game.closeSuperimposedScreen();
                                                 audio.playMusic(armadaScreens.MENU_THEME);
                                                 analytics.login();
+                                                showAnnouncements();
                                             }
                                         }]
                                 });
                             } else {
                                 audio.playMusic(armadaScreens.MENU_THEME);
                                 analytics.login();
+                                showAnnouncements();
                             }
                             armadaScreens.setupFullscreenButton.call(this);
                         },

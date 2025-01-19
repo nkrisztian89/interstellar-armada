@@ -67,6 +67,10 @@
         "0.5.4": "<ul><li>Új küldetés: \"Az ostrom\"</li><li>Új űrhajók: Athén űrállomás és Őrszem védelmi üteg platform</li><li>A lövegek nem tüzelnek, ha a saját hajójukat találnák el</li><li>A fegyverek már forognak a célpont előnézetében is</li><li>A közösségi küldetésekhez is méri a játék a lejátszások számát (a beküldő láthatja)</li><li>Érintőképernyős eszközökön az irányítást bemutató oldal jelenik meg küldetésindításkor</li><li>A játékverzió mutatása, az FPS számláló és a küldetés eleji felugró ablak a beállításokban kikapcsolható</li><li>A demo gomb már nem jelenik meg, de a beállításokban visszakapcsolható</li><li>A modellfájlok kisebbek lettek, és a teljesítmény kisebb optimalizáláson esett át</li><li>Néhány hiba javítva lett, ami elsősorban a mobileszközöket érinti</li><li>Számos felhasználóbarátságot javító fejlesztés és hibajavítás a küldetésszerkesztőhöz</li><li>3 új fejezetet kapott a játék szerkesztőjéhez készített oktatóanyag (angol nyelven)</li></ul>",
         "button": "Indítás"
     },
+    "announcements": {
+        "header": "Hirdetmények",
+        "button": "Ok"
+    },
     "firstMultiRunNote": {
         "header": "Többjátékos mód megjegyzések",
         "message": "Ez a többjátékos mód nagyon korai előzetes verziója! Csak a <strong>legalapvetőbb funkciók</strong> egy része elérhető, és ha kipróbálod, számíts <strong>hibákra, rossz teljesítményre, akadozásra, szinkronizációs és csatlakozási problémákra</strong>! Jobb teljesítmény érhető el, ha a többi játékossal egy helyi hálózaton játszol, mert ilyenkor a házigazda közvetlenül csatlakozik a többiekhez, nem pedig a szerveren keresztül.<br><br>Jelenleg <strong>minden játék nyilvános</strong>, nincs lehetőség privát játék indítására!<br><br>A játékon belüli üzenetküldés nincs moderálva, kérlek <strong>kulturált és udvarias módon</strong> érintkezz a többi játékossal! <strong>Ne ossz meg személyes vagy érzékeny információt</strong> a játékosneveden vagy az üzeneteiden keresztül! A játék fejlesztője semmilyen felelősséget nem vállal a játékosok viselkedéséért és üzeneteiért. Belépés csak saját felelősségre!",
@@ -1117,6 +1121,9 @@
     "missileClass": {
         "smallMissile": {
             "name": "SM-4 Könnyű rakéta"
+        },
+        "smallRocket": {
+            "name": "SR-2 Irányítatlan rakéta"
         },
         "mediumMissile": {
             "name": "MH-7 Közepes célkövető rakéta"

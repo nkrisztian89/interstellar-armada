@@ -53,6 +53,10 @@
         "0.5.4": "<ul><li>New mission: \"The siege\"</li><li>New spacecrafts: Athens station and Sentinel sentry gun platform</li><li>Turrets don't fire if they are blocked by their own ship</li><li>Weapons now rotate in the target view</li><li>Statistics tracking for community missions (the submitter can see them)</li><li>Added a touch control overview screen for devices with a touchscreen</li><li>Showing game version, FPS counter and popup at mission start can be disabled in the settings</li><li>Launch demo button hidden by default, can be re-enabled in the settings</li><li>Smaller model files and performance optimizations</li><li>Several fixes, especially for mobile devices</li><li>Numerous usability improvements and fixes for the Interstellar Armada Editor</li><li>3 new chapters added to the Interstellar Armada Editor tutorial</li></ul>",
         "button": "Start"
     },
+    "announcements": {
+        "header": "Announcements",
+        "button": "Ok"
+    },
     "firstMultiRunNote": {
         "header": "Multiplayer notice",
         "message": "This is a very early preview version of the multiplayer feature of the game. It has only <strong>extremely basic functionality</strong>, and if you choose to try it out, expect <strong>bugs, performance problems, lag, jittering, desynchronization, disconnects</strong> and other issues! The performance can be improved if you play on the same local network, because in this case the game host will connect to the other players directly, not through the server.<br><br>At the moment, <strong>all games are public</strong>, private games cannot be created!<br><br>The chat in the game lobby room is not moderated, please <strong>stay civil and respectful</strong> towards other players! <strong>Do not share any personal or sensitive information</strong> through your player name or in the chat! The game developer does not take responsibility for any player behaviour or messages you may encounter here. Enter at your own risk!",
