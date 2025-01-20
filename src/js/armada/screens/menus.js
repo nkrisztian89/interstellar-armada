@@ -199,7 +199,8 @@ define([
                             } else if (!application.isFirstRun() && application.hasVersionChanged() && !_releaseNotesShown) {
                                 _releaseNotesShown = true;
                                 message = utils.formatString(strings.get(strings.RELEASE_NOTES.GENERAL), {
-                                    version: application.getVersion()
+                                    version: application.getVersion(),
+                                    patreon: '<a target="_blank" rel="noopener" href="https://www.patreon.com/c/Entian">Patreon</a>'
                                 }) + "<br/><br/>";
                                 newReleases = application.getNewReleases();
                                 if (newReleases.length > 0) {
