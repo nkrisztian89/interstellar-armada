@@ -1,6 +1,6 @@
 {
     "name": "interstellar-armada",
-    "version": "0.5.5",
+    "version": "0.5.6",
     "description": "Interstellar Armada: Galactic Ace is a mission-based 3D space combat simulator where you take the role of a fighter pilot. The game uses Newtonian mechanics with an assisted, six degrees of freedom flight model and supports keyboard, mouse, joystick, gamepad and touch controls. This development version features several training and combat missions, a basic multiplayer mode and support for creating and publishing user-created custom missions. The game is built with open web technologies and is packaged as a standalone app using Electron.",
     "main": "main.js",
     "scripts": {
