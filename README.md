@@ -24,7 +24,7 @@ If you are on Ubuntu or another Linux distribution with snap support, you can in
 If you are on Linux but you don't use snaps, you can also download the appimage for the latest **[release](https://github.com/nkrisztian89/interstellar-armada/releases)**. This also allows for offline play, but you will have to manually check here for updates.
 ## Flatpak
 Creating Flatpak builds is a little more complicated, because the build system I use does not support it out of the box, but I plan to add Flatpaks for future releases (from 0.6).
-## Windows and Max OS
+## Windows and Mac OS
 If you are using these operating systems (or Android, iOS or anything else), just run the web version I linked as the first option, preferably from Chromium or Chrome. Currently I have no plans to add pre-packaged builds for these systems.
 
 # Donation
