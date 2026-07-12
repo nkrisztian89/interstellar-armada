@@ -1,137 +1,208 @@
 {
-    "title": "Mixed",
-    "description": "A face-to-face team battle with three interceptors and three bombers on each side. You are one of the lead interceptors. Do not get caught in the crossfire and avoid hitting your teammates!",
-    "environment": "luxilian",
-    "tips": [
-        "tryControls",
-        "changeControls",
-        "tryViews",
-        "prioritizeTargets",
-        "think",
-        "curve",
-        "strafe",
-        "rollStrafe",
-        "cruiseMode",
-        "combatMode",
-        "scoreDestroy",
-        "friendlyFire",
-        "effectiveness",
-        "interceptors",
-        "bombers"
-    ],
-    "teams": [
-        "empire",
-        {
-            "faction": "rebels",
-            "color": [0.2, 0.2, 0.8, 1.0]
-        }
-    ],
-    "views": [
-        {
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [0, 3100, -80],
-            "rotations": ["x-75"]
-        }
-    ],
-    "spacecrafts": [
-        {
-            "team": "empire",
-            "class": "falcon",
-            "piloted": true,
-            "squad": "alpha 1",
-            "position": [0, 0, 0],
-            "loadout": "full"
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "squad": "alpha 2",
-            "ai": "fighter",
-            "position": [35, -35, 0]
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "squad": "alpha 3",
-            "ai": "fighter",
-            "position": [-35, -35, 0]
-        },
-        {
-            "team": "empire",
-            "class": "viper",
-            "squad": "beta 1",
-            "ai": "fighter",
-            "position": [0, -50, -50],
-            "loadout": "heavy"
-        },
-        {
-            "team": "empire",
-            "class": "viper",
-            "squad": "beta 2",
-            "ai": "fighter",
-            "position": [35, -85, -50],
-            "loadout": "half"
-        },
-        {
-            "team": "empire",
-            "class": "viper",
-            "squad": "beta 3",
-            "ai": "fighter",
-            "position": [-35, -85, -50],
-            "loadout": "half"
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 1",
-            "ai": "fighter",
-            "position": [0, 3200, -100],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 2",
-            "ai": "fighter",
-            "position": [-35, 3235, -100],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 3",
-            "ai": "fighter",
-            "position": [35, 3235, -100],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 1",
-            "ai": "fighter",
-            "position": [0, 3250, -150],
-            "rotations": ["z+180"],
-            "loadout": "heavy"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 2",
-            "ai": "fighter",
-            "position": [-35, 3285, -150],
-            "rotations": ["z+180"],
-            "loadout": "half"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 3",
-            "ai": "fighter",
-            "position": [35, 3285, -150],
-            "rotations": ["z+180"],
-            "loadout": "half"
-        }
-    ]
+  "title": "Mixed",
+  "description": "A face-to-face team battle with three interceptors and three bombers on each side. You are one of the lead interceptors. Do not get caught in the crossfire and avoid hitting your teammates!",
+  "environment": "luxilian",
+  "tips": [
+    "tryControls",
+    "changeControls",
+    "tryViews",
+    "prioritizeTargets",
+    "think",
+    "curve",
+    "strafe",
+    "rollStrafe",
+    "cruiseMode",
+    "combatMode",
+    "scoreDestroy",
+    "friendlyFire",
+    "effectiveness",
+    "interceptors",
+    "bombers"
+  ],
+  "teams": [
+    "empire",
+    {
+      "faction": "rebels",
+      "color": [
+        0.2,
+        0.2,
+        0.8,
+        1
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "free",
+      "movable": true,
+      "turnable": true,
+      "position": [
+        0,
+        3100,
+        -80
+      ],
+      "rotations": [
+        "x-75"
+      ]
+    }
+  ],
+  "spacecrafts": [
+    {
+      "team": "empire",
+      "class": "falcon",
+      "piloted": true,
+      "squad": "alpha 1",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "loadout": "full"
+    },
+    {
+      "team": "empire",
+      "class": "falcon",
+      "squad": "alpha 2",
+      "ai": "fighter",
+      "position": [
+        35,
+        -35,
+        0
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "falcon",
+      "squad": "alpha 3",
+      "ai": "fighter",
+      "position": [
+        -35,
+        -35,
+        0
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "viper",
+      "squad": "beta 1",
+      "ai": "fighter",
+      "position": [
+        0,
+        -50,
+        -50
+      ],
+      "loadout": "heavy"
+    },
+    {
+      "team": "empire",
+      "class": "viper",
+      "squad": "beta 2",
+      "ai": "fighter",
+      "position": [
+        35,
+        -85,
+        -50
+      ],
+      "loadout": "half"
+    },
+    {
+      "team": "empire",
+      "class": "viper",
+      "squad": "beta 3",
+      "ai": "fighter",
+      "position": [
+        -35,
+        -85,
+        -50
+      ],
+      "loadout": "half"
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "squad": "wraith 1",
+      "ai": "fighter",
+      "position": [
+        0,
+        3200,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "squad": "wraith 2",
+      "ai": "fighter",
+      "position": [
+        -35,
+        3235,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "squad": "wraith 3",
+      "ai": "fighter",
+      "position": [
+        35,
+        3235,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "rebels",
+      "class": "viper",
+      "squad": "phantom 1",
+      "ai": "fighter",
+      "position": [
+        0,
+        3250,
+        -150
+      ],
+      "rotations": [
+        "z+180"
+      ],
+      "loadout": "heavy"
+    },
+    {
+      "team": "rebels",
+      "class": "viper",
+      "squad": "phantom 2",
+      "ai": "fighter",
+      "position": [
+        -35,
+        3285,
+        -150
+      ],
+      "rotations": [
+        "z+180"
+      ],
+      "loadout": "half"
+    },
+    {
+      "team": "rebels",
+      "class": "viper",
+      "squad": "phantom 3",
+      "ai": "fighter",
+      "position": [
+        35,
+        3285,
+        -150
+      ],
+      "rotations": [
+        "z+180"
+      ],
+      "loadout": "half"
+    }
+  ]
 }

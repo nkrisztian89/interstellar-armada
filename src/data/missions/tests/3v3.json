@@ -1,86 +1,127 @@
 {
-    "title": "Three versus three",
-    "description": "Practice team fighting in a matchup with three against three interceptors. You are better armed than the rest.",
-    "environment": "mera",
-    "combatTheme": "combat",
-    "tips": [
-        "tryControls",
-        "changeControls",
-        "tryViews",
-        "curve",
-        "strafe",
-        "rollStrafe",
-        "scoreDestroy",
-        "friendlyFire",
-        "interceptors"
-    ],
-    "teams": [
-        "empire",
-        {
-            "faction": "rebels",
-            "color": [0.2, 0.2, 0.8, 1.0]
-        }
-    ],
-    "views": [
-        {
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [0, 3150, -80],
-            "rotations": ["x-75"]
-        }
-    ],
-    "spacecrafts": [
-        {
-            "team": "empire",
-            "class": "falcon",
-            "piloted": true,
-            "squad": "alpha 1",
-            "position": [0, 0, 0],
-            "loadout": "player-tier1"
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "squad": "alpha 2",
-            "ai": "fighter",
-            "position": [35, -35, 0],
-            "loadout": "imperial-tier1"
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "squad": "alpha 3",
-            "ai": "fighter",
-            "position": [-35, -35, 0],
-            "loadout": "imperial-tier1"
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 1",
-            "ai": "fighter",
-            "position": [0, 3200, -100],
-            "rotations": ["z+180"],
-            "loadout": "rebel"
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 2",
-            "ai": "fighter",
-            "position": [-35, 3235, -100],
-            "rotations": ["z+180"],
-            "loadout": "rebel"
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 3",
-            "ai": "fighter",
-            "position": [35, 3235, -100],
-            "rotations": ["z+180"],
-            "loadout": "rebel"
-        }
-    ]
+  "title": "Three versus three",
+  "description": "Practice team fighting in a matchup with three against three interceptors. You are better armed than the rest.",
+  "environment": "mera",
+  "combatTheme": "combat",
+  "tips": [
+    "tryControls",
+    "changeControls",
+    "tryViews",
+    "curve",
+    "strafe",
+    "rollStrafe",
+    "scoreDestroy",
+    "friendlyFire",
+    "interceptors"
+  ],
+  "teams": [
+    "empire",
+    {
+      "faction": "rebels",
+      "color": [
+        0.2,
+        0.2,
+        0.8,
+        1
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "free",
+      "movable": true,
+      "turnable": true,
+      "position": [
+        0,
+        3150,
+        -80
+      ],
+      "rotations": [
+        "x-75"
+      ]
+    }
+  ],
+  "spacecrafts": [
+    {
+      "team": "empire",
+      "class": "falcon",
+      "piloted": true,
+      "squad": "alpha 1",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "loadout": "player-tier1"
+    },
+    {
+      "team": "empire",
+      "class": "falcon",
+      "squad": "alpha 2",
+      "ai": "fighter",
+      "position": [
+        35,
+        -35,
+        0
+      ],
+      "loadout": "imperial-tier1"
+    },
+    {
+      "team": "empire",
+      "class": "falcon",
+      "squad": "alpha 3",
+      "ai": "fighter",
+      "position": [
+        -35,
+        -35,
+        0
+      ],
+      "loadout": "imperial-tier1"
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "squad": "wraith 1",
+      "ai": "fighter",
+      "position": [
+        0,
+        3200,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ],
+      "loadout": "rebel"
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "squad": "wraith 2",
+      "ai": "fighter",
+      "position": [
+        -35,
+        3235,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ],
+      "loadout": "rebel"
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "squad": "wraith 3",
+      "ai": "fighter",
+      "position": [
+        35,
+        3235,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ],
+      "loadout": "rebel"
+    }
+  ]
 }

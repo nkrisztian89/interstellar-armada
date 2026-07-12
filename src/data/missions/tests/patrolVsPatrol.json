@@ -1,100 +1,144 @@
 {
-    "title": "Patrol vs patrol",
-    "description": "Two identical partols consisting of a corvette and three interceptor escorts face each other in this mission. You pilot one of the fighters. Draw the fire of the enemy corvette away from the one on your team, but do not approach it too much as it will quickly take you down.",
-    "environment": "mera",
-    "tips": [
-        "tryControls",
-        "changeControls",
-        "tryViews",
-        "prioritizeTargets",
-        "think",
-        "curve",
-        "strafe",
-        "rollStrafe",
-        "cruiseMode",
-        "combatMode",
-        "turretDistance",
-        "scoreDestroy",
-        "friendlyFire",
-        "effectiveness",
-        "interceptors",
-        "corvettes"
-    ],
-    "teams": [
-        "empire",
-        {
-            "faction": "rebels",
-            "color": [0.2, 0.2, 0.8, 1.0]
-        }
-    ],
-    "views": [
-        {
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [60, 200, 45],
-            "rotations": ["x-80", "z+215"]
-        }
-    ],
-    "spacecrafts": [
-        {
-            "team": "empire",
-            "class": "falcon",
-            "ai": "fighter",
-            "squad": "alpha 1",
-            "position": [-100, -10, 10]
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "piloted": true,
-            "squad": "alpha 2",
-            "position": [-65, -50, 20]
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "ai": "fighter",
-            "squad": "alpha 3",
-            "position": [-135, -50, 20]
-        },
-        {
-            "team": "empire",
-            "class": "aries",
-            "name": "Ohio",
-            "ai": "ship",
-            "position": [0, 50, 0],
-            "loadout": "full",
-            "excludeFromReferenceScore": true
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "ai": "fighter",
-            "squad": "serpent 1",
-            "position": [-100, 5010, 10]
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "ai": "fighter",
-            "squad": "serpent 2",
-            "position": [-65, 5050, 20]
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "ai": "fighter",
-            "squad": "serpent 3",
-            "position": [-135, 5050, 20]
-        },
-        {
-            "team": "rebels",
-            "class": "aries",
-            "ai": "ship",
-            "position": [0, 4950, 0],
-            "loadout": "full",
-            "excludeFromReferenceScore": true
-        }
-    ]
+  "title": "Patrol vs patrol",
+  "description": "Two identical partols consisting of a corvette and three interceptor escorts face each other in this mission. You pilot one of the fighters. Draw the fire of the enemy corvette away from the one on your team, but do not approach it too much as it will quickly take you down.",
+  "environment": "mera",
+  "tips": [
+    "tryControls",
+    "changeControls",
+    "tryViews",
+    "prioritizeTargets",
+    "think",
+    "curve",
+    "strafe",
+    "rollStrafe",
+    "cruiseMode",
+    "combatMode",
+    "turretDistance",
+    "scoreDestroy",
+    "friendlyFire",
+    "effectiveness",
+    "interceptors",
+    "corvettes"
+  ],
+  "teams": [
+    "empire",
+    {
+      "faction": "rebels",
+      "color": [
+        0.2,
+        0.2,
+        0.8,
+        1
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "free",
+      "movable": true,
+      "turnable": true,
+      "position": [
+        60,
+        200,
+        45
+      ],
+      "rotations": [
+        "x-80",
+        "z+215"
+      ]
+    }
+  ],
+  "spacecrafts": [
+    {
+      "team": "empire",
+      "class": "falcon",
+      "ai": "fighter",
+      "squad": "alpha 1",
+      "position": [
+        -100,
+        -10,
+        10
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "falcon",
+      "piloted": true,
+      "squad": "alpha 2",
+      "position": [
+        -65,
+        -50,
+        20
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "falcon",
+      "ai": "fighter",
+      "squad": "alpha 3",
+      "position": [
+        -135,
+        -50,
+        20
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "aries",
+      "name": "Ohio",
+      "ai": "ship",
+      "position": [
+        0,
+        50,
+        0
+      ],
+      "loadout": "full",
+      "excludeFromReferenceScore": true
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "ai": "fighter",
+      "squad": "serpent 1",
+      "position": [
+        -100,
+        5010,
+        10
+      ]
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "ai": "fighter",
+      "squad": "serpent 2",
+      "position": [
+        -65,
+        5050,
+        20
+      ]
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "ai": "fighter",
+      "squad": "serpent 3",
+      "position": [
+        -135,
+        5050,
+        20
+      ]
+    },
+    {
+      "team": "rebels",
+      "class": "aries",
+      "ai": "ship",
+      "position": [
+        0,
+        4950,
+        0
+      ],
+      "loadout": "full",
+      "excludeFromReferenceScore": true
+    }
+  ]
 }

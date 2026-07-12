@@ -1,92 +1,128 @@
 {
-    "config": {
-        "sourceFolder": "mission"
+  "config": {
+    "sourceFolder": "mission"
+  },
+  "missions": [
+    {
+      "source": "training/targetPracticeBoxes.json"
     },
-    "missions": [{
-            "source": "training/targetPracticeBoxes.json"
-        }, {
-            "source": "training/targetPracticeDrones.json"
-        }, {
-            "source": "training/targetPracticeFalcon.json"
-        }, {
-            "source": "pirates.json"
-        }, {
-            "source": "headhunt.json"
-        }, {
-            "source": "destroyCorvette.json"
-        }, {
-            "source": "training/targetPracticeMissile.json"
-        }, {
-            "source": "destroyFrigate.json"
-        }, {
-            "source": "defendCorvette.json"
-        }, {
-            "source": "defendFrigate.json"
-        }, {
-            "source": "corvette.json"
-        }, {
-            "source": "1v6.json"
-        }, {
-            "source": "defendFrigates.json"
-        }, {
-            "source": "battle.json"
-        }, {
-            "source": "heavy.json"
-        }, {
-            "source": "hideAndSeek.json"
-        }, {
-            "source": "holdingOut.json"
-        }, {
-            "source": "siege.json"
-        }, {
-            "source": "tests/test.json"
-        }, {
-            "source": "tests/cruiserVsBombers.json",
-            "test": true
-        }, {
-            "source": "tests/sandbox-30.json",
-            "test": true
-        }, {
-            "source": "tests/sandbox-50.json",
-            "test": true
-        }, {
-            "source": "tests/shipcount.json",
-            "test": true
-        }, {
-            "source": "tests/fleetBattle.json",
-            "test": true
-        }, {
-            "source": "tests/libraTest.json",
-            "test": true
-        }, {
-            "source": "tests/staticAvoidance.json",
-            "test": true
-        }, {
-            "source": "tests/dynamicAvoidance.json",
-            "test": true
-        }, {
-            "source": "tests/wolf.json",
-            "test": true
-        }, {
-            "source": "tests/lineup.json",
-            "test": true
-        }, {
-            "source": "tests/1v1.json",
-            "test": true
-        }, {
-            "source": "tests/3v3.json",
-            "test": true
-        }, {
-            "source": "tests/bombers.json",
-            "test": true
-        }, {
-            "source": "tests/mixed.json",
-            "test": true
-        }, {
-            "source": "tests/patrolVsPatrol.json",
-            "test": true
-        }, {
-            "source": "tests/strikeForceVsStrikeForce.json",
-            "test": true
-        }]
+    {
+      "source": "training/targetPracticeDrones.json"
+    },
+    {
+      "source": "training/targetPracticeFalcon.json"
+    },
+    {
+      "source": "pirates.json"
+    },
+    {
+      "source": "headhunt.json"
+    },
+    {
+      "source": "destroyCorvette.json"
+    },
+    {
+      "source": "training/targetPracticeMissile.json"
+    },
+    {
+      "source": "destroyFrigate.json"
+    },
+    {
+      "source": "defendCorvette.json"
+    },
+    {
+      "source": "defendFrigate.json"
+    },
+    {
+      "source": "corvette.json"
+    },
+    {
+      "source": "1v6.json"
+    },
+    {
+      "source": "defendFrigates.json"
+    },
+    {
+      "source": "battle.json"
+    },
+    {
+      "source": "heavy.json"
+    },
+    {
+      "source": "hideAndSeek.json"
+    },
+    {
+      "source": "holdingOut.json"
+    },
+    {
+      "source": "siege.json"
+    },
+    {
+      "source": "tests/test.json"
+    },
+    {
+      "source": "tests/cruiserVsBombers.json",
+      "test": true
+    },
+    {
+      "source": "tests/sandbox-30.json",
+      "test": true
+    },
+    {
+      "source": "tests/sandbox-50.json",
+      "test": true
+    },
+    {
+      "source": "tests/shipcount.json",
+      "test": true
+    },
+    {
+      "source": "tests/fleetBattle.json",
+      "test": true
+    },
+    {
+      "source": "tests/libraTest.json",
+      "test": true
+    },
+    {
+      "source": "tests/staticAvoidance.json",
+      "test": true
+    },
+    {
+      "source": "tests/dynamicAvoidance.json",
+      "test": true
+    },
+    {
+      "source": "tests/wolf.json",
+      "test": true
+    },
+    {
+      "source": "tests/lineup.json",
+      "test": true
+    },
+    {
+      "source": "tests/1v1.json",
+      "test": true
+    },
+    {
+      "source": "tests/3v3.json",
+      "test": true
+    },
+    {
+      "source": "tests/bombers.json",
+      "test": true
+    },
+    {
+      "source": "tests/mixed.json",
+      "test": true
+    },
+    {
+      "source": "tests/patrolVsPatrol.json",
+      "test": true
+    },
+    {
+      "source": "tests/strikeForceVsStrikeForce.json",
+      "test": true
+    }
+  ]
 }

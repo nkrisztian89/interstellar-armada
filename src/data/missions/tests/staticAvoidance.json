@@ -1,51 +1,78 @@
 {
-    "title": "Static avoidance test",
-    "description": "A small test about how fighters avoid static obstacles blocking their path towards their target.",
-    "environment": "blovell",
-    "teams": [
-        "empire",
-        {
-            "faction": "rebels",
-            "color": [0.2, 0.2, 0.8, 1.0]
+  "title": "Static avoidance test",
+  "description": "A small test about how fighters avoid static obstacles blocking their path towards their target.",
+  "environment": "blovell",
+  "teams": [
+    "empire",
+    {
+      "faction": "rebels",
+      "color": [
+        0.2,
+        0.2,
+        0.8,
+        1
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "free",
+      "movable": true,
+      "turnable": true,
+      "position": [
+        0,
+        -300,
+        20
+      ],
+      "rotations": [
+        "x-75"
+      ]
+    }
+  ],
+  "spacecrafts": [
+    {
+      "team": "empire",
+      "class": "falcon",
+      "ai": "fighter",
+      "position": [
+        -100,
+        0,
+        0
+      ],
+      "loadout": "imperial-tier3"
+    },
+    {
+      "team": "empire",
+      "class": "aries",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "equipment": {
+        "propulsion": {
+          "class": "imperialCorvetteMk1"
         }
-    ],
-    "views": [
-        {
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [0, -300, 20],
-            "rotations": ["x-75"]
-        }
-    ],
-    "spacecrafts": [
-        {
-            "team": "empire",
-            "class": "falcon",
-            "ai": "fighter",
-            "position": [-100, 0, 0],
-            "loadout": "imperial-tier3"
-        },
-        {
-            "team": "empire",
-            "class": "aries",
-            "position": [0, 0, 0],
-            "equipment": {
-                "propulsion": {
-                    "class": "imperialCorvetteMk1"
-                }
-            }
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "position": [100, 0, 0]
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "piloted": true,
-            "position": [0, -250, 0]
-        }
-    ]
+      }
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "position": [
+        100,
+        0,
+        0
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "falcon",
+      "piloted": true,
+      "position": [
+        0,
+        -250,
+        0
+      ]
+    }
+  ]
 }

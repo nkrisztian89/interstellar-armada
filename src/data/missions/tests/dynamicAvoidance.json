@@ -1,82 +1,115 @@
 {
-    "title": "Dynamic avoidance test",
-    "description": "A small test about how fighters avoid dynamic obstacles blocking their path towards their target.",
-    "environment": "blovell",
-    "teams": [
-        "empire",
-        {
-            "faction": "rebels",
-            "color": [0.2, 0.2, 0.8, 1.0]
-        }
-    ],
-    "views": [
-        {
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [0, -300, 20],
-            "rotations": ["x-75"]
-        }
-    ],
-    "events": [
-        {
-            "trigger": {
-                "conditions": [{
-                        "type": "destroyed",
-                        "subjects": {
-                            "teams": ["rebels"]
-                        }
-                    }
-                ],
-                "delay": 5000
-            },
-            "actions": [{
-                    "type": "command",
-                    "subjects": {
-                        "teams": ["empire"]
-                    },
-                    "params": {
-                        "command": "jump",
-                        "jump": {
-                            "way": "out"
-                        }
-                    }
-                }
-            ]
-        }
-    ],
-    "spacecrafts": [
-        {
-            "team": "empire",
-            "class": "falcon",
-            "ai": "fighter",
-            "position": [-100, 0, 0],
-            "loadout": "imperial-tier3"
-        },
-        {
-            "team": "empire",
-            "class": "aries",
-            "ai": "fighter",
-            "position": [0, 0, 0],
-            "equipment": {
-                "propulsion": {
-                    "class": "imperialCorvetteMk1"
-                },
-                "jumpEngine": {
-                    "class": "imperialSmallShipMk1"
-                }
+  "title": "Dynamic avoidance test",
+  "description": "A small test about how fighters avoid dynamic obstacles blocking their path towards their target.",
+  "environment": "blovell",
+  "teams": [
+    "empire",
+    {
+      "faction": "rebels",
+      "color": [
+        0.2,
+        0.2,
+        0.8,
+        1
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "free",
+      "movable": true,
+      "turnable": true,
+      "position": [
+        0,
+        -300,
+        20
+      ],
+      "rotations": [
+        "x-75"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "trigger": {
+        "conditions": [
+          {
+            "type": "destroyed",
+            "subjects": {
+              "teams": [
+                "rebels"
+              ]
             }
-        },
+          }
+        ],
+        "delay": 5000
+      },
+      "actions": [
         {
-            "team": "rebels",
-            "class": "falcon",
-            "position": [100, 0, 0]
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "piloted": true,
-            "position": [0, -250, 0]
+          "type": "command",
+          "subjects": {
+            "teams": [
+              "empire"
+            ]
+          },
+          "params": {
+            "command": "jump",
+            "jump": {
+              "way": "out"
+            }
+          }
         }
-    ]
+      ]
+    }
+  ],
+  "spacecrafts": [
+    {
+      "team": "empire",
+      "class": "falcon",
+      "ai": "fighter",
+      "position": [
+        -100,
+        0,
+        0
+      ],
+      "loadout": "imperial-tier3"
+    },
+    {
+      "team": "empire",
+      "class": "aries",
+      "ai": "fighter",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "equipment": {
+        "propulsion": {
+          "class": "imperialCorvetteMk1"
+        },
+        "jumpEngine": {
+          "class": "imperialSmallShipMk1"
+        }
+      }
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "position": [
+        100,
+        0,
+        0
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "falcon",
+      "piloted": true,
+      "position": [
+        0,
+        -250,
+        0
+      ]
+    }
+  ]
 }

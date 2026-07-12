@@ -1,67 +1,119 @@
 {
-    "description": "A test mission to showcase the full lineup of fighter classes in the game.",
-    "environment": "blovell",
-    "teams": [
-        "empire",
-        "pirates"
-    ],
-    "views": [
-        {
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [0, 150, -80],
-            "rotations": ["x-75"]
-        }
-    ],
-    "spacecrafts": [
-        {
-            "team": "empire",
-            "class": "falcon",
-            "piloted": true,
-            "position": [0, 0, 0]
-        },
-        {
-            "team": "empire",
-            "class": "drone",
-            "position": [-20, 200, -100],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "position": [0, 199, -100],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "empire",
-            "class": "viper",
-            "position": [20, 203, -100],
-            "rotations": ["z+180"]
-        }, 
-        {
-            "team": "empire",
-            "class": "rhino",
-            "position": [46, 200, -100],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "pirates",
-            "class": "wolf",
-            "position": [72, 200, -100],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "pirates",
-            "class": "piranha",
-            "position": [92, 200, -100],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "pirates",
-            "class": "stingray",
-            "position": [112, 200, -100],
-            "rotations": ["z+180"]
-        }
-    ]
+  "description": "A test mission to showcase the full lineup of fighter classes in the game.",
+  "environment": "blovell",
+  "teams": [
+    "empire",
+    "pirates"
+  ],
+  "views": [
+    {
+      "name": "free",
+      "movable": true,
+      "turnable": true,
+      "position": [
+        0,
+        150,
+        -80
+      ],
+      "rotations": [
+        "x-75"
+      ]
+    }
+  ],
+  "spacecrafts": [
+    {
+      "team": "empire",
+      "class": "falcon",
+      "piloted": true,
+      "position": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "drone",
+      "position": [
+        -20,
+        200,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "falcon",
+      "position": [
+        0,
+        199,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "viper",
+      "position": [
+        20,
+        203,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "rhino",
+      "position": [
+        46,
+        200,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "pirates",
+      "class": "wolf",
+      "position": [
+        72,
+        200,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "pirates",
+      "class": "piranha",
+      "position": [
+        92,
+        200,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "pirates",
+      "class": "stingray",
+      "position": [
+        112,
+        200,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    }
+  ]
 }

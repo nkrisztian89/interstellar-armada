@@ -1,84 +1,125 @@
 {
-    "title": "Bombers",
-    "description": "Try piloting a heavily armed bomber in a simple three versus three dogfight against less armed opponents.",
-    "environment": "varanock",
-    "tips": [
-        "tryControls",
-        "changeControls",
-        "tryViews",
-        "curve",
-        "strafe",
-        "rollStrafe",
-        "scoreDestroy",
-        "friendlyFire",
-        "bombers"
-    ],
-    "teams": [
-        "empire",
-        {
-            "faction": "rebels",
-            "color": [0.2, 0.2, 0.8, 1.0]
-        }
-    ],
-    "views": [
-        {
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [0, 3150, -80],
-            "rotations": ["x-75"]
-        }
-    ],
-    "spacecrafts": [
-        {
-            "team": "empire",
-            "class": "viper",
-            "piloted": true,
-            "squad": "alpha 1",
-            "position": [0, 0, 0]
-        },
-        {
-            "team": "empire",
-            "class": "viper",
-            "squad": "alpha 2",
-            "ai": "fighter",
-            "position": [35, -35, 0],
-            "loadout": "light"
-        },
-        {
-            "team": "empire",
-            "class": "viper",
-            "squad": "alpha 3",
-            "ai": "fighter",
-            "position": [-35, -35, 0],
-            "loadout": "light"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 1",
-            "ai": "fighter",
-            "position": [0, 3200, -100],
-            "rotations": ["z+180"],
-            "loadout": "rebel"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 2",
-            "ai": "fighter",
-            "position": [-35, 3235, -100],
-            "rotations": ["z+180"],
-            "loadout": "rebel-light"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 3",
-            "ai": "fighter",
-            "position": [35, 3235, -100],
-            "rotations": ["z+180"],
-            "loadout": "rebel-light"
-        }
-    ]
+  "title": "Bombers",
+  "description": "Try piloting a heavily armed bomber in a simple three versus three dogfight against less armed opponents.",
+  "environment": "varanock",
+  "tips": [
+    "tryControls",
+    "changeControls",
+    "tryViews",
+    "curve",
+    "strafe",
+    "rollStrafe",
+    "scoreDestroy",
+    "friendlyFire",
+    "bombers"
+  ],
+  "teams": [
+    "empire",
+    {
+      "faction": "rebels",
+      "color": [
+        0.2,
+        0.2,
+        0.8,
+        1
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "free",
+      "movable": true,
+      "turnable": true,
+      "position": [
+        0,
+        3150,
+        -80
+      ],
+      "rotations": [
+        "x-75"
+      ]
+    }
+  ],
+  "spacecrafts": [
+    {
+      "team": "empire",
+      "class": "viper",
+      "piloted": true,
+      "squad": "alpha 1",
+      "position": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "viper",
+      "squad": "alpha 2",
+      "ai": "fighter",
+      "position": [
+        35,
+        -35,
+        0
+      ],
+      "loadout": "light"
+    },
+    {
+      "team": "empire",
+      "class": "viper",
+      "squad": "alpha 3",
+      "ai": "fighter",
+      "position": [
+        -35,
+        -35,
+        0
+      ],
+      "loadout": "light"
+    },
+    {
+      "team": "rebels",
+      "class": "viper",
+      "squad": "phantom 1",
+      "ai": "fighter",
+      "position": [
+        0,
+        3200,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ],
+      "loadout": "rebel"
+    },
+    {
+      "team": "rebels",
+      "class": "viper",
+      "squad": "phantom 2",
+      "ai": "fighter",
+      "position": [
+        -35,
+        3235,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ],
+      "loadout": "rebel-light"
+    },
+    {
+      "team": "rebels",
+      "class": "viper",
+      "squad": "phantom 3",
+      "ai": "fighter",
+      "position": [
+        35,
+        3235,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ],
+      "loadout": "rebel-light"
+    }
+  ]
 }

@@ -1,265 +1,396 @@
 {
-    "title": "Strike force battle",
-    "description": "Two strike forces of equal strength - three interceptors, three bombers and three small warships on each side - are about to battle. Be the pilot who makes the difference!",
-    "environment": "sheenuba",
-    "tips": [
-        "tryControls",
-        "changeControls",
-        "tryViews",
-        "prioritizeTargets",
-        "think",
-        "curve",
-        "strafe",
-        "rollStrafe",
-        "cruiseMode",
-        "combatMode",
-        "turretDistance",
-        "scoreDestroy",
-        "friendlyFire",
-        "effectiveness",
-        "interceptors",
-        "bombers",
-        "corvettes",
-        "frigates"
-    ],
-    "teams": [
-        "empire",
+  "title": "Strike force battle",
+  "description": "Two strike forces of equal strength - three interceptors, three bombers and three small warships on each side - are about to battle. Be the pilot who makes the difference!",
+  "environment": "sheenuba",
+  "tips": [
+    "tryControls",
+    "changeControls",
+    "tryViews",
+    "prioritizeTargets",
+    "think",
+    "curve",
+    "strafe",
+    "rollStrafe",
+    "cruiseMode",
+    "combatMode",
+    "turretDistance",
+    "scoreDestroy",
+    "friendlyFire",
+    "effectiveness",
+    "interceptors",
+    "bombers",
+    "corvettes",
+    "frigates"
+  ],
+  "teams": [
+    "empire",
+    {
+      "faction": "rebels",
+      "color": [
+        0.2,
+        0.2,
+        0.8,
+        1
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "free",
+      "movable": true,
+      "turnable": true,
+      "position": [
+        0,
+        -500,
+        280
+      ],
+      "rotations": [
+        "x-70"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "trigger": {},
+      "actions": [
         {
-            "faction": "rebels",
-            "color": [0.2, 0.2, 0.8, 1.0]
-        }
-    ],
-    "views": [
-        {
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [0, -500, 280],
-            "rotations": ["x-70"]
-        }
-    ],
-    "events": [
-        {
-            "trigger": {},
-            "actions": [{
-                    "type": "command",
-                    "subjects": {
-                        "spacecrafts": ["Danube", "Vistula"]
-                    },
-                    "params": {
-                        "command": "target",
-                        "target": {
-                            "list": ["Tigris", "Ganges", "Seine"],
-                            "priority": true
-                        }
-                    }
-                }, {
-                    "type": "command",
-                    "subjects": {
-                        "spacecrafts": ["Tigris", "Ganges"]
-                    },
-                    "params": {
-                        "command": "target",
-                        "target": {
-                            "list": ["Danube", "Vistula", "Ohio"],
-                            "priority": true
-                        }
-                    }
-                }]
-        }, 
-        {
-            "trigger": {
-                "conditions": [{
-                        "type": "destroyed",
-                        "subjects": {
-                            "teams": ["rebels"]
-                        }
-                    }
-                ],
-                "delay": 45000
-            },
-            "actions": [{
-                    "type": "command",
-                    "subjects": {
-                        "teams": ["empire"]
-                    },
-                    "params": {
-                        "command": "jump",
-                        "jump": {
-                            "way": "out"
-                        }
-                    }
-                }
+          "type": "command",
+          "subjects": {
+            "spacecrafts": [
+              "Danube",
+              "Vistula"
             ]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "destroyed",
-                        "subjects": {
-                            "teams": ["empire"]
-                        }
-                    }
-                ],
-                "delay": 45000
-            },
-            "actions": [{
-                    "type": "command",
-                    "subjects": {
-                        "teams": ["rebels"]
-                    },
-                    "params": {
-                        "command": "jump",
-                        "jump": {
-                            "way": "out"
-                        }
-                    }
-                }
+          },
+          "params": {
+            "command": "target",
+            "target": {
+              "list": [
+                "Tigris",
+                "Ganges",
+                "Seine"
+              ],
+              "priority": true
+            }
+          }
+        },
+        {
+          "type": "command",
+          "subjects": {
+            "spacecrafts": [
+              "Tigris",
+              "Ganges"
             ]
+          },
+          "params": {
+            "command": "target",
+            "target": {
+              "list": [
+                "Danube",
+                "Vistula",
+                "Ohio"
+              ],
+              "priority": true
+            }
+          }
         }
-    ],
-    "spacecrafts": [
+      ]
+    },
+    {
+      "trigger": {
+        "conditions": [
+          {
+            "type": "destroyed",
+            "subjects": {
+              "teams": [
+                "rebels"
+              ]
+            }
+          }
+        ],
+        "delay": 45000
+      },
+      "actions": [
         {
-            "team": "empire",
-            "class": "falcon",
-            "ai": "fighter",
-            "squad": "alpha 1",
-            "position": [-100, 0, 10]
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "piloted": true,
-            "squad": "alpha 2",
-            "position": [-65, -35, 20]
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "ai": "fighter",
-            "squad": "alpha 3",
-            "position": [-135, -35, 20]
-        },
-        {
-            "team": "empire",
-            "class": "viper",
-            "ai": "fighter",
-            "squad": "beta 1",
-            "position": [100, 0, 10]
-        },
-        {
-            "team": "empire",
-            "class": "viper",
-            "ai": "fighter",
-            "squad": "beta 2",
-            "position": [135, -35, 20]
-        },
-        {
-            "team": "empire",
-            "class": "viper",
-            "ai": "fighter",
-            "squad": "beta 3",
-            "position": [65, -35, 20]
-        },
-        {
-            "team": "empire",
-            "class": "aries",
-            "name": "Ohio",
-            "ai": "ship",
-            "position": [0, 50, 0],
-            "loadout": "full",
-            "excludeFromReferenceScore": true
-        },
-        {
-            "team": "empire",
-            "class": "taurus",
-            "name": "Danube",
-            "ai": "ship",
-            "position": [-200, -50, 100],
-            "excludeFromReferenceScore": true
-        },
-        {
-            "team": "empire",
-            "class": "taurus",
-            "name": "Vistula",
-            "ai": "ship",
-            "position": [200, -50, 100],
-            "excludeFromReferenceScore": true
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "ai": "fighter",
-            "squad": "serpent 1",
-            "position": [100, 5000, 10],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "ai": "fighter",
-            "squad": "serpent 2",
-            "position": [65, 5035, 20],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "ai": "fighter",
-            "squad": "serpent 3",
-            "position": [135, 5035, 20],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "ai": "fighter",
-            "squad": "phantom 1",
-            "position": [-100, 5000, 10],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "ai": "fighter",
-            "squad": "phantom 2",
-            "position": [-135, 5035, 20],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "ai": "fighter",
-            "squad": "phantom 3",
-            "position": [-65, 5035, 20],
-            "rotations": ["z+180"]
-        },
-        {
-            "team": "rebels",
-            "class": "aries",
-            "name": "Seine",
-            "ai": "ship",
-            "position": [0, 4950, 0],
-            "rotations": ["z+180"],
-            "loadout": "full",
-            "excludeFromReferenceScore": true
-        },
-        {
-            "team": "rebels",
-            "class": "taurus",
-            "name": "Tigris",
-            "ai": "ship",
-            "position": [200, 5050, 100],
-            "rotations": ["z+180"],
-            "excludeFromReferenceScore": true
-        },
-        {
-            "team": "rebels",
-            "class": "taurus",
-            "name": "Ganges",
-            "ai": "ship",
-            "position": [-200, 5050, 100],
-            "rotations": ["z+180"],
-            "excludeFromReferenceScore": true
+          "type": "command",
+          "subjects": {
+            "teams": [
+              "empire"
+            ]
+          },
+          "params": {
+            "command": "jump",
+            "jump": {
+              "way": "out"
+            }
+          }
         }
-    ]
+      ]
+    },
+    {
+      "trigger": {
+        "conditions": [
+          {
+            "type": "destroyed",
+            "subjects": {
+              "teams": [
+                "empire"
+              ]
+            }
+          }
+        ],
+        "delay": 45000
+      },
+      "actions": [
+        {
+          "type": "command",
+          "subjects": {
+            "teams": [
+              "rebels"
+            ]
+          },
+          "params": {
+            "command": "jump",
+            "jump": {
+              "way": "out"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "spacecrafts": [
+    {
+      "team": "empire",
+      "class": "falcon",
+      "ai": "fighter",
+      "squad": "alpha 1",
+      "position": [
+        -100,
+        0,
+        10
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "falcon",
+      "piloted": true,
+      "squad": "alpha 2",
+      "position": [
+        -65,
+        -35,
+        20
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "falcon",
+      "ai": "fighter",
+      "squad": "alpha 3",
+      "position": [
+        -135,
+        -35,
+        20
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "viper",
+      "ai": "fighter",
+      "squad": "beta 1",
+      "position": [
+        100,
+        0,
+        10
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "viper",
+      "ai": "fighter",
+      "squad": "beta 2",
+      "position": [
+        135,
+        -35,
+        20
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "viper",
+      "ai": "fighter",
+      "squad": "beta 3",
+      "position": [
+        65,
+        -35,
+        20
+      ]
+    },
+    {
+      "team": "empire",
+      "class": "aries",
+      "name": "Ohio",
+      "ai": "ship",
+      "position": [
+        0,
+        50,
+        0
+      ],
+      "loadout": "full",
+      "excludeFromReferenceScore": true
+    },
+    {
+      "team": "empire",
+      "class": "taurus",
+      "name": "Danube",
+      "ai": "ship",
+      "position": [
+        -200,
+        -50,
+        100
+      ],
+      "excludeFromReferenceScore": true
+    },
+    {
+      "team": "empire",
+      "class": "taurus",
+      "name": "Vistula",
+      "ai": "ship",
+      "position": [
+        200,
+        -50,
+        100
+      ],
+      "excludeFromReferenceScore": true
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "ai": "fighter",
+      "squad": "serpent 1",
+      "position": [
+        100,
+        5000,
+        10
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "ai": "fighter",
+      "squad": "serpent 2",
+      "position": [
+        65,
+        5035,
+        20
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "rebels",
+      "class": "falcon",
+      "ai": "fighter",
+      "squad": "serpent 3",
+      "position": [
+        135,
+        5035,
+        20
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "rebels",
+      "class": "viper",
+      "ai": "fighter",
+      "squad": "phantom 1",
+      "position": [
+        -100,
+        5000,
+        10
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "rebels",
+      "class": "viper",
+      "ai": "fighter",
+      "squad": "phantom 2",
+      "position": [
+        -135,
+        5035,
+        20
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "rebels",
+      "class": "viper",
+      "ai": "fighter",
+      "squad": "phantom 3",
+      "position": [
+        -65,
+        5035,
+        20
+      ],
+      "rotations": [
+        "z+180"
+      ]
+    },
+    {
+      "team": "rebels",
+      "class": "aries",
+      "name": "Seine",
+      "ai": "ship",
+      "position": [
+        0,
+        4950,
+        0
+      ],
+      "rotations": [
+        "z+180"
+      ],
+      "loadout": "full",
+      "excludeFromReferenceScore": true
+    },
+    {
+      "team": "rebels",
+      "class": "taurus",
+      "name": "Tigris",
+      "ai": "ship",
+      "position": [
+        200,
+        5050,
+        100
+      ],
+      "rotations": [
+        "z+180"
+      ],
+      "excludeFromReferenceScore": true
+    },
+    {
+      "team": "rebels",
+      "class": "taurus",
+      "name": "Ganges",
+      "ai": "ship",
+      "position": [
+        -200,
+        5050,
+        100
+      ],
+      "rotations": [
+        "z+180"
+      ],
+      "excludeFromReferenceScore": true
+    }
+  ]
 }

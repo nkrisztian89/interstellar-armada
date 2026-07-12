@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2024 Krisztián Nagy
+ * Copyright 2016-2026 Krisztián Nagy
  * @file The main module for the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -133,6 +133,12 @@ define([
             TUTORIAL_TEXT = 'for more information, check out the <a href="docs/editor/tutorial/00-index.html" target="_blank">Getting started guide</a>',
             NO_PREVIEW_TEXT = "preview not available for this type of item",
             NO_PROPERTIES_TEXT = "properties not available for this type of item",
+            /**
+             * The number of spaces to use for indentation when exporting JSON files, so they are in a readable, canonical format, keeping
+             * diffs minimal
+             * @type Number
+             */
+            EXPORT_INDENT = 2,
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -686,16 +692,7 @@ define([
         };
     }
     /**
-     * Returns the stringified info object that can be embedded at the beginning of exported files (e.g. classes)
-     * @param {String} name The name to be included in the info
-     * @param {String} author The author to be included in the info
-     * @returns {String}
-     */
-    function _getInfoString(name, author) {
-        return JSON.stringify(_getInfoObject(name, author));
-    }
-    /**
-     * Returns the string that can be used as the content of an exported file 
+     * Returns the string that can be used as the content of an exported file
      * @param {String} name The name to be included in the info section of the file
      * @param {String} author The author to be included in the info section of the file
      * @param {String[]} categories The list of the categories to include in the file
@@ -704,21 +701,20 @@ define([
      * @returns {String}
      */
     function _getItemsString(name, author, categories, getNamesFunction, getItemFunction) {
-        var i, j, itemNames, result, itemData;
-        result = '{"info":' + _getInfoString(name, author);
+        var i, j, itemNames, itemData, result = {
+            info: _getInfoObject(name, author)
+        };
         for (i = 0; i < categories.length; i++) {
-            result += ',"' + categories[i] + '":[';
+            result[categories[i]] = [];
             itemNames = getNamesFunction(categories[i]);
             for (j = 0; j < itemNames.length; j++) {
                 itemData = getItemFunction(categories[i], itemNames[j]).getData();
                 if (itemData) {
-                    result += ((j > 0) ? ',' : '') + JSON.stringify(itemData);
+                    result[categories[i]].push(itemData);
                 }
             }
-            result += ']';
         }
-        result += "}";
-        return result;
+        return JSON.stringify(result, null, EXPORT_INDENT);
     }
     /**
      * Exports the passed string into a JSON file the download of which is then triggered
@@ -808,7 +804,7 @@ define([
                         delete data.name;
                         _exportString(
                                 exportItem.value,
-                                JSON.stringify(data));
+                                JSON.stringify(data, null, EXPORT_INDENT));
                     });
                     break;
                 default:
