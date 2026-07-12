@@ -9,10 +9,11 @@
         "build": "grunt build",
         "build-with-editor": "grunt build-with-editor",
         "dev-build": "grunt dev-build",
-        "start": "google-chrome --allow-file-access-from-files --user-data-dir=/tmp file://${INIT_CWD}/index.html#local --no-default-browser-check --no-first-run",
+        "start": "google-chrome --allow-file-access-from-files --user-data-dir=${INIT_CWD}/.chrome-data file://${INIT_CWD}/index.html#local --no-default-browser-check --no-first-run",
         "build-snap": "grunt set-platform-snap; electron-builder --linux snap; grunt reset-platform;",
         "build-appimage": "grunt set-platform-appimage; electron-builder --linux appimage; grunt reset-platform;",
-        "clean-snap": "grunt clean-snap"
+        "clean-snap": "grunt clean-snap",
+        "clean-chrome-data": "rm -rf .chrome-data"
     },
     "build": {
         "appId": "interstellar-armada",
