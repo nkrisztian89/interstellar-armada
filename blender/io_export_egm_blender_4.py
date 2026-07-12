@@ -25,7 +25,7 @@ from mathutils import (
 bl_info = {
     "name": "EgomModel export",
     "author": "Krisztián Nagy",
-    "version": (1, 0, 0),
+    "version": (1, 1, 0),
     "blender": (4, 2, 1),
     "location": "File > Import-Export",
     "description": "Adds support to export models in the EgomModel (.egm) file format, version 3.6",
@@ -43,11 +43,10 @@ def get_group_index_from_group(group: VertexGroupElement) -> int:
     return round(group.weight * WEIGHT_FACTOR)
 
 
-# Get EGM group index for MeshPolygon 'polygon' inside object 'ob' of
-# group with index 'group'
-def get_group_index(ob: Object, polygon: MeshPolygon, group: int) -> int:
+# Get EGM group index for MeshPolygon 'polygon' inside the (evaluated) mesh
+# vertex collection 'vertices' for the group with index 'group'
+def get_group_index(vertices, polygon: MeshPolygon, group: int) -> int:
     index = 0
-    vertices = ob.data.vertices
     for i in range(len(polygon.vertices)):
         v = vertices[polygon.vertices[i]]
         group_index = 0
@@ -129,6 +128,7 @@ def flatten(nested_list):
 
 
 def get_triangles(obs: list[Object],
+                  meshes: list,
                   vstart: list[int],
                   vertex_indices: list[int],
                   minLOD: int,
@@ -151,9 +151,10 @@ def get_triangles(obs: list[Object],
     def add_polygon(p: MeshPolygon,
                     obMinLOD: int,
                     obMaxLOD: int,
-                    ob: Object,
+                    vertices,
                     uv: bpy_prop_collection,
                     split_normals: list[Vector],
+                    normal_matrix,
                     tra: int,
                     lum: int):
         # Vertex indices
@@ -162,18 +163,18 @@ def get_triangles(obs: list[Object],
         vcount = len(p.vertices)
         # We collect the vertex indices for the deduplicated common vertex
         # array for this polygon's vertices
-        vertices = [vertex_indices[i + start] for i in p.vertices]
+        verts = [vertex_indices[i + start] for i in p.vertices]
         # In egm files we always start with the lowest vertex index for each
         # polygon, so we create a mapping from blender's vertex order to this
         # reordered vertex list into index_map
-        index = vertices.index(min(vertices))
+        index = verts.index(min(verts))
         index_map = [index + i for i in range(vcount - index)]
         index_map += [i for i in range(index)]
         # Collect the resulting vertex data into the array:
         # Vertex count, start vertex index, vertex index offsets for the rest
-        pdata = [vcount, vertices[index]]
+        pdata = [vcount, verts[index]]
         for i in range(1, vcount):
-            pdata.append(vertices[index_map[i]] - vertices[index])
+            pdata.append(verts[index_map[i]] - verts[index])
         # Color
         pdata.append(p.material_index)
         # Texture coordinates
@@ -182,27 +183,30 @@ def get_triangles(obs: list[Object],
               1 - uv[p.loop_indices[index_map[i]]].uv[1]]
             for i in range(vcount)
           ]))
-        # Normal vectors
+        # Normal vectors, transformed via the normal matrix (matrix_world's
+        # inverted-transposed 3x3 part) rather than matrix_world directly, so
+        # they stay correct under non-uniform scale
+        face_normal = (normal_matrix @ p.normal).normalized()
         normals = [split_normals[i] for i in p.loop_indices]
         normals = [normals[index_map[i]] for i in range(vcount)]
         has_split_normals = not all([
-                normals[i][0] == p.normal.x and
-                normals[i][1] == p.normal.y and
-                normals[i][2] == p.normal.z
+                normals[i][0] == face_normal.x and
+                normals[i][1] == face_normal.y and
+                normals[i][2] == face_normal.z
                 for i in range(vcount)
             ])
         pdata.append(1 if has_split_normals else 0)
         if has_split_normals:
             pdata += map(round4, flatten(normals))
         else:
-            pdata += map(round4, [p.normal.x, p.normal.y, p.normal.z])
+            pdata += map(round4, [face_normal.x, face_normal.y, face_normal.z])
         # Group indices
         tr = 0
         lu = 0
         if tra >= 0:
-            tr = get_group_index(ob, p, tra)
+            tr = get_group_index(vertices, p, tra)
         if lum >= 0:
-            lu = get_group_index(ob, p, lum)
+            lu = get_group_index(vertices, p, lum)
         pdata += [tr, lu]
         # LOD
         pdata += [obMinLOD, obMaxLOD]
@@ -215,7 +219,7 @@ def get_triangles(obs: list[Object],
 
     # Collect all the polygon data from all the objects in an unduplicated way
     # into the polygon_data array
-    for ob in obs:
+    for ob, mesh in zip(obs, meshes):
         (obMinLOD, obMaxLOD) = get_lod_from_object(ob, minLOD, maxLOD)
         if obMinLOD > maxLOD or obMaxLOD < minLOD:
             continue
@@ -229,14 +233,17 @@ def get_triangles(obs: list[Object],
             lum = ob.vertex_groups['luminosity'].index
         else:
             lum = -1
-        uv = ob.data.uv_layers.active.data
-        split_normals = [n.vector for n in ob.data.corner_normals]
-        for p in ob.data.polygons:
+        uv = mesh.uv_layers.active.data
+        normal_matrix = ob.matrix_world.to_3x3().inverted().transposed()
+        split_normals = [(normal_matrix @ n.vector).normalized()
+                          for n in mesh.corner_normals]
+        for p in mesh.polygons:
             # Skip transparent triangles for opaque list and vice versa
             mat = obs[0].material_slots[p.material_index].material
             if (get_color(mat)[3] < 1) != transparent:
                 continue
-            add_polygon(p, obMinLOD, obMaxLOD, ob, uv, split_normals, tra, lum)
+            add_polygon(p, obMinLOD, obMaxLOD, mesh.vertices, uv,
+                        split_normals, normal_matrix, tra, lum)
         oindex += 1
 
     # Convert the unduplicated polygon data to a string that can be written
@@ -349,83 +356,102 @@ def determine_lod_range(obs: list[Object]):
 def write_egm(path, obs, props):
     minLOD = props.min_lod
     maxLOD = props.max_lod
-    # Write file header
-    f = open(path, "w")
-    f.write('{"format":"EgomModel","version":"3.6","info":{"name":"'
-            + props.model_name
-            + '","author":"' + props.author + '","scale":'
-            + f2s3(obs[0].scale[0])
-            + ',"LOD":[' + str(minLOD) + ',' + str(maxLOD)
-            + '],"colorPalette":[')
-    # Export color palette based on the materials of the first object
-    # All objects must share the same materials in the same slots
-    mtext = []
-    for m in obs[0].material_slots:
-        color = get_color(m.material)
-        mtext.append("["
-                     + f2s3(color[0]) + ","
-                     + f2s3(color[1]) + ","
-                     + f2s3(color[2]) + ","
-                     + f2s3(color[3]) + "]")
-    f.write(",".join(mtext))
-    # Export vertices
-    f.write(']},"vertices":[')
-    vtext = []
-    vstart = []
-    vindex = 0
-    vertex_data = []
-    vertex_indices = []
+    # Evaluate all objects through the dependency graph so modifier stacks
+    # (mirror, subdivision, bevel, boolean, etc.) are included in the
+    # exported geometry
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    ob_evals = [ob.evaluated_get(depsgraph) for ob in obs]
+    meshes = [ob_eval.to_mesh() for ob_eval in ob_evals]
+    try:
+        # Write file header
+        f = open(path, "w")
+        # The per-model "scale" field is always exported as 1: vertex
+        # positions already include each object's world-space scale (see
+        # add_vertex below), and the engine also applies this field's value
+        # on load as a separate multiplier - leaving it non-1 here would
+        # scale models twice
+        f.write('{"format":"EgomModel","version":"3.6","info":{"name":"'
+                + props.model_name
+                + '","author":"' + props.author + '","scale":1'
+                + ',"LOD":[' + str(minLOD) + ',' + str(maxLOD)
+                + '],"colorPalette":[')
+        # Export color palette based on the materials of the first object
+        # All objects must share the same materials in the same slots
+        mtext = []
+        for m in obs[0].material_slots:
+            color = get_color(m.material)
+            mtext.append("["
+                         + f2s3(color[0]) + ","
+                         + f2s3(color[1]) + ","
+                         + f2s3(color[2]) + ","
+                         + f2s3(color[3]) + "]")
+        f.write(",".join(mtext))
+        # Export vertices
+        f.write(']},"vertices":[')
+        vtext = []
+        vstart = []
+        vindex = 0
+        vertex_data = []
+        vertex_indices = []
 
-    def add_vertex(v, obMinLOD, obMaxLOD):
-        vdata = [
-            round3(v.co[0]),
-            round3(v.co[1]),
-            round3(v.co[2]),
-            obMinLOD, obMaxLOD]
-        for i in range(len(vertex_data)):
-            vd = vertex_data[i]
-            if vd[0] == vdata[0] and vd[1] == vdata[1] and vd[2] == vdata[2]:
-                vd[3] = min(vd[3], obMinLOD)
-                vd[4] = max(vd[4], obMaxLOD)
-                vertex_indices.append(i)
-                return
-        vertex_indices.append(len(vertex_data))
-        vertex_data.append(vdata)
+        def add_vertex(co, obMinLOD, obMaxLOD):
+            vdata = [
+                round3(co[0]),
+                round3(co[1]),
+                round3(co[2]),
+                obMinLOD, obMaxLOD]
+            for i in range(len(vertex_data)):
+                vd = vertex_data[i]
+                if vd[0] == vdata[0] and vd[1] == vdata[1] and vd[2] == vdata[2]:
+                    vd[3] = min(vd[3], obMinLOD)
+                    vd[4] = max(vd[4], obMaxLOD)
+                    vertex_indices.append(i)
+                    return
+            vertex_indices.append(len(vertex_data))
+            vertex_data.append(vdata)
 
-    for ob in obs:
-        (obMinLOD, obMaxLOD) = get_lod_from_object(ob, minLOD, maxLOD)
-        if obMinLOD > maxLOD or obMaxLOD < minLOD:
-            continue
-        vertices = ob.data.vertices
-        vstart.append(vindex)
-        vindex += len(vertices)
-        for v in vertices:
-            add_vertex(v, obMinLOD, obMaxLOD)
-    prevMinLOD = minLOD
-    prevMaxLOD = maxLOD
-    for vertex in vertex_data:
-        vt = f'[{vertex[0]:g},{vertex[1]:g},{vertex[2]:g}'
-        if vertex[3] != prevMinLOD or vertex[4] != prevMaxLOD:
-            vt += f',{vertex[3]},{vertex[4]}'
-            prevMinLOD = vertex[3]
-            prevMaxLOD = vertex[4]
-        vt += ']'
-        vtext.append(vt)
+        for ob, mesh in zip(obs, meshes):
+            (obMinLOD, obMaxLOD) = get_lod_from_object(ob, minLOD, maxLOD)
+            if obMinLOD > maxLOD or obMaxLOD < minLOD:
+                continue
+            vertices = mesh.vertices
+            vstart.append(vindex)
+            vindex += len(vertices)
+            # Bake each object's world transform (location/rotation/scale)
+            # into the exported coordinates, since multiple objects share one
+            # combined vertex space
+            for v in vertices:
+                world_co = ob.matrix_world @ v.co
+                add_vertex(world_co, obMinLOD, obMaxLOD)
+        prevMinLOD = minLOD
+        prevMaxLOD = maxLOD
+        for vertex in vertex_data:
+            vt = f'[{vertex[0]:g},{vertex[1]:g},{vertex[2]:g}'
+            if vertex[3] != prevMinLOD or vertex[4] != prevMaxLOD:
+                vt += f',{vertex[3]},{vertex[4]}'
+                prevMinLOD = vertex[3]
+                prevMaxLOD = vertex[4]
+            vt += ']'
+            vtext.append(vt)
 
-    f.write(",".join(vtext))
-    # Export polygons
-    f.write('],"polygons":[')
-    opaque_triangles = get_triangles(obs, vstart, vertex_indices, 
-                                     minLOD, maxLOD, False)
-    transparent_triangles = get_triangles(obs, vstart, vertex_indices,
-                                          minLOD, maxLOD, True)
+        f.write(",".join(vtext))
+        # Export polygons
+        f.write('],"polygons":[')
+        opaque_triangles = get_triangles(obs, meshes, vstart, vertex_indices,
+                                         minLOD, maxLOD, False)
+        transparent_triangles = get_triangles(obs, meshes, vstart, vertex_indices,
+                                              minLOD, maxLOD, True)
 
-    f.write(opaque_triangles)
-    if opaque_triangles and transparent_triangles:
-        f.write(",")
-    f.write(transparent_triangles)
-    f.write("]}")
-    f.close()
+        f.write(opaque_triangles)
+        if opaque_triangles and transparent_triangles:
+            f.write(",")
+        f.write(transparent_triangles)
+        f.write("]}")
+        f.close()
+    finally:
+        # Free the temporary evaluated meshes created above
+        for ob_eval in ob_evals:
+            ob_eval.to_mesh_clear()
 
 
 class ExportEGM(Operator, ExportHelper):
