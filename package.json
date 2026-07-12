@@ -1,5 +1,6 @@
 {
     "name": "interstellar-armada",
+    "desktopName": "InterstellarArmada.desktop",
     "version": "0.5.6",
     "description": "Interstellar Armada: Galactic Ace is a mission-based 3D space combat simulator where you take the role of a fighter pilot. The game uses Newtonian mechanics with an assisted, six degrees of freedom flight model and supports keyboard, mouse, joystick, gamepad and touch controls. This development version features several training and combat missions, a basic multiplayer mode and support for creating and publishing user-created custom missions. The game is built with open web technologies and is packaged as a standalone app using Electron.",
     "main": "main.js",
@@ -18,29 +19,30 @@
     "build": {
         "appId": "interstellar-armada",
         "productName": "Interstellar Armada: Galactic Ace",
-        "snap": {
-            "base": "core20",
-            "category": "Game",
-            "confinement": "strict",
-            "grade": "stable",
-            "title": "Interstellar Armada: Galactic Ace",
-            "summary": "A 3D space combat action/sim game in development.",
-            "plugs": [
-                "desktop",
-                "desktop-legacy",
-                "wayland",
-                "x11",
-                "unity7",
-                "home",
-                "gsettings",
-                "browser-support",
-                "network",
-                "audio-playback",
-                "opengl",
-                "hardware-observe",
-                "joystick",
-                "screen-inhibit-control"
-            ]
+        "snapcraft": {
+            "base": "core24",
+            "core24": {
+                "confinement": "strict",
+                "grade": "stable",
+                "title": "Interstellar Armada: Galactic Ace",
+                "summary": "A 3D space combat action/sim game in development.",
+                "plugs": [
+                    "desktop",
+                    "desktop-legacy",
+                    "wayland",
+                    "x11",
+                    "unity7",
+                    "home",
+                    "gsettings",
+                    "browser-support",
+                    "network",
+                    "audio-playback",
+                    "opengl",
+                    "hardware-observe",
+                    "joystick",
+                    "screen-inhibit-control"
+                ]
+            }
         },
         "files": [
             "**/*",
@@ -59,8 +61,22 @@
             "!.yarnrc.yml"
         ],
         "linux": {
+            "executableName": "interstellar-armada",
+            "syncDesktopName": true,
             "icon": "./interstellar-armada.png",
-            "desktop": "./interstellar-armada.desktop",
+            "synopsis": "Space Combat Simulator",
+            "desktop": {
+                "entry": {
+                    "Name": "Interstellar Armada: Galactic Ace",
+                    "Comment": "A 3D space combat action/sim game in development.",
+                    "Icon": "${SNAP}/meta/gui/interstellar-armada.png",
+                    "Type": "Application",
+                    "Categories": "Game;",
+                    "StartupWMClass": "InterstellarArmada",
+                    "StartupNotify": true,
+                    "Terminal": false
+                }
+            },
             "category": "Game"
         }
     },
@@ -74,8 +90,8 @@
         "url": "https://github.com/nkrisztian89/interstellar-armada/issues"
     },
     "devDependencies": {
-        "electron": "^34.0.0",
-        "electron-builder": "^25.1.8",
+        "electron": "^43.1.0",
+        "electron-builder": "^26.15.3",
         "grunt": "^1.6.1",
         "grunt-concurrent": "^3.0.0",
         "grunt-contrib-clean": "^2.0.1",
@@ -86,6 +102,7 @@
         "grunt-eslint": "^24.0.0",
         "grunt-json-minify": "^1.1.0",
         "grunt-replace-lts": "^1.1.0",
-        "grunt-sync": "^0.8.2"
+        "grunt-sync": "^0.8.2",
+        "sass": "1.99.0"
     }
 }
