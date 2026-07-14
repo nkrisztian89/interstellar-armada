@@ -25,7 +25,7 @@ from mathutils import (
 bl_info = {
     "name": "EgomModel export",
     "author": "Krisztián Nagy",
-    "version": (1, 1, 0),
+    "version": (1, 1, 1),
     "blender": (4, 2, 1),
     "location": "File > Import-Export",
     "description": "Adds support to export models in the EgomModel (.egm) file format, version 3.6",
@@ -164,6 +164,10 @@ def get_triangles(obs: list[Object],
         # We collect the vertex indices for the deduplicated common vertex
         # array for this polygon's vertices
         verts = [vertex_indices[i + start] for i in p.vertices]
+        # Skip degenerate polygons (fewer than 3 unique vertices, e.g. a
+        # zero-width sliver) - these have no area and shouldn't be exported
+        if len(set(verts)) < 3:
+            return
         # In egm files we always start with the lowest vertex index for each
         # polygon, so we create a mapping from blender's vertex order to this
         # reordered vertex list into index_map

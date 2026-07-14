@@ -9,3 +9,5 @@
 /js
 /.chrome-data
 /docs/reports
+__pycache__/
+*.pyc

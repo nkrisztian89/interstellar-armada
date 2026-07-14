@@ -12,7 +12,7 @@ from bpy.types import (
 bl_info = {
     "name": "EgomModel import",
     "author": "Krisztián Nagy",
-    "version": (1, 0, 0),
+    "version": (1, 0, 1),
     "blender": (4, 2, 1),
     "location": "File > Import-Export",
     "description": "Adds support to import models in the EgomModel (.egm) file format, version 3.6",
@@ -183,26 +183,31 @@ class ImportEGM(Operator, ImportHelper):
                     indices = [t[0][offs]]
                     for i in range(offs+1, offs+points):
                         indices.append(t[0][offs]+t[0][i])
-                    faces.append(tuple(indices))
-                    # Set normals (from second array if given)
-                    if len(t) < 2 or len(t[1]) < 3:
-                        if len(prevNormals) < points:
-                            normals += [[prevNormals[0][0],
-                                        prevNormals[0][1],
-                                        prevNormals[0][2]]] * points
+                    # Skip degenerate polygons (fewer than 3 unique vertex
+                    # indices): from_pydata() silently drops these, which
+                    # would desync the normals array below from the mesh's
+                    # actual loop count and crash normals_split_custom_set
+                    if len(set(indices)) >= 3:
+                        faces.append(tuple(indices))
+                        # Set normals (from second array if given)
+                        if len(t) < 2 or len(t[1]) < 3:
+                            if len(prevNormals) < points:
+                                normals += [[prevNormals[0][0],
+                                            prevNormals[0][1],
+                                            prevNormals[0][2]]] * points
+                            else:
+                                normals += [[prevNormals[i][0],
+                                             prevNormals[i][1],
+                                             prevNormals[i][2]]
+                                            for i in range(points)]
+                        elif len(t[1]) < 3*points:
+                            for i in range(points):
+                                normals.append([t[1][0], t[1][1], t[1][2]])
                         else:
-                            normals += [[prevNormals[i][0],
-                                         prevNormals[i][1],
-                                         prevNormals[i][2]]
-                                        for i in range(points)]
-                    elif len(t[1]) < 3*points:
-                        for i in range(points):
-                            normals.append([t[1][0], t[1][1], t[1][2]])
-                    else:
-                        for i in range(points):
-                            normals.append([t[1][i*3],
-                                            t[1][i*3+1],
-                                            t[1][i*3+2]])
+                            for i in range(points):
+                                normals.append([t[1][i*3],
+                                                t[1][i*3+1],
+                                                t[1][i*3+2]])
                 # Parse second array containing normals
                 if len(t) > 1 and len(t[1]) > 2:
                     if len(t[1]) < 3*points:
@@ -252,8 +257,15 @@ class ImportEGM(Operator, ImportHelper):
                 if len(t) > 1 and len(t[1]) % 3 == 2:
                     prev_tra = t[1][-2]
                     prev_lum = t[1][-1]
+                # Recompute the same vertex indices as the first pass, to
+                # detect degenerate polygons that were skipped there (and so
+                # never consumed a slot in mesh.polygons)
+                indices = [t[0][offs]]
+                for ix2 in range(offs+1, offs+points):
+                    indices.append(t[0][offs]+t[0][ix2])
                 # If the polygon exists in the current LOD, set properties
-                if prevMinLOD <= lod and prevMaxLOD >= lod:
+                if (len(set(indices)) >= 3
+                        and prevMinLOD <= lod and prevMaxLOD >= lod):
                     face.material_index = prevmat
                     for ix, loop in enumerate(face.loop_indices):
                         uv_layer[loop].uv = prevUv[ix]
