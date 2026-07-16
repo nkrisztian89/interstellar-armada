@@ -25,7 +25,7 @@ from mathutils import (
 bl_info = {
     "name": "EgomModel export",
     "author": "Krisztián Nagy",
-    "version": (1, 1, 1),
+    "version": (1, 2, 0),
     "blender": (4, 2, 1),
     "location": "File > Import-Export",
     "description": "Adds support to export models in the EgomModel (.egm) file format, version 3.6",
@@ -127,10 +127,28 @@ def flatten(nested_list):
     return [item for sub_list in nested_list for item in sub_list]
 
 
+# Build the combined, deduplicated material list to export as the color
+# palette from the materials of all passed objects, together with a mapping
+# for each object.
+def build_material_map(obs: list[Object]):
+    materials = []
+    local_to_global: dict[Object, list[int]] = {}
+    for ob in obs:
+        mapping = []
+        for slot in ob.material_slots:
+            mat = slot.material
+            if mat not in materials:
+                materials.append(mat)
+            mapping.append(materials.index(mat))
+        local_to_global[ob] = mapping
+    return materials, local_to_global
+
+
 def get_triangles(obs: list[Object],
                   meshes: list,
                   vstart: list[int],
                   vertex_indices: list[int],
+                  material_map: dict,
                   minLOD: int,
                   maxLOD: int,
                   transparent: bool) -> str:
@@ -156,7 +174,8 @@ def get_triangles(obs: list[Object],
                     split_normals: list[Vector],
                     normal_matrix,
                     tra: int,
-                    lum: int):
+                    lum: int,
+                    material_index: int):
         # Vertex indices
         start = vstart[oindex]  # The index for the first vertex of this object
         #                         in the vertex_indices array
@@ -180,7 +199,7 @@ def get_triangles(obs: list[Object],
         for i in range(1, vcount):
             pdata.append(verts[index_map[i]] - verts[index])
         # Color
-        pdata.append(p.material_index)
+        pdata.append(material_index)
         # Texture coordinates
         pdata += map(round3, flatten([[
               uv[p.loop_indices[index_map[i]]].uv[0],
@@ -243,11 +262,12 @@ def get_triangles(obs: list[Object],
                           for n in mesh.corner_normals]
         for p in mesh.polygons:
             # Skip transparent triangles for opaque list and vice versa
-            mat = obs[0].material_slots[p.material_index].material
+            mat = ob.material_slots[p.material_index].material
             if (get_color(mat)[3] < 1) != transparent:
                 continue
             add_polygon(p, obMinLOD, obMaxLOD, mesh.vertices, uv,
-                        split_normals, normal_matrix, tra, lum)
+                        split_normals, normal_matrix, tra, lum,
+                        material_map[ob][p.material_index])
         oindex += 1
 
     # Convert the unduplicated polygon data to a string that can be written
@@ -360,6 +380,7 @@ def determine_lod_range(obs: list[Object]):
 def write_egm(path, obs, props):
     minLOD = props.min_lod
     maxLOD = props.max_lod
+    materials, material_map = build_material_map(obs)
     # Evaluate all objects through the dependency graph so modifier stacks
     # (mirror, subdivision, bevel, boolean, etc.) are included in the
     # exported geometry
@@ -379,11 +400,12 @@ def write_egm(path, obs, props):
                 + '","author":"' + props.author + '","scale":1'
                 + ',"LOD":[' + str(minLOD) + ',' + str(maxLOD)
                 + '],"colorPalette":[')
-        # Export color palette based on the materials of the first object
-        # All objects must share the same materials in the same slots
+        # Export color palette based on the combined, deduplicated materials
+        # of all selected objects (see build_material_map) - objects may use
+        # different subsets/orderings of materials in their own slots
         mtext = []
-        for m in obs[0].material_slots:
-            color = get_color(m.material)
+        for mat in materials:
+            color = get_color(mat)
             mtext.append("["
                          + f2s3(color[0]) + ","
                          + f2s3(color[1]) + ","
@@ -442,9 +464,9 @@ def write_egm(path, obs, props):
         # Export polygons
         f.write('],"polygons":[')
         opaque_triangles = get_triangles(obs, meshes, vstart, vertex_indices,
-                                         minLOD, maxLOD, False)
+                                         material_map, minLOD, maxLOD, False)
         transparent_triangles = get_triangles(obs, meshes, vstart, vertex_indices,
-                                              minLOD, maxLOD, True)
+                                              material_map, minLOD, maxLOD, True)
 
         f.write(opaque_triangles)
         if opaque_triangles and transparent_triangles:
