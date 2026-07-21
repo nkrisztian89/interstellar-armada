@@ -3,8 +3,8 @@
     "name": "classes",
     "author": "Krisztián Nagy",
     "comment": "Created by Interstellar Armada editor",
-    "version": "0.5.5-dev:1238 (2024.12.07.)",
-    "creationTime": "Sat Dec 07 2024 17:40:31 GMT+0100 (Central European Standard Time)"
+    "version": "0.5.6-dev:1282 (2026.07.21.)",
+    "creationTime": "Tue Jul 21 2026 01:45:57 GMT+0200 (Central European Summer Time)"
   },
   "skyboxClasses": [
     {
@@ -6418,6 +6418,50 @@
       "scoreValue": 10
     },
     {
+      "name": "pirateHeavyFighterMk1",
+      "fullName": "Pirate heavy fighter propulsion",
+      "shader": "particle",
+      "texture": "flare",
+      "color": [
+        1,
+        0.3882,
+        0.3882,
+        1
+      ],
+      "referenceMass": 45000,
+      "thrust": 55,
+      "angularThrust": 200,
+      "maxMoveBurnLevel": 0.5,
+      "maxTurnBurnLevel": 0.35,
+      "thrusterSound": {
+        "name": "thruster",
+        "volume": 1.4
+      },
+      "scoreValue": 15
+    },
+    {
+      "name": "pirateHeavyFighterMk2",
+      "fullName": "Advanced pirate heavy fighter propulsion",
+      "shader": "particle",
+      "texture": "flare",
+      "color": [
+        1,
+        0.3882,
+        0.3882,
+        1
+      ],
+      "referenceMass": 45000,
+      "thrust": 60,
+      "angularThrust": 250,
+      "maxMoveBurnLevel": 0.5,
+      "maxTurnBurnLevel": 0.35,
+      "thrusterSound": {
+        "name": "thruster",
+        "volume": 1.4
+      },
+      "scoreValue": 20
+    },
+    {
       "name": "rebelFighterMk1",
       "fullName": "Rebel fighter propulsion",
       "shader": "particle",
@@ -7571,6 +7615,42 @@
         "volume": 1
       },
       "scoreValue": 25
+    },
+    {
+      "name": "pirateHeavyFighterMk1",
+      "fullName": "Pirate heavy fighter shield",
+      "capacity": 25,
+      "rechargeDelay": 600,
+      "rechargeRate": 2.5,
+      "rechargeColor": [
+        1,
+        0.38,
+        0.38
+      ],
+      "rechargeAnimationDuration": 1000,
+      "rechargeStartSound": {
+        "name": "shieldUp",
+        "volume": 1
+      },
+      "scoreValue": 50
+    },
+    {
+      "name": "pirateHeavyFighterMk2",
+      "fullName": "Advanced pirate heavy fighter shield",
+      "capacity": 30,
+      "rechargeDelay": 500,
+      "rechargeRate": 3,
+      "rechargeColor": [
+        1,
+        0.38,
+        0.38
+      ],
+      "rechargeAnimationDuration": 1000,
+      "rechargeStartSound": {
+        "name": "shieldUp",
+        "volume": 1
+      },
+      "scoreValue": 65
     },
     {
       "name": "rebelBomberMk1",
@@ -18039,6 +18119,830 @@
           "spotFullIntensityAngle": 5
         }
       ]
+    },
+    {
+      "name": "scarab",
+      "type": "heavyFighter",
+      "fullName": "Scarab",
+      "description": "Based on a luxurious personal shuttle popular among high-profile businessmen, the Scarab is a deadly modification that utilizes the advanced energy core of the ship to power an exceptionally strong shield generator. This quickly made it the preferred vessel for the richest crime lords and their elite assassins and mercenaries.",
+      "hitpoints": 30,
+      "model": "scarab",
+      "shader": "ship",
+      "texture": "scarab",
+      "mass": 45000,
+      "dragFactor": 0.3,
+      "bodies": [
+        {
+          "position": [
+            0,
+            0,
+            -3.3
+          ],
+          "size": [
+            6.6,
+            15.4,
+            3.3
+          ]
+        },
+        {
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            4.95,
+            5.5,
+            3.3
+          ]
+        },
+        {
+          "position": [
+            0,
+            -1.1,
+            3.3
+          ],
+          "size": [
+            4.95,
+            7.7,
+            3.3
+          ]
+        },
+        {
+          "position": [
+            0,
+            -1.1,
+            2.86
+          ],
+          "size": [
+            12.1,
+            3.3,
+            0.55
+          ]
+        },
+        {
+          "position": [
+            8,
+            -1,
+            0.75
+          ],
+          "rotations": [
+            {
+              "axis": "Z",
+              "degrees": 25
+            },
+            {
+              "axis": "Y",
+              "degrees": 22
+            }
+          ],
+          "size": [
+            15,
+            3.85,
+            1
+          ]
+        },
+        {
+          "position": [
+            -8,
+            -1,
+            0.75
+          ],
+          "rotations": [
+            {
+              "axis": "Z",
+              "degrees": -25
+            },
+            {
+              "axis": "Y",
+              "degrees": -22
+            }
+          ],
+          "size": [
+            15,
+            3.85,
+            1
+          ]
+        }
+      ],
+      "weaponSlots": [
+        {
+          "position": [
+            -3.65,
+            -2.508,
+            1.705
+          ],
+          "rotations": [
+            {
+              "axis": "Y",
+              "degrees": -65
+            }
+          ]
+        },
+        {
+          "position": [
+            3.65,
+            -2.508,
+            1.705
+          ],
+          "rotations": [
+            {
+              "axis": "Y",
+              "degrees": 65
+            }
+          ]
+        },
+        {
+          "position": [
+            4,
+            2.527,
+            -3.332
+          ],
+          "rotations": [
+            {
+              "axis": "Y",
+              "degrees": 90
+            }
+          ]
+        },
+        {
+          "position": [
+            -4,
+            2.527,
+            -3.332
+          ],
+          "rotations": [
+            {
+              "axis": "Y",
+              "degrees": -90
+            }
+          ]
+        },
+        {
+          "position": [
+            7.415,
+            0.009,
+            0.355
+          ],
+          "rotations": [
+            {
+              "axis": "Y",
+              "degrees": 25
+            }
+          ]
+        },
+        {
+          "position": [
+            -7.415,
+            0.009,
+            0.355
+          ],
+          "rotations": [
+            {
+              "axis": "Y",
+              "degrees": -25
+            }
+          ]
+        }
+      ],
+      "missileLaunchers": [
+        {
+          "tubes": [
+            {
+              "position": [
+                1.914,
+                6.435,
+                -2.492
+              ],
+              "count": 1
+            }
+          ],
+          "size": "medium",
+          "capacity": 5
+        },
+        {
+          "tubes": [
+            {
+              "position": [
+                -1.914,
+                6.435,
+                -2.492
+              ],
+              "count": 1
+            }
+          ],
+          "size": "medium",
+          "capacity": 5
+        },
+        {
+          "tubes": [
+            {
+              "position": [
+                1.914,
+                6.435,
+                -4.136
+              ],
+              "count": 1
+            }
+          ],
+          "size": "medium",
+          "capacity": 5
+        },
+        {
+          "tubes": [
+            {
+              "position": [
+                -1.914,
+                6.435,
+                -4.136
+              ],
+              "count": 1
+            }
+          ],
+          "size": "medium",
+          "capacity": 5
+        }
+      ],
+      "views": [
+        {
+          "name": "near",
+          "aimingView": true,
+          "position": [
+            0,
+            -36,
+            8.5
+          ]
+        },
+        {
+          "name": "far",
+          "aimingView": true,
+          "position": [
+            0,
+            -65,
+            12
+          ]
+        },
+        {
+          "name": "cockpit",
+          "aimingView": true,
+          "fov": 45,
+          "fps": true,
+          "turnable": true,
+          "alphaRange": [
+            -120,
+            120
+          ],
+          "betaRange": [
+            -80,
+            50
+          ],
+          "position": [
+            0,
+            -1.265,
+            4.62
+          ],
+          "resetsOnFocusChange": true
+        },
+        {
+          "name": "front",
+          "fov": 55,
+          "position": [
+            0,
+            23,
+            7.5
+          ],
+          "rotations": [
+            {
+              "axis": "Z",
+              "degrees": 180
+            },
+            {
+              "axis": "X",
+              "degrees": -10
+            }
+          ]
+        },
+        {
+          "name": "free",
+          "fov": 45,
+          "fovRange": [
+            30,
+            60
+          ],
+          "movable": true,
+          "turnable": true,
+          "rotationCenterIsObject": true,
+          "distanceRange": [
+            25,
+            75
+          ],
+          "position": [
+            0,
+            -50,
+            0
+          ]
+        },
+        {
+          "name": "flyby",
+          "fov": 45,
+          "fps": true,
+          "position": [
+            18,
+            120,
+            6.5
+          ],
+          "startsWithRelativePosition": true,
+          "lookAt": "self",
+          "distanceRange": [
+            18,
+            180
+          ]
+        },
+        {
+          "name": "jump",
+          "aimingView": true,
+          "fov": 75,
+          "position": [
+            0,
+            -13,
+            6
+          ],
+          "excludeFromCycle": true
+        },
+        {
+          "name": "target",
+          "fov": 55,
+          "fovRange": [
+            30,
+            55
+          ],
+          "fps": true,
+          "movable": true,
+          "position": [
+            0,
+            -33,
+            10
+          ],
+          "lookAt": "target",
+          "distanceRange": [
+            22,
+            75
+          ],
+          "rotationCenterIsObject": true
+        }
+      ],
+      "loadouts": [
+        {
+          "name": "pirate-tier1",
+          "weapons": [
+            {
+              "class": "pirateGun"
+            },
+            {
+              "class": "pirateGun"
+            }
+          ],
+          "propulsion": {
+            "class": "pirateHeavyFighterMk1"
+          },
+          "sensors": {
+            "class": "standardSensors"
+          },
+          "jumpEngine": {
+            "class": "pirateFighterMk1"
+          }
+        },
+        {
+          "name": "pirate-tier2",
+          "basedOn": "pirate-tier1",
+          "weapons": [
+            {
+              "class": "pirateGun"
+            },
+            {
+              "class": "pirateGun"
+            },
+            {
+              "class": "pirateGun"
+            },
+            {
+              "class": "pirateGun"
+            }
+          ],
+          "shield": {
+            "class": "pirateHeavyFighterMk1"
+          }
+        },
+        {
+          "name": "pirate-tier3",
+          "basedOn": "pirate-tier2",
+          "propulsion": {
+            "class": "pirateHeavyFighterMk2"
+          },
+          "shield": {
+            "class": "pirateHeavyFighterMk2"
+          }
+        },
+        {
+          "name": "pirate-elite",
+          "basedOn": "pirate-tier3",
+          "weapons": [
+            {
+              "class": "pirateGun"
+            },
+            {
+              "class": "pirateGun"
+            },
+            {
+              "class": "pirateGun"
+            },
+            {
+              "class": "pirateGun"
+            },
+            {
+              "class": "pirateGun"
+            },
+            {
+              "class": "pirateGun"
+            }
+          ]
+        },
+        {
+          "name": "full",
+          "basedOn": "pirate-elite",
+          "missiles": [
+            {
+              "class": "mediumMissile",
+              "amount": 5
+            },
+            {
+              "class": "mediumMissile",
+              "amount": 5
+            },
+            {
+              "class": "mediumMissile",
+              "amount": 5
+            },
+            {
+              "class": "mediumMissile",
+              "amount": 5
+            }
+          ]
+        }
+      ],
+      "humSound": {
+        "name": "spacecraftHum",
+        "volume": 0.5
+      },
+      "collisionSound": {
+        "name": "collision",
+        "volume": 1.5
+      },
+      "explosion": "bomberExplosion",
+      "showTimeRatioDuringExplosion": 0.25,
+      "damageIndicators": [
+        {
+          "hullIntegrity": 25,
+          "class": "smallFire"
+        },
+        {
+          "hullIntegrity": 10,
+          "class": "smallFire"
+        }
+      ],
+      "scoreValue": 90,
+      "defaultLoadout": "full",
+      "thrusterSlots": [
+        {
+          "group": 1,
+          "uses": [
+            "forward"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                0,
+                -3.025,
+                0
+              ],
+              "size": 4
+            }
+          ]
+        },
+        {
+          "group": 3,
+          "uses": [
+            "forward",
+            "pitchUp"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                0,
+                -2.1,
+                -2.354
+              ],
+              "size": 4
+            }
+          ]
+        },
+        {
+          "group": 2,
+          "uses": [
+            "reverse"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                0,
+                3.025,
+                0
+              ],
+              "size": 4
+            }
+          ]
+        },
+        {
+          "group": 4,
+          "uses": [
+            "reverse",
+            "pitchDown"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                0,
+                3.96,
+                -2.354
+              ],
+              "size": 4
+            }
+          ]
+        },
+        {
+          "group": 5,
+          "uses": [
+            "forward",
+            "yawLeft",
+            "pitchDown"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                14.256,
+                -6.6,
+                2.673
+              ],
+              "size": 2
+            }
+          ]
+        },
+        {
+          "group": 6,
+          "uses": [
+            "reverse",
+            "yawRight",
+            "pitchUp"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                14.256,
+                -0.6,
+                2.673
+              ],
+              "size": 2
+            }
+          ]
+        },
+        {
+          "group": 7,
+          "uses": [
+            "forward",
+            "yawRight",
+            "pitchDown"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                -14.256,
+                -6.6,
+                2.673
+              ],
+              "size": 2
+            }
+          ]
+        },
+        {
+          "group": 8,
+          "uses": [
+            "reverse",
+            "yawLeft",
+            "pitchUp"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                -14.256,
+                -0.6,
+                2.673
+              ],
+              "size": 2
+            }
+          ]
+        },
+        {
+          "group": 9,
+          "uses": [
+            "lower",
+            "rollRight"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                13.7,
+                -3.025,
+                3.8
+              ],
+              "size": 1.5
+            },
+            {
+              "position": [
+                13.7,
+                -4.095,
+                3.8
+              ],
+              "size": 1.5
+            }
+          ]
+        },
+        {
+          "group": 10,
+          "uses": [
+            "raise",
+            "rollLeft",
+            "strafeLeft"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                14.8,
+                -3.025,
+                1.55
+              ],
+              "size": 1.5
+            },
+            {
+              "position": [
+                14.8,
+                -4.095,
+                1.55
+              ],
+              "size": 1.5
+            }
+          ]
+        },
+        {
+          "group": 11,
+          "uses": [
+            "lower",
+            "rollLeft"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                -13.7,
+                -3.025,
+                3.8
+              ],
+              "size": 1.5
+            },
+            {
+              "position": [
+                -13.7,
+                -4.095,
+                3.8
+              ],
+              "size": 1.5
+            }
+          ]
+        },
+        {
+          "group": 12,
+          "uses": [
+            "raise",
+            "rollRight",
+            "strafeRight"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                -14.8,
+                -3.025,
+                1.55
+              ],
+              "size": 1.5
+            },
+            {
+              "position": [
+                -14.8,
+                -4.095,
+                1.55
+              ],
+              "size": 1.5
+            }
+          ]
+        },
+        {
+          "group": 13,
+          "uses": [
+            "strafeLeft"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                3.575,
+                0,
+                -3.333
+              ],
+              "size": 2.25
+            },
+            {
+              "position": [
+                3.465,
+                -1.617,
+                -3.333
+              ],
+              "size": 2.25
+            }
+          ]
+        },
+        {
+          "group": 14,
+          "uses": [
+            "strafeRight"
+          ],
+          "thrusters": [
+            {
+              "position": [
+                -3.575,
+                0,
+                -3.333
+              ],
+              "size": 2.25
+            },
+            {
+              "position": [
+                -3.465,
+                -1.617,
+                -3.333
+              ],
+              "size": 2.25
+            }
+          ]
+        }
+      ],
+      "defaultLuminosityFactors": [
+        [
+          18,
+          1
+        ]
+      ],
+      "lights": [
+        {
+          "position": [
+            0.884,
+            2.756,
+            2.589
+          ],
+          "intensity": 6400,
+          "spotDirection": [
+            0,
+            1,
+            0
+          ],
+          "spotCutoffAngle": 11,
+          "spotFullIntensityAngle": 5
+        }
+      ]
+    },
+    {
+      "name": "crimsonClaymore",
+      "basedOn": "scarab",
+      "showInDatabase": false,
+      "hitpoints": 60,
+      "texture": "crimson_claymore",
+      "defaultLuminosityFactors": [
+        [
+          18,
+          1
+        ],
+        [
+          19,
+          1
+        ]
+      ],
+      "scoreValue": 160
     },
     {
       "name": "sentinelPirate",

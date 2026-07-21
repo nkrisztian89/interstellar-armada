@@ -114,6 +114,18 @@
       "rotations": [
         "z+180"
       ]
+    },
+    {
+      "team": "pirates",
+      "class": "scarab",
+      "position": [
+        142,
+        200,
+        -100
+      ],
+      "rotations": [
+        "z+180"
+      ]
     }
   ]
 }

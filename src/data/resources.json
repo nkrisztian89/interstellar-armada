@@ -3,8 +3,8 @@
     "name": "resources",
     "author": "Krisztián Nagy",
     "comment": "Created by Interstellar Armada editor",
-    "version": "0.4.1-dev:560 (2017.03.28.)",
-    "creationTime": "Fri Mar 31 2017 15:20:15 GMT+0200 (CEST)"
+    "version": "0.5.6-dev:1282 (2026.07.21.)",
+    "creationTime": "Tue Jul 21 2026 01:47:07 GMT+0200 (Central European Summer Time)"
   },
   "textures": [
     {
@@ -511,6 +511,38 @@
         "diffuse": "wolf",
         "specular": "wolf_specular",
         "emissive": "stingray_luminosity"
+      },
+      "qualitySuffixes": {
+        "low": "_256",
+        "medium": "",
+        "high": "_1024"
+      }
+    },
+    {
+      "name": "scarab",
+      "basepath": "spacecraft/",
+      "format": "png",
+      "useMipmap": true,
+      "typeSuffixes": {
+        "diffuse": "wolf",
+        "specular": "wolf_specular",
+        "emissive": "scarab_luminosity"
+      },
+      "qualitySuffixes": {
+        "low": "_256",
+        "medium": "",
+        "high": "_1024"
+      }
+    },
+    {
+      "name": "crimson_claymore",
+      "basepath": "spacecraft/",
+      "format": "png",
+      "useMipmap": true,
+      "typeSuffixes": {
+        "diffuse": "wolf/ruby_blade",
+        "specular": "wolf/ruby_blade_specular",
+        "emissive": "scarab_luminosity"
       },
       "qualitySuffixes": {
         "low": "_256",
@@ -1986,6 +2018,33 @@
     {
       "name": "stingray",
       "basepath": "stingray",
+      "format": "egm",
+      "files": [
+        {
+          "suffix": "_lod0-0",
+          "maxLOD": 0
+        },
+        {
+          "suffix": "_lod0-1",
+          "maxLOD": 1
+        },
+        {
+          "suffix": "_lod0-2",
+          "maxLOD": 2
+        },
+        {
+          "suffix": "_lod0-3",
+          "maxLOD": 3
+        },
+        {
+          "suffix": "_lod0-4",
+          "maxLOD": 4
+        }
+      ]
+    },
+    {
+      "name": "scarab",
+      "basepath": "scarab",
       "format": "egm",
       "files": [
         {
