@@ -3,8 +3,8 @@
     "name": "classes",
     "author": "Krisztián Nagy",
     "comment": "Created by Interstellar Armada editor",
-    "version": "0.5.6-dev:1282 (2026.07.21.)",
-    "creationTime": "Tue Jul 21 2026 01:45:57 GMT+0200 (Central European Summer Time)"
+    "version": "0.5.6-dev:1285 (2026.07.22.)",
+    "creationTime": "Fri Jul 31 2026 00:30:09 GMT+0200 (Central European Summer Time)"
   },
   "skyboxClasses": [
     {
@@ -7929,7 +7929,7 @@
       "fullName": "SMCU-11 Container",
       "showInDatabase": false,
       "hitpoints": 5,
-      "model": "box",
+      "model": "container",
       "shader": "ship",
       "texture": "libra",
       "mass": 8000,
@@ -7942,8 +7942,8 @@
             0
           ],
           "size": [
-            4,
-            4,
+            4.5,
+            6,
             4
           ]
         }
@@ -7976,7 +7976,72 @@
       },
       "explosion": "containerExplosion",
       "showTimeRatioDuringExplosion": 0.25,
-      "scoreValue": 5
+      "scoreValue": 5,
+      "defaultLuminosityFactors": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "blinkers": [
+        {
+          "particle": {
+            "shader": "particle",
+            "texture": "flare",
+            "color": [
+              1,
+              1,
+              0,
+              1
+            ],
+            "size": 1.5,
+            "duration": 300
+          },
+          "position": [
+            0,
+            0,
+            2
+          ],
+          "period": 2000,
+          "blinks": [
+            0
+          ],
+          "intensity": 10
+        },
+        {
+          "particle": {
+            "shader": "particle",
+            "texture": "flare",
+            "color": [
+              1,
+              1,
+              0,
+              1
+            ],
+            "size": 1.5,
+            "duration": 300
+          },
+          "position": [
+            0,
+            0,
+            -2
+          ],
+          "period": 2000,
+          "blinks": [
+            0
+          ],
+          "intensity": 10
+        }
+      ]
+    },
+    {
+      "name": "containerCivilian",
+      "texture": "civilian",
+      "basedOn": "container"
     },
     {
       "name": "containerTank",

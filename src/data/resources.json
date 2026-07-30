@@ -3,8 +3,8 @@
     "name": "resources",
     "author": "Krisztián Nagy",
     "comment": "Created by Interstellar Armada editor",
-    "version": "0.5.6-dev:1282 (2026.07.21.)",
-    "creationTime": "Tue Jul 21 2026 01:47:07 GMT+0200 (Central European Summer Time)"
+    "version": "0.5.6-dev:1285 (2026.07.22.)",
+    "creationTime": "Thu Jul 30 2026 23:15:30 GMT+0200 (Central European Summer Time)"
   },
   "textures": [
     {
@@ -1721,6 +1721,33 @@
     {
       "name": "box",
       "basepath": "box",
+      "format": "egm",
+      "files": [
+        {
+          "suffix": "_lod0-0",
+          "maxLOD": 0
+        },
+        {
+          "suffix": "_lod0-1",
+          "maxLOD": 1
+        },
+        {
+          "suffix": "_lod0-2",
+          "maxLOD": 2
+        },
+        {
+          "suffix": "_lod0-3",
+          "maxLOD": 3
+        },
+        {
+          "suffix": "_lod0-4",
+          "maxLOD": 4
+        }
+      ]
+    },
+    {
+      "name": "container",
+      "basepath": "container",
       "format": "egm",
       "files": [
         {
