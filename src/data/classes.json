@@ -3,8 +3,8 @@
     "name": "classes",
     "author": "Krisztián Nagy",
     "comment": "Created by Interstellar Armada editor",
-    "version": "0.5.6-dev:1285 (2026.07.22.)",
-    "creationTime": "Fri Jul 31 2026 00:30:09 GMT+0200 (Central European Summer Time)"
+    "version": "0.5.6-dev:1285 (2026.07.31.)",
+    "creationTime": "Fri Jul 31 2026 00:54:38 GMT+0200 (Central European Summer Time)"
   },
   "skyboxClasses": [
     {
@@ -18434,8 +18434,8 @@
           "aimingView": true,
           "position": [
             0,
-            -36,
-            8.5
+            -38,
+            9.5
           ]
         },
         {
@@ -18444,7 +18444,7 @@
           "position": [
             0,
             -65,
-            12
+            15
           ]
         },
         {
@@ -18473,7 +18473,7 @@
           "fov": 55,
           "position": [
             0,
-            23,
+            25,
             7.5
           ],
           "rotations": [
@@ -18498,8 +18498,8 @@
           "turnable": true,
           "rotationCenterIsObject": true,
           "distanceRange": [
-            25,
-            75
+            24,
+            80
           ],
           "position": [
             0,
@@ -18512,14 +18512,14 @@
           "fov": 45,
           "fps": true,
           "position": [
-            18,
+            22,
             120,
-            6.5
+            7
           ],
           "startsWithRelativePosition": true,
           "lookAt": "self",
           "distanceRange": [
-            18,
+            22,
             180
           ]
         },
@@ -18529,8 +18529,8 @@
           "fov": 75,
           "position": [
             0,
-            -13,
-            6
+            -14,
+            6.5
           ],
           "excludeFromCycle": true
         },
@@ -18545,8 +18545,8 @@
           "movable": true,
           "position": [
             0,
-            -33,
-            10
+            -38,
+            12
           ],
           "lookAt": "target",
           "distanceRange": [
