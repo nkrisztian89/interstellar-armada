@@ -1,4 +1,5 @@
-@import "../_common.scss";
+@use "../_common.scss";
+@use "../color-scheme";
 
 .loadingBox {
     text-align: center;
@@ -10,7 +11,7 @@
 }
 
 .loadingBoxBackground {
-    background-color: $overlay-background-color;
+    background-color: color-scheme.$overlay-background-color;
 }
 
 .loadingBoxContent {

@@ -1,16 +1,16 @@
-@import "../_common.scss";
+@use "../_common.scss";
 
 $medal-height: 3em;
 $score-font-size: 1.2em;
 $score-margin: 1.0em;
 
 img.medal {
-    margin-top: $page-padding;
+    margin-top: common.$page-padding;
     height: $medal-height;
 }
 
 .debriefing.pageContent {
-    height: calc(100% - #{2*$separator-height});
+    height: calc(100% - #{2*common.$separator-height});
     text-align: center;
     padding-bottom: 1em;
 }
@@ -32,7 +32,7 @@ table.debriefing {
 
 .newRecord {
     color: #44ff44;
-    @include highlight-text;
+    @include common.highlight-text;
 }
 
 .debriefingDescription {

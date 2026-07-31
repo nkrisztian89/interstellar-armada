@@ -1,4 +1,5 @@
-@import "../_common.scss";
+@use "../_common.scss";
+@use "../color-scheme";
 
 .infoBox {
     text-align: center;
@@ -10,7 +11,7 @@
 }
 
 .infoBoxBackground {
-    background-color: $overlay-background-color;
+    background-color: color-scheme.$overlay-background-color;
 }
 
 .infoBoxContent {

@@ -1,17 +1,18 @@
-@import "../_common.scss";
+@use "../_common.scss";
+@use "../color-scheme";
 
 .listContainer {
     display: inline-block;
 
     text-align: left;
 
-    background-color: $panel-back-color;
+    background-color: color-scheme.$panel-back-color;
     padding: 0;
 
     overflow-x: hidden;
     
-    @include bordered;
-    @include styled-scrollbar;
+    @include common.bordered;
+    @include common.styled-scrollbar;
 }
 
 .list {
@@ -30,7 +31,7 @@
 }
 
 .listElement:not(.disabled) {
-    cursor: $cursor-light, pointer;
+    cursor: common.$cursor-light, pointer;
 }
 
 .caption {
@@ -52,7 +53,7 @@
 }
 
 .listElement.selected {
-    background-color: relDarken($highlight-color,0.733);
+    background-color: color-scheme.relDarken(color-scheme.$highlight-color,0.733);
 }
 
 .listElement.selected > .subcaption {
@@ -61,10 +62,10 @@
 
 .listElement.highlighted {
     text-shadow: none;
-    box-shadow: inset 0em 0em 0.75em $highlight-color;
+    box-shadow: inset 0em 0em 0.75em color-scheme.$highlight-color;
     transition: all 0s;
 }
 
 .listElement.highlighted > .caption {
-    @include highlight-text;
+    @include common.highlight-text;
 }

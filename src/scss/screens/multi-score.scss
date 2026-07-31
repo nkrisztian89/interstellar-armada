@@ -1,4 +1,5 @@
-@import "../_common.scss";
+@use "../_common.scss";
+@use "../color-scheme";
 
 table.multiScores {
     max-width: 90%;
@@ -13,9 +14,9 @@ table.multiScores {
         }
     }
     & tr.left {
-        color: $dark-text-color;
+        color: color-scheme.$dark-text-color;
         &>td {
-            background-color: $dark-panel-color;
+            background-color: color-scheme.$dark-panel-color;
         }
     }
     & td.playerRank {

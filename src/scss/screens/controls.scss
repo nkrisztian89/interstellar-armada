@@ -1,7 +1,7 @@
-@import "../_common.scss";
+@use "../_common.scss";
 
 .controls.pageContent {
-    height: calc(100% - #{2*$separator-height+$page-padding});
+    height: calc(100% - #{2*common.$separator-height+common.$page-padding});
 
     & .selector {
         margin: 0.25em auto;
@@ -25,7 +25,7 @@
 }
 
 .controls.tableTitle:hover {
-    @include highlight-text;
+    @include common.highlight-text;
 }
 
 .pointerLock.selector>.selectorButtonContainer>button {

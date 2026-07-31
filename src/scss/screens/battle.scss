@@ -1,4 +1,5 @@
-@import "../_common.scss";
+@use "../_common.scss";
+@use "../color-scheme";
 
 /* the canvas element where the game (WebGL) scene is rendered */
 canvas.battleCanvas {
@@ -119,5 +120,5 @@ div.touch-control-sheet-center-message {
     font-size: 4vh;
     top: 40vh;
     left: 25vw;
-    background: $panel-back-color; 
+    background: color-scheme.$panel-back-color; 
 }

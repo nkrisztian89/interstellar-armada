@@ -1,3 +1,4 @@
+@use "sass:color";
 /*
 Copyright (C) 2017-2018, 2020-2022 Krisztián Nagy
 
@@ -16,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 @function relDarken($color,$amount) {
-    @return darken($color,lightness($color)*$amount);
+    @return color.adjust($color,$lightness: -(color.channel($color, 'lightness', $space: hsl)*$amount));
 }
 
 @function relLighten($color,$amount) {
-    @return lighten($color,lightness($color)*$amount);
+    @return color.adjust($color,$lightness: color.channel($color, 'lightness', $space: hsl)*$amount);
 }
 
 $highlight-color: #00ff00;
@@ -28,9 +29,9 @@ $highlight-color: #00ff00;
 $light-highlight-color: relLighten($highlight-color,0.26);
 
 $text-color: #dddddd;
-$light-text-color: lighten($text-color,100%);
-$dark-text-color: darken($text-color,20%);
-$darker-text-color: darken($text-color,35%);
+$light-text-color: color.scale($text-color,$lightness: 100%);
+$dark-text-color: color.adjust($text-color,$lightness: -20%);
+$darker-text-color: color.adjust($text-color,$lightness: -35%);
 $text-glow-color: #888888;
 
 $body-color: #000000;

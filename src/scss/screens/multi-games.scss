@@ -1,11 +1,12 @@
-@import "../_common.scss";
+@use "../_common.scss";
+@use "../color-scheme";
 
 $horizontal-margin: 1em;
 
 .multiGames.pageContent {
     width: calc(100% - #{$horizontal-margin});
-    height: calc(100% - #{2*$separator-height+3*$page-padding});
-    margin-top: $page-padding;
+    height: calc(100% - #{2*common.$separator-height+3*common.$page-padding});
+    margin-top: common.$page-padding;
 }
 
 div.onlinePlayersContainer, 
@@ -26,7 +27,7 @@ table.multiGames {
     & tbody {
         max-height: 22em;
         display: block;
-        @include styled-scrollbar;
+        @include common.styled-scrollbar;
         @media screen and (min-aspect-ratio: 2/1) {
             max-height: 17em;
         }
@@ -37,8 +38,8 @@ table.multiGames {
         table-layout: fixed;
     }
     & tbody tr:hover>td {
-        color: $light-text-color;
-        background-color: $panel-front-color;
+        color: color-scheme.$light-text-color;
+        background-color: color-scheme.$panel-front-color;
     }
     & .playersColumn, & .startedColumn {
         width: 12vw;

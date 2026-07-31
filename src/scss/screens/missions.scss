@@ -1,4 +1,5 @@
-@import "../_common.scss";
+@use "../_common.scss";
+@use "../color-scheme";
 
 $horizontal-margin: 1em;
 $list-width: 14em;
@@ -6,8 +7,8 @@ $header-height: 3em;
 
 .missions.pageContent {
     width: calc(100% - #{$horizontal-margin});
-    height: calc(100% - #{2*$separator-height+3*$page-padding});
-    margin-top: $page-padding;
+    height: calc(100% - #{2*common.$separator-height+3*common.$page-padding});
+    margin-top: common.$page-padding;
 }
 
 .missionListContainer {
@@ -60,8 +61,8 @@ $info-top-margin: 0.5em;
     padding-right: 0.5em;
     height: calc(100% - #{$header-height + $info-top-margin});
 
-    @include top-bordered;
-    @include styled-scrollbar;
+    @include common.top-bordered;
+    @include common.styled-scrollbar;
     
     &>p {
         margin-top: 0;
@@ -74,14 +75,14 @@ $info-top-margin: 0.5em;
         background-image:
             -webkit-linear-gradient(
             left,
-            $panel-back-color,
-            rgba($panel-back-color,0)
+            color-scheme.$panel-back-color,
+            rgba(color-scheme.$panel-back-color,0)
             );
         background-image:
             -moz-linear-gradient(
             left,
-            $panel-back-color,
-            rgba($panel-back-color,0)
+            color-scheme.$panel-back-color,
+            rgba(color-scheme.$panel-back-color,0)
             );
     }
 }
@@ -95,11 +96,11 @@ $info-top-margin: 0.5em;
             }
             &.ship {
                 font-weight: bold;
-                color: $friendly-color;
+                color: color-scheme.$friendly-color;
             }
             &.ship-hostile {
                 font-weight: bold;
-                color: $hostile-color;
+                color: color-scheme.$hostile-color;
             }
         }
     }
@@ -146,7 +147,7 @@ img.missionMedal {
 .missionEquipment {
     margin: 0;
     padding: 0.4em 0em 0.4em 0;
-    @include bottom-bordered;
+    @include common.bottom-bordered;
 }
 
 button.fileButton {
@@ -217,7 +218,7 @@ table.submissions {
     & tbody {
         max-height: 28em;
         display: block;
-        @include styled-scrollbar;
+        @include common.styled-scrollbar;
         @media screen and (min-aspect-ratio: 2/1) {
             max-height: 22em;
         }
@@ -228,8 +229,8 @@ table.submissions {
         table-layout: fixed;
     }
     & tbody tr:hover>td {
-        color: $light-text-color;
-        background-color: $panel-front-color;
+        color: color-scheme.$light-text-color;
+        background-color: color-scheme.$panel-front-color;
     }
     & td {
         vertical-align: top;

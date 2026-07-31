@@ -1,7 +1,7 @@
-@import "../_common.scss";
+@use "../_common.scss";
 
 .about.pageContent {
-    height: calc(100% - #{2*$separator-height});
+    height: calc(100% - #{2*common.$separator-height});
 }
 
 p.about {

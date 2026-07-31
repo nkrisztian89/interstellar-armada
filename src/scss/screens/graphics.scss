@@ -1,19 +1,20 @@
-@import "../_common.scss";
+@use "../_common.scss";
+@use "../color-scheme";
 
 .graphics.pageContent {
     padding: 0 0 0.5em 0;
     text-align: center;
-    height: calc(100% - #{2*$separator-height+2*$button-height});
+    height: calc(100% - #{2*common.$separator-height+2*common.$button-height});
 }
 
 .generalLevelDiv {
     margin: 0.5em auto;
     text-align: center;
-    background: $panel-back-color;
+    background: color-scheme.$panel-back-color;
     padding-top: 0.25em;
 }
 
-$div-width: $input-width + 0.5em;
+$div-width: common.$input-width + 0.5em;
 $margin-bottom: 0.5em;
 
 .settingsDivLeft {

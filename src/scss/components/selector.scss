@@ -1,14 +1,15 @@
-@import "../_common.scss";
+@use "../_common.scss";
+@use "../color-scheme";
 
 div.selector {
     display: table;
-    width: $input-width;
+    width: common.$input-width;
     padding-left: 0.4em;
     padding-right: 0.4em;
     margin: 0.25em 0.5em;
     
-    background-color: $panel-back-color;
-    @include bordered;
+    background-color: color-scheme.$panel-back-color;
+    @include common.bordered;
     
     &[hidden] {
         display: none;
@@ -18,7 +19,7 @@ div.selector {
 div.selectorButtonContainer {
     display: table-cell;
     vertical-align: middle;
-    width: $input-value-width;
+    width: common.$input-value-width;
     margin: 0;
 }
 
@@ -27,7 +28,7 @@ div.selectorPropertyContainer {
     display: table-cell;
     text-align: left;
     vertical-align: middle;
-    width: $input-label-width;
+    width: common.$input-label-width;
     margin: 0;
     padding: 0;
 }

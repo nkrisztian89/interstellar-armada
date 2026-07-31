@@ -1,10 +1,11 @@
-@import "../_common.scss";
+@use "../_common.scss";
+@use "../color-scheme";
 
-$content-height: calc(100% - #{2*$separator-height+3*$page-padding});
+$content-height: calc(100% - #{2*common.$separator-height+3*common.$page-padding});
 
 .database.pageContent {
     height: $content-height;
-    margin-top: $page-padding;
+    margin-top: common.$page-padding;
 }
 
 $data-preview-size: 50vh;
@@ -16,8 +17,8 @@ div.itemDataSheet {
     width: $data-preview-size;
     min-width: 12em;
     height: calc(100% - #{$data-preview-size} - #{$gap});
-    @include bordered;
-    background-color: $panel-back-color;
+    @include common.bordered;
+    background-color: color-scheme.$panel-back-color;
 }
 
 div.itemDataSheet > p {
@@ -33,8 +34,8 @@ div.itemDescriptionContainer {
     text-align: left;
     margin: 0;
     padding: 0.5em;
-    @include bordered;
-    @include styled-scrollbar;
+    @include common.bordered;
+    @include common.styled-scrollbar;
 }
 
 div.itemView {
@@ -67,7 +68,7 @@ canvas.databaseViewScreen {
     margin-left: auto; 
     margin-right: auto; 
     margin-bottom: $gap;
-    @include bordered;
+    @include common.bordered;
 }
 
 @media screen and (min-aspect-ratio: 2/1) {
@@ -75,7 +76,7 @@ canvas.databaseViewScreen {
     $data-sheet-font-size: 90%;
 
     canvas.databaseViewScreen {
-        height: calc(100% - #{mulpercent($data-sheet-font-size, $data-sheet-height)+$gap});
+        height: calc(100% - #{common.mulpercent($data-sheet-font-size, $data-sheet-height)+$gap});
     }
     
     div.itemDataSheet {

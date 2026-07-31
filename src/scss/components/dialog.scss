@@ -1,4 +1,4 @@
-@import "../_common.scss";
+@use "../_common.scss";
 
 .dialogContainer {
     width: 46em;
@@ -28,5 +28,5 @@
     margin-top: 0.5em;
     max-height: 60vh;
     padding: 0 0.5em;
-    @include styled-scrollbar;
+    @include common.styled-scrollbar;
 }

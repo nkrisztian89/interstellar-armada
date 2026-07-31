@@ -1,9 +1,10 @@
-@import "../_common.scss";
+@use "../_common.scss";
+@use "../color-scheme";
 
 .multiLobby.pageContent {
     width: 100%;
-    height: calc(100% - #{2*$separator-height+3*$page-padding});
-    margin-top: $page-padding;
+    height: calc(100% - #{2*common.$separator-height+3*common.$page-padding});
+    margin-top: common.$page-padding;
     text-align: center;
 }
 
@@ -53,7 +54,7 @@ table.multiPlayers {
 }
 
 .colorSelector:hover {
-    @include glowing;
+    @include common.glowing;
 }
 
 .hostSettings button {
@@ -73,9 +74,9 @@ table.multiPlayers {
 }
 
 .chatLog {
-    @include bordered;
-    @include styled-scrollbar;
-    background: $panel-back-color;
+    @include common.bordered;
+    @include common.styled-scrollbar;
+    background: color-scheme.$panel-back-color;
     width: 38em;
     height: 10em;
     margin: 1em auto;
@@ -85,7 +86,7 @@ table.multiPlayers {
 .chatLog>p {
     margin: 0.2em;
     padding: 0.2em;
-    background: $panel-front-color;
+    background: color-scheme.$panel-front-color;
     transition: background 0.75s;
 }
 
@@ -108,7 +109,7 @@ span.remainingMessageChars {
     right: 0.3em;
     bottom: 0.2em;
     font-size: 65%;
-    color: $dark-text-color;
+    color: color-scheme.$dark-text-color;
     background-color: rgba(17, 17, 17, 0.5);
 }
 
@@ -119,14 +120,14 @@ button.chatSend, button.kickPlayer, button.selectSpacecraft {
 }
 
 .multi-message-sender {
-    color: $highlight-color;
+    color: color-scheme.$highlight-color;
 }
 
 .multi-message-system {
-    color: $dark-text-color;
+    color: color-scheme.$dark-text-color;
 }
 
 .multi-message-time {
-    color: $darker-text-color;
+    color: color-scheme.$darker-text-color;
     font-size: 80%;
 }

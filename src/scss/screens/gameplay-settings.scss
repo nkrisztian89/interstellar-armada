@@ -1,9 +1,9 @@
-@import "../_common.scss";
+@use "../_common.scss";
 
 .gameplay.pageContent {
-    margin-top: $page-padding;
+    margin-top: common.$page-padding;
     text-align: center;
-    height: calc(100% - #{2*$separator-height + 2*$page-padding});
+    height: calc(100% - #{2*common.$separator-height + 2*common.$page-padding});
     display: flex;
     flex-direction: row;
     justify-content: center;

@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // -----------------------------------------------------------------------------
 // imports
 
-@import "_common.scss";
+@use "_common.scss";
+@use "color-scheme";
 
 // -----------------------------------------------------------------------------
 // fonts
@@ -51,12 +52,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 body,html {
     width: auto;
     height: auto;
-    cursor: $cursor, auto;
+    cursor: common.$cursor, auto;
 }
 
 body {
-    color: $text-color;
-    background-color: $body-color;
+    color: color-scheme.$text-color;
+    background-color: color-scheme.$body-color;
     font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
     font-size: 2.2vmin;
     margin: 0;
@@ -93,7 +94,7 @@ img.orientation {
 
 /* Adding this class to the body of the document will ensure the cursor will show wait above all elements */
 body.wait, body.wait * {
-    cursor: $cursor, wait;
+    cursor: common.$cursor, wait;
 }
 
 canvas {
@@ -117,17 +118,17 @@ canvas {
 }
 
 .outerContainer {
-    @include glowing;
-    background-color: rgba($panel-back-color,$outer-panel-opacity);
-    @include bordered;
+    @include common.glowing;
+    background-color: rgba(color-scheme.$panel-back-color,color-scheme.$outer-panel-opacity);
+    @include common.bordered;
 }
 
 .horizontallyCentered.innerContainer {
-    @include shadowed;
+    @include common.shadowed;
 }
 
 .innerContainer {
-    background-color: $panel-color;
+    background-color: color-scheme.$panel-color;
     border: none;
 }
 
@@ -138,15 +139,15 @@ canvas {
     position: fixed;
     top: 0;
     left: 0;
-    padding: $page-padding;
+    padding: common.$page-padding;
     white-space: normal;
 }
 
 /* To use with the outermost container div which houses the page content */
 .pageContainer {
-    padding: $page-padding;
-    margin-bottom: $page-padding;
-    margin-top: $page-padding;
+    padding: common.$page-padding;
+    margin-bottom: common.$page-padding;
+    margin-top: common.$page-padding;
     white-space: normal;
 }
 
@@ -155,7 +156,7 @@ canvas {
     box-sizing: border-box;
     width: 100%;
     
-    @include styled-scrollbar;
+    @include common.styled-scrollbar;
 }
 
 .withSmallBackgroundSign {
@@ -226,7 +227,7 @@ canvas {
 
 .contentWide {
     display: table;
-    padding: $page-padding;
+    padding: common.$page-padding;
 }
 
 .transparentContainer {
@@ -243,7 +244,7 @@ canvas {
     background: 
         url(../assets/images/empire_white_50.png) left 10px center,
         url(../assets/images/empire_white_50.png) right 10px center;
-    background-color: $separator-color;
+    background-color: color-scheme.$separator-color;
     background-repeat: no-repeat;
     box-sizing: border-box; 
     border: none;
@@ -275,13 +276,13 @@ th, td {
 
 th {
     text-align: left;
-    color: $light-text-color;
+    color: color-scheme.$light-text-color;
 }
 
 td {
-    @include shadowed;
+    @include common.shadowed;
     border: none;
-    background-color: $panel-color;
+    background-color: color-scheme.$panel-color;
     font-size: 0.9em;
 }
 
@@ -290,7 +291,7 @@ li {
 }
 
 a, button {
-    color: $light-text-color;
+    color: color-scheme.$light-text-color;
     text-decoration: none;
     font-weight: bold;
     font-variant: small-caps;
@@ -298,18 +299,18 @@ a, button {
 
 a {
     font-size: 1.1em;
-    color: $link-color;
+    color: color-scheme.$link-color;
 }
 
 button {
-    @include shadowed;
+    @include common.shadowed;
     border: none;
     min-width: 8.8em;
     font-family: inherit;
-    font-size: $button-font-size;
+    font-size: common.$button-font-size;
     text-align: center;
-    padding: $button-padding;
-    background-color: $panel-color;
+    padding: common.$button-padding;
+    background-color: color-scheme.$panel-color;
     &:active, &:focus {
         border: none;
         outline: none;
@@ -324,17 +325,17 @@ button {
     }
     &.separate {
         display: table;
-        margin-top: $horizontal-menu-margin;
-        margin-bottom: $horizontal-menu-margin;
+        margin-top: common.$horizontal-menu-margin;
+        margin-bottom: common.$horizontal-menu-margin;
     }
     &.disabled {
-        color: $text-disabled-color;
-        background-color: $panel-disabled-color;
-        cursor: $cursor, default;
+        color: color-scheme.$text-disabled-color;
+        background-color: color-scheme.$panel-disabled-color;
+        cursor: common.$cursor, default;
         pointer-events: none;
     }
     &:hover:not(.disabled):not(.menu), &.selected {
-        background-color: $panel-front-color;
+        background-color: color-scheme.$panel-front-color;
         transition: all 0s;
     }
 }
@@ -344,7 +345,7 @@ div.horizontalMenu {
     &>button {
         display: table-cell;
         vertical-align: middle;
-        margin: $horizontal-menu-margin;
+        margin: common.$horizontal-menu-margin;
         &[hidden] {
             display: none;
         }
@@ -352,8 +353,8 @@ div.horizontalMenu {
 }
 
 a:hover, button:hover:not(.disabled):not(.menu):not(.listElement), button.selected {
-    color: $light-text-color;
-    @include highlight-text;
+    color: color-scheme.$light-text-color;
+    @include common.highlight-text;
     transition: all 0s;
 }
 
@@ -362,24 +363,24 @@ a, button {
 }
 
 a, a:hover, a:active, button, button:hover, button:active {
-    cursor: $cursor-light, pointer;
+    cursor: common.$cursor-light, pointer;
 }
 
 .clickable:hover {
-    color: $light-text-color;
-    background-color: $panel-front-color;
-    cursor: $cursor-light, pointer;
+    color: color-scheme.$light-text-color;
+    background-color: color-scheme.$panel-front-color;
+    cursor: common.$cursor-light, pointer;
 }
 
 .highlightedItem {
-    @include inner-glowing;
-    color: $light-text-color;
-    background-color: $panel-front-color;
-    @include glowing-text;
+    @include common.inner-glowing;
+    color: color-scheme.$light-text-color;
+    background-color: color-scheme.$panel-front-color;
+    @include common.glowing-text;
 }
 
 .highlightedText {
-    color: $light-highlight-color;
+    color: color-scheme.$light-highlight-color;
     font-weight: bold;
 }
 
@@ -388,7 +389,7 @@ a, a:hover, a:active, button, button:hover, button:active {
 }
 
 img {
-    margin: $image-margin;
+    margin: common.$image-margin;
 }
 
 img.menuHeaderImage {
@@ -440,16 +441,16 @@ p.sub {
 }
 
 h1 {
-    @include glowing-text;
+    @include common.glowing-text;
     text-align: center;
     font-variant: small-caps;
-    font-size: $title-font-size;
+    font-size: common.$title-font-size;
     height: 1em;
-    margin: #{$title-top-margin} 0 #{$title-bottom-margin} 0;
+    margin: #{common.$title-top-margin} 0 #{common.$title-bottom-margin} 0;
 }
 
 h2 {
-    @include glowing-text;
+    @include common.glowing-text;
     text-align: center;
     font-variant: small-caps;
 }
@@ -509,14 +510,14 @@ progress[value] {
     border: none;
 
     // Styling of the container in Firefox 
-    background-color: relLighten($panel-color,1.0);
+    background-color: color-scheme.relLighten(color-scheme.$panel-color,1.0);
     box-shadow: $inset-shadow;
     width: 18em;
     height: 0.5em;
 
     // Styling of the container in Webkit browsers
     &::-webkit-progress-bar {
-        background-color: relLighten($panel-color,1.0);
+        background-color: color-scheme.relLighten(color-scheme.$panel-color,1.0);
         box-shadow: $inset-shadow;
     }
     // Styling of the value bar in Webkit browsers
@@ -524,20 +525,20 @@ progress[value] {
         background-image:
             -webkit-linear-gradient(
             top, 
-            relDarken($highlight-color,0.067),
-            relDarken($highlight-color,0.333)
+            color-scheme.relDarken(color-scheme.$highlight-color,0.067),
+            color-scheme.relDarken(color-scheme.$highlight-color,0.333)
             );
-        box-shadow: $faint-glow;
+        box-shadow: common.$faint-glow;
     }
     // Styling of the value bar in Firefox
     &::-moz-progress-bar { 
         background-image:
             -moz-linear-gradient(
             top, 
-            relDarken($highlight-color,0.067),
-            relDarken($highlight-color,0.333)
+            color-scheme.relDarken(color-scheme.$highlight-color,0.067),
+            color-scheme.relDarken(color-scheme.$highlight-color,0.333)
             );
-        box-shadow: $faint-glow;
+        box-shadow: common.$faint-glow;
     }
 }
 
@@ -545,15 +546,15 @@ progress[value] {
 /* Styling of text inputs */
 
 input[type=text], input[type=email], input[type=password], textarea {
-    color: $text-color;
+    color: color-scheme.$text-color;
     font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
     font-size: 2.2vmin;
-    background: $panel-back-color;
+    background: color-scheme.$panel-back-color;
     margin: 0 0.5em;
-    @include bordered;
+    @include common.bordered;
     outline: none;
     &:active,&:focus,&.focusing {
-        @include glowing;
+        @include common.glowing;
         outline: none;
     }
     @media screen and (min-aspect-ratio: 2/1) {
@@ -567,7 +568,7 @@ input[type=password], input.password {
 
 textarea {
     resize: none;
-    @include styled-scrollbar;
+    @include common.styled-scrollbar;
 }
 
 /******************************************************************************************/
@@ -581,10 +582,10 @@ input[type=range] {
 
     margin: 0.25em 0 0 0.25em;
     padding: 0;
-    cursor: $cursor, pointer;
+    cursor: common.$cursor, pointer;
 
     &:hover {
-        cursor: $cursor-light, pointer;
+        cursor: common.$cursor-light, pointer;
     }
     &:focus {
         outline: none; /* Removes the blue border. */
@@ -601,9 +602,9 @@ input[type=range] {
                               * depends on height */
 
         /* gray appearance similar to buttons - for consistent look */
-        background-color: $panel-front-color;
-        border: 0.15em solid relLighten($panel-color,1.5);
-        @include shadowed;
+        background-color: color-scheme.$panel-front-color;
+        border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
+        @include common.shadowed;
         /* glowing green appearance for better contrast */
         /*    background-color: #00cc00;
             border: 2px solid #008800;
@@ -611,8 +612,8 @@ input[type=range] {
 
         &:hover {
             /* gray appearance similar to buttons - for consistent look */
-            background-color: relLighten($panel-color,1.5);
-            border: 0.15em solid relLighten($panel-color,2.5);
+            background-color: color-scheme.relLighten(color-scheme.$panel-color,1.5);
+            border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
             /* glowing green appearance for better contrast */
             /*    background-color: #44ff44;
                 border: 2px solid #00aa00;
@@ -626,13 +627,13 @@ input[type=range] {
 
         border-radius: 0;
 
-        background-color: $panel-front-color;
-        border: 0.15em solid relLighten($panel-color,1.5);
-        @include shadowed;
+        background-color: color-scheme.$panel-front-color;
+        border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
+        @include common.shadowed;
 
         &:hover {
-            background-color: relLighten($panel-color,1.5);
-            border: 0.15em solid relLighten($panel-color,2.5);
+            background-color: color-scheme.relLighten(color-scheme.$panel-color,1.5);
+            border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
         }
     }
 
@@ -642,13 +643,13 @@ input[type=range] {
 
         border-radius: 0;
 
-        background-color: $panel-front-color;
-        border: 0.15em solid relLighten($panel-color,1.5);
-        @include shadowed;
+        background-color: color-scheme.$panel-front-color;
+        border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
+        @include common.shadowed;
 
         &:hover {
-            background-color: relLighten($panel-color,1.5);
-            border: 0.15em solid relLighten($panel-color,2.5);
+            background-color: color-scheme.relLighten(color-scheme.$panel-color,1.5);
+            border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
         }
     }
 
@@ -657,19 +658,19 @@ input[type=range] {
     &::-webkit-slider-runnable-track {
         width: 100%;
         height: 1.0em;
-        @include inset-bordered-panel;
+        @include common.inset-bordered-panel;
     }
 
     &::-moz-range-track {
         width: 100%;
         height: 0.6em;
-        @include inset-bordered-panel;
+        @include common.inset-bordered-panel;
     }
 
     &::-ms-track {
         width: 100%;
         height: 1.0em;
-        @include inset-bordered-panel;
+        @include common.inset-bordered-panel;
     }
 
     /* having different tracks to the left and right are only supported in IE and Firefox, not using for now */
@@ -704,36 +705,36 @@ input[type=checkbox] {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    cursor: $cursor-light, default;
+    cursor: common.$cursor-light, default;
     
     height: 1.5em;
     width: 1.1em;
     margin: 0.5em 0.5em -0.2em 0.5em;
-    background-color: $panel-front-color;
-    border: 0.15em solid relLighten($panel-color,1.5);
+    background-color: color-scheme.$panel-front-color;
+    border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
     
     div:hover>& {
-        background-color: relLighten($panel-color,1.5);
-        border: 0.15em solid relLighten($panel-color,2.5);
+        background-color: color-scheme.relLighten(color-scheme.$panel-color,1.5);
+        border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
     }
     
     &:checked {
-        background-color: $highlight-color;
+        background-color: color-scheme.$highlight-color;
         background-image:
             -webkit-radial-gradient(
-            relLighten($highlight-color,0.333),
-            relDarken($highlight-color,0.333)
+            color-scheme.relLighten(color-scheme.$highlight-color,0.333),
+            color-scheme.relDarken(color-scheme.$highlight-color,0.333)
             );
-        @include faint-glowing;
+        @include common.faint-glowing;
         
         div:hover>& {
-            @include glowing;
+            @include common.glowing;
         }
     }
 }
 
 label {
-    cursor: $cursor, default;
+    cursor: common.$cursor, default;
 }
 
 div.wrapper {
@@ -763,8 +764,8 @@ span.passwordEye {
 
 .topRight {
     position: absolute;
-    top: $page-padding;
-    right: $page-padding;
+    top: common.$page-padding;
+    right: common.$page-padding;
 }
 
 div.helpButton {
@@ -773,8 +774,8 @@ div.helpButton {
     box-sizing: border-box;
     padding: 0.1em;
     border-radius: 0.6em;
-    background-color: $text-color;
-    color: $body-color;
+    background-color: color-scheme.$text-color;
+    color: color-scheme.$body-color;
     font-weight: bold;
     z-index: 1000;
 
@@ -783,12 +784,12 @@ div.helpButton {
     }
 
     &:hover {
-        background-color: $light-text-color;
+        background-color: color-scheme.$light-text-color;
     }
 }
 
 .popupBackground {
-    background-color: $overlay-background-color;
+    background-color: color-scheme.$overlay-background-color;
 }
 
 .gameVersion {
