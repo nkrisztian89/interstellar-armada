@@ -3,6 +3,7 @@
         "context": {
             "antialiasing": true,
             "filtering": "trilinear",
+            "resolution": "standard",
             "textureQuality": "medium",
             "cubemapQuality": {
                 "level": "high",

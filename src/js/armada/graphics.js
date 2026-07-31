@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021, 2023-2024 Krisztián Nagy
+ * Copyright 2014-2021, 2023-2026 Krisztián Nagy
  * @file Provides functionality to parse and load the graphics settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -14,6 +14,7 @@
  * @param managedGL Used for checking valid texture filtering values
  * @param resources Used to provide resource accessor functions that access resources through this module but add parameters based on current graphics context settings
  * @param sceneGraph The graphics context creates and stores a default LODContext
+ * @param screens Used for the CanvasResolution enum, to validate the resolution setting
  * @param constants Used to access common game constants
  */
 define([
@@ -24,9 +25,10 @@ define([
     "modules/managed-gl",
     "modules/media-resources",
     "modules/scene/scene-graph",
+    "modules/screens",
     "armada/constants",
     "utils/polyfill"
-], function (mat, types, application, asyncResource, managedGL, resources, sceneGraph, constants) {
+], function (mat, types, application, asyncResource, managedGL, resources, sceneGraph, screens, constants) {
     "use strict";
     var
             // --------------------------------------------------------------------------------------------
@@ -697,6 +699,13 @@ define([
              */
             ANISOTROPIC_FALLBACK_FILTERING = managedGL.TextureFiltering.TRILINEAR,
             // ............................................................................................
+            // Resolution
+            /**
+             * The key identifying the location where the resolution setting is stored in local storage.
+             * @type String
+             */
+            RESOLUTION_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "resolution",
+            // ............................................................................................
             // Texture quality
             /**
              * The key identifying the location where the texture quality setting is stored in local storage.
@@ -1162,6 +1171,12 @@ define([
          */
         this._filtering = null;
         /**
+         * (enum screens.CanvasResolution) Whether canvases should render at their CSS size ("standard") or their full device pixel size
+         * ("native").
+         * @type String
+         */
+        this._resolution = null;
+        /**
          * The available and current model LOD levels.
          * @type OrderedNamedNumericOptions
          */
@@ -1478,6 +1493,7 @@ define([
         if (typeof dataJSON.context === "object") {
             this.setAntialiasing(types.getBooleanValue(dataJSON.context.antialiasing, {name: "settings.graphics.context.antialiasing"}), false);
             this.setFiltering(types.getEnumValue(managedGL.TextureFiltering, dataJSON.context.filtering, {name: "settings.graphics.context.filtering"}), false);
+            this.setResolution(types.getEnumValue(screens.CanvasResolution, dataJSON.context.resolution, {name: "settings.graphics.context.resolution"}), false);
             this.setTextureQuality(dataJSON.context.textureQuality, false, true);
             this.setCubemapQuality(dataJSON.context.cubemapQuality.level, false, true);
             this._limitSettingByScreenSize(dataJSON.context.cubemapQuality, this._cubemapQuality, this.getCubemapMaxResolution.bind(this), this.setCubemapQuality.bind(this), "level");
@@ -1549,6 +1565,7 @@ define([
         }.bind(this));
         loadSetting(ANTIALIASING_LOCAL_STORAGE_ID, "boolean", this.getAntialiasing(), this.setAntialiasing.bind(this));
         loadSetting(FILTERING_LOCAL_STORAGE_ID, {baseType: "enum", values: managedGL.TextureFiltering}, this.getFiltering(), this.setFiltering.bind(this));
+        loadSetting(RESOLUTION_LOCAL_STORAGE_ID, {baseType: "enum", values: screens.CanvasResolution}, this.getResolution(), this.setResolution.bind(this));
         loadSetting(TEXTURE_QUALITY_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getTextureQualities())}, this.getTextureQuality(), this.setTextureQuality.bind(this));
         loadSetting(CUBEMAP_QUALITY_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getCubemapQualities())}, this.getCubemapQuality(), this.setCubemapQuality.bind(this));
         loadSetting(MAX_LOD_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getLODLevels())}, this.getLODLevel(), this.setLODLevel.bind(this));
@@ -1574,6 +1591,7 @@ define([
         localStorage.removeItem(GENERAL_LEVEL_LOCAL_STORAGE_ID);
         localStorage.removeItem(ANTIALIASING_LOCAL_STORAGE_ID);
         localStorage.removeItem(FILTERING_LOCAL_STORAGE_ID);
+        localStorage.removeItem(RESOLUTION_LOCAL_STORAGE_ID);
         localStorage.removeItem(TEXTURE_QUALITY_LOCAL_STORAGE_ID);
         localStorage.removeItem(CUBEMAP_QUALITY_LOCAL_STORAGE_ID);
         localStorage.removeItem(MAX_LOD_LOCAL_STORAGE_ID);
@@ -1643,6 +1661,28 @@ define([
         // saving the original preference
         if (saveToLocalStorage) {
             localStorage[FILTERING_LOCAL_STORAGE_ID] = value.toString();
+        }
+    };
+    /**
+     * Returns the current resolution setting.
+     * @returns {String} enum screens.CanvasResolution
+     */
+    GraphicsSettingsContext.prototype.getResolution = function () {
+        return this._resolution;
+    };
+    /**
+     * Sets a new resolution setting.
+     * @param {String} value enum screens.CanvasResolution
+     * @param {Boolean} [saveToLocalStorage=true]
+     */
+    GraphicsSettingsContext.prototype.setResolution = function (value, saveToLocalStorage) {
+        if (saveToLocalStorage === undefined) {
+            saveToLocalStorage = true;
+        }
+        this._resolution = types.getEnumValue(screens.CanvasResolution, value, {name: "resolution", defaultValue: this._resolution});
+        // saving the original preference
+        if (saveToLocalStorage) {
+            localStorage[RESOLUTION_LOCAL_STORAGE_ID] = value.toString();
         }
     };
     /**
@@ -2588,6 +2628,8 @@ define([
         setAntialiasing: _context.setAntialiasing.bind(_context),
         getFiltering: _context.getFiltering.bind(_context),
         setFiltering: _context.setFiltering.bind(_context),
+        getResolution: _context.getResolution.bind(_context),
+        setResolution: _context.setResolution.bind(_context),
         getTextureQualities: _context.getTextureQualities.bind(_context),
         getTextureQuality: _context.getTextureQuality.bind(_context),
         setTextureQuality: _context.setTextureQuality.bind(_context),

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2025 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file This module manages and provides the Battle screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -2730,6 +2730,7 @@ define([
                 graphics.getAntialiasing(),
                 true,
                 graphics.getFiltering(),
+                graphics.getResolution(),
                 config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME),
                 {
                     activate: function () {
@@ -2880,7 +2881,7 @@ define([
             window.removeEventListener("resize", _handleResize);
         }
         _handleResize = _handleResize || function () {
-            control.setScreenCenter(canvas.width / 2, canvas.height / 2);
+            control.setScreenCenter(canvas.clientWidth / 2, canvas.clientHeight / 2);
         };
         window.addEventListener("resize", _handleResize);
         this._touchControlSheet.hide();
@@ -3536,14 +3537,14 @@ define([
                     !craft.isManeuveringLocked()) {
                 position2D = mouseInputInterpreter.getMousePosition();
                 position2D = [
-                    (position2D[0] / canvas.width - 0.5) * 2,
-                    (0.5 - position2D[1] / canvas.height) * 2
+                    (position2D[0] / canvas.clientWidth - 0.5) * 2,
+                    (0.5 - position2D[1] / canvas.clientHeight) * 2
                 ];
                 if (mouseInputInterpreter.isMouseDisplaced()) {
                     _hudStillCursor.hide();
                     _hudTurnCursor.show();
                     _hudTurnCursor.setPosition(position2D);
-                    angle = vec.angle2y(position2D[0] * canvas.width / canvas.height, position2D[1]);
+                    angle = vec.angle2y(position2D[0] * canvas.clientWidth / canvas.clientHeight, position2D[1]);
                     _hudTurnCursor.setAngle(angle * ((position2D[0] < 0) ? -1 : 1));
                 } else {
                     _hudStillCursor.show();
@@ -5206,6 +5207,7 @@ define([
                 var i, j, voices, missionVoiceMessages, craft;
                 this.setAntialiasing(graphics.getAntialiasing());
                 this.setFiltering(graphics.getFiltering());
+                this.setResolution(graphics.getResolution());
                 this.clearSceneCanvasBindings();
                 this.bindSceneToCanvas(_battleScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
                 this.bindSceneToCanvas(_targetScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
@@ -5466,8 +5468,8 @@ define([
         this._loadingBox.show();
         this.resizeCanvases();
         control.setScreenCenter(
-                canvas.width / 2,
-                canvas.height / 2);
+                canvas.clientWidth / 2,
+                canvas.clientHeight / 2);
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_MISSION), 0);
         missionParams = {
             difficulty: _difficulty,

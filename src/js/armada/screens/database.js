@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2023 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file This module manages and provides the in-game database screen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -496,6 +496,7 @@ define([
                 graphics.getAntialiasing(),
                 true,
                 graphics.getFiltering(),
+                graphics.getResolution(),
                 config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME),
                 undefined,
                 {
@@ -697,6 +698,7 @@ define([
      */
     DatabaseScreen.prototype.show = function () {
         if (screens.HTMLScreenWithCanvases.prototype.show.call(this)) {
+            this.setResolution(graphics.getResolution());
             this.executeWhenReady(function () {
                 this._initializeCanvas();
             });

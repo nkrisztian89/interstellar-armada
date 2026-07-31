@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file This module manages and provides the Graphics settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -58,6 +58,14 @@ define([
             _filterTextureFilteringValue = function (element) {
                 return managedGL.isAnisotropicFilteringAvailable() || element !== managedGL.TextureFiltering.ANISOTROPIC;
             },
+            /**
+             * Whether the resolution (CSS vs. full device pixel) setting has any actual effect on the current device, and thus whether
+             * it is worth showing to the user at all.
+             * @returns {Boolean}
+             */
+            _isResolutionSettingRelevant = function () {
+                return (window.devicePixelRatio || 1) !== 1;
+            },
             _mapCaption = function (element) {
                 return element[0];
             },
@@ -76,6 +84,13 @@ define([
              */
             _getFilteringSettingValues = function () {
                 return utils.getEnumValues(managedGL.TextureFiltering).filter(_filterTextureFilteringValue).map(_getMapToCaptionAndValueFunction(strings.GRAPHICS));
+            },
+            /**
+             * In the same format as the other value arrays
+             * @type String[][2]
+             */
+            _getResolutionSettingValues = function () {
+                return utils.getEnumValues(screens.CanvasResolution).map(_getMapToCaptionAndValueFunction(strings.GRAPHICS));
             },
             /**
              * In the same format as the other value arrays
@@ -161,6 +176,7 @@ define([
             GENERAL_LEVEL_SELECTOR_PROPERTY_CLASS_NAME = "smallSelectorPropertyContainer",
             AA_SELECTOR_ID = "aaSelector",
             FILTERING_SELECTOR_ID = "filteringSelector",
+            RESOLUTION_SELECTOR_ID = "resolutionSelector",
             TEXTURE_QUALITY_SELECTOR_ID = "textureQualitySelector",
             CUBEMAP_QUALITY_SELECTOR_ID = "cubemapQualitySelector",
             LOD_SELECTOR_ID = "lodSelector",
@@ -224,6 +240,10 @@ define([
         /**
          * @type Selector
          */
+        this._resolutionSelector = null;
+        /**
+         * @type Selector
+         */
         this._textureQualitySelector = null;
         /**
          * @type Selector
@@ -280,6 +300,9 @@ define([
             this._filteringSelector = this._registerSelector(FILTERING_SELECTOR_ID,
                     strings.GRAPHICS.FILTERING.name,
                     _getFilteringSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
+            this._resolutionSelector = this._registerSelector(RESOLUTION_SELECTOR_ID,
+                    strings.GRAPHICS.RESOLUTION.name,
+                    _getResolutionSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
             this._textureQualitySelector = this._registerSelector(TEXTURE_QUALITY_SELECTOR_ID,
                     strings.GRAPHICS.TEXTURE_QUALITY.name,
                     _getTextureQualitySettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
@@ -349,6 +372,7 @@ define([
     GraphicsScreen.prototype._applyAndClose = function () {
         graphics.setAntialiasing((this._antialiasingSelector.getSelectedIndex() === SETTING_ON_INDEX));
         graphics.setFiltering(_getFilteringSettingValues()[this._filteringSelector.getSelectedIndex()][1]);
+        graphics.setResolution(_getResolutionSettingValues()[this._resolutionSelector.getSelectedIndex()][1]);
         graphics.setTextureQuality(_getTextureQualitySettingValues()[this._textureQualitySelector.getSelectedIndex()][1]);
         graphics.setCubemapQuality(_getCubemapQualitySettingValues()[this._cubemapQualitySelector.getSelectedIndex()][1]);
         graphics.setLODLevel(_getLODSettingValues()[this._lodSelector.getSelectedIndex()][1]);
@@ -398,6 +422,7 @@ define([
         }.bind(this);
         this._antialiasingSelector.onChange = setCustomLevel;
         this._filteringSelector.onChange = setCustomLevel;
+        this._resolutionSelector.onChange = setCustomLevel;
         this._textureQualitySelector.onChange = setCustomLevel;
         this._cubemapQualitySelector.onChange = setCustomLevel;
         this._lodSelector.onChange = setCustomLevel;
@@ -450,6 +475,7 @@ define([
         this._generalLevelSelector.setValueList(_getGeneralLevelSettingValues().map(_mapCaption));
         this._antialiasingSelector.setValueList(managedGL.isAntialiasingAvailable() ? strings.getOnOffSettingValues() : strings.getOffSettingValue());
         this._filteringSelector.setValueList(_getFilteringSettingValues().map(_mapCaption));
+        this._resolutionSelector.setValueList(_getResolutionSettingValues().map(_mapCaption));
         this._textureQualitySelector.setValueList(_getTextureQualitySettingValues().map(_mapCaption));
         this._cubemapQualitySelector.setValueList(_getCubemapQualitySettingValues().map(_mapCaption));
         this._lodSelector.setValueList(_getLODSettingValues().map(_mapCaption));
@@ -539,6 +565,8 @@ define([
             this._generalLevelSelector.selectValueWithIndex(generalLevel ? _findIndexOf(generalLevel, _getGeneralLevelSettingValues()) : _getGeneralLevelSettingValues().length - 1);
             this._antialiasingSelector.selectValueWithIndex((graphics.getAntialiasing() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._filteringSelector.selectValueWithIndex(_findIndexOf(graphics.getFiltering(), _getFilteringSettingValues()));
+            this._resolutionSelector.setVisible(_isResolutionSettingRelevant());
+            this._resolutionSelector.selectValueWithIndex(_findIndexOf(graphics.getResolution(), _getResolutionSettingValues()));
             this._textureQualitySelector.selectValueWithIndex(_findIndexOf(graphics.getTextureQuality(), _getTextureQualitySettingValues()));
             this._cubemapQualitySelector.selectValueWithIndex(_findIndexOf(graphics.getCubemapQuality(), _getCubemapQualitySettingValues()));
             this._lodSelector.selectValueWithIndex(_findIndexOf(graphics.getLODLevel(), _getLODSettingValues()));

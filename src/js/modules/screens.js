@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides wrapper classes that can be used to manage (loading, assemblin, displaying, hiding, translating...) HTML based screens for
  * an application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -55,6 +55,17 @@ define([
                 defaultValue: "The antialiasing setting has been changed. Please restart the application to apply the new setting!"
             },
             // ------------------------------------------------------------------------------
+            // enums
+            /**
+             * An enumeration storing the possible values for how the render resolution (backing buffer size) of a canvas relates to its
+             * displayed (CSS/client) size.
+             * @enum {String}
+             */
+            CanvasResolution = {
+                STANDARD: "standard",
+                NATIVE: "native"
+            },
+            // ------------------------------------------------------------------------------
             // private module variables
             /**
              * Stores the settings for rendering CanvasTexts for anaglyph display
@@ -66,6 +77,7 @@ define([
                 filter: [1, 1, 1, 1], // for cyan factor
                 gamma: 1
             };
+    Object.freeze(CanvasResolution);
     // #########################################################################
     // private module functions
     /**
@@ -1738,10 +1750,10 @@ define([
      * @param {HTMLCanvasElement} container
      */
     TextLayer.prototype.setContainer = function (container) {
-        this.handleResize(container.width, container.height);
+        this.handleResize(container.clientWidth, container.clientHeight);
         container.parentNode.appendChild(this._canvas);
         this._canvas.style.position = "absolute";
-        this._canvas.zIndex = container.zIndex + 1;
+        this._canvas.style.zIndex = container.style.zIndex + 1;
     };
     /**
      * Returns whether the text layer is currently visible
@@ -1793,8 +1805,9 @@ define([
      * @param {Boolean} alpha Whether alpha channel support (blending with the HTML element behind the canvas) 
      * should be turned on for this canvas.
      * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to this canvas
+     * @param {String} resolution (enum CanvasResolution) Whether to render at the canvas's CSS size or at its full device pixel size
      */
-    function ScreenCanvas(canvas, antialiasing, alpha, filtering) {
+    function ScreenCanvas(canvas, antialiasing, alpha, filtering, resolution) {
         /**
          * A reference to the wrapped HTML5 canvas.
          * @type HTMLCanvasElement
@@ -1821,6 +1834,11 @@ define([
          * @type String
          */
         this._filtering = types.getEnumValue(managedGL.TextureFiltering, filtering, {name: "ScreenCanvas.filtering"});
+        /**
+         * (enum CanvasResolution) Whether to render at the canvas's CSS size or at its full device pixel size
+         * @type String
+         */
+        this._resolution = types.getEnumValue(CanvasResolution, resolution, {name: "ScreenCanvas.resolution", defaultValue: CanvasResolution.STANDARD});
         /**
          * A reference to the managed GL context associated with this canvas.
          * @type ManagedGLContext
@@ -1897,20 +1915,35 @@ define([
         }
     };
     /**
+     * Sets a new resolution option determining whether this canvas renders at its CSS size or its full device pixel size, and applies it
+     * immediately by resizing the canvas.
+     * @param {String} value (enum CanvasResolution)
+     */
+    ScreenCanvas.prototype.setResolution = function (value) {
+        if (value !== this._resolution) {
+            this._resolution = value;
+            this.handleResize();
+        }
+    };
+    /**
      * Resizes the viewport of the wrapped canvas and any text layer canvases. To be called in case the window size changes.
      */
     ScreenCanvas.prototype.handleResize = function () {
         var
-                width = this._canvas.clientWidth,
-                height = this._canvas.clientHeight,
+                dpr = (this._resolution === CanvasResolution.NATIVE) ? (window.devicePixelRatio || 1) : 1,
+                cssWidth = this._canvas.clientWidth,
+                cssHeight = this._canvas.clientHeight,
+                width = cssWidth * dpr,
+                height = cssHeight * dpr,
                 i;
         if (this._canvas.width !== width ||
                 this._canvas.height !== height) {
             // Change the size of the canvas to match the size it's being displayed
             this._canvas.width = width;
             this._canvas.height = height;
+            // text layers are positioned and sized in CSS pixels, not device pixels
             for (i = 0; i < this._textLayers.length; i++) {
-                this._textLayers[i].handleResize(width, height);
+                this._textLayers[i].handleResize(cssWidth, cssHeight);
             }
         }
     };
@@ -1943,6 +1976,8 @@ define([
      * canvases of this screen. It can be specified altogether (Boolean) or on a per-canvas basis (Object storing Booleans for the
      * IDs of the canvases)
      * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to a canvases of this screen
+     * @param {String} resolution (enum CanvasResolution) Whether the canvases of this screen should render at their CSS size or their
+     * full device pixel size
      * @param {Boolean} [useRequestAnimFrame=false] Whether to use the requestAnimationFrame API for the render loop
      * (as opposed to setInterval)
      * @param {Object.<String, Function>} [eventHandlers] Event handler functions to be executed when something happens to this page, by the
@@ -1951,7 +1986,7 @@ define([
      * while this screen is active, by the names of the keys (as in utils.getKeyCodeOf())
      * @param {Object.<String, Object.<String, Function>>} [elementEventHandlers] See HTMLScreen
      */
-    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, alpha, filtering, useRequestAnimFrame, eventHandlers, keyCommands, elementEventHandlers) {
+    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, alpha, filtering, resolution, useRequestAnimFrame, eventHandlers, keyCommands, elementEventHandlers) {
         HTMLScreen.call(this, name, htmlFilename, style, eventHandlers, keyCommands, elementEventHandlers);
         /**
          * Whether antialiasing should be turned on for the GL contexts of the canvases of this screen
@@ -1959,7 +1994,7 @@ define([
          */
         this._antialiasing = antialiasing;
         /**
-         * Whether alpha channel support should be turned on for the GL contexts of the 
+         * Whether alpha channel support should be turned on for the GL contexts of the
          * canvases of this screen. It can be specified altogether (Boolean) or on a per-canvas basis (Object storing Booleans for the
          * IDs of the canvases)
          * @type Boolean|Object.<String, Boolean>
@@ -1970,6 +2005,11 @@ define([
          * @type String
          */
         this._filtering = htmlFilename ? types.getEnumValue(managedGL.TextureFiltering, filtering, {name: "HTMLScreenWithCanvases.filtering"}) : null;
+        /**
+         * (enum CanvasResolution) Whether the canvases of this screen should render at their CSS size or their full device pixel size
+         * @type String
+         */
+        this._resolution = htmlFilename ? types.getEnumValue(CanvasResolution, resolution, {name: "HTMLScreenWithCanvases.resolution", defaultValue: CanvasResolution.STANDARD}) : null;
         /**
          * Stores the canvases of the screen by their names (IDs)
          * @type Object.<String, ScreenCanvas>
@@ -2092,7 +2132,8 @@ define([
                     canvasElements[i],
                     this._antialiasing,
                     this._getAlphaForCanvas(this._getOriginalElementID(canvasElements[i])),
-                    this._filtering);
+                    this._filtering,
+                    this._resolution);
         }
         // save a specific reference so we can remove it later
         this._resizeEventListener = this.handleResize.bind(this);
@@ -2163,6 +2204,23 @@ define([
             for (canvasName in this._canvases) {
                 if (this._canvases.hasOwnProperty(canvasName)) {
                     this._canvases[canvasName].setFiltering(this._filtering);
+                }
+            }
+        }
+    };
+    /**
+     * Sets a new resolution option for the canvases of this screen, determining whether they render at their CSS size or their full
+     * device pixel size.
+     * @param {String} value (enum CanvasResolution)
+     */
+    HTMLScreenWithCanvases.prototype.setResolution = function (value) {
+        var canvasName;
+        value = types.getEnumValue(CanvasResolution, value, {name: "HTMLScreenWithCanvases.resolution", defaultValue: this._resolution});
+        if (value !== this._resolution) {
+            this._resolution = value;
+            for (canvasName in this._canvases) {
+                if (this._canvases.hasOwnProperty(canvasName)) {
+                    this._canvases[canvasName].setResolution(this._resolution);
                 }
             }
         }
@@ -2406,6 +2464,7 @@ define([
     // The public interface of the module
     return {
         ELEMENT_ID_SEPARATOR: ELEMENT_ID_SEPARATOR,
+        CanvasResolution: CanvasResolution,
         HTMLScreen: HTMLScreen,
         CanvasText: CanvasText,
         ClipSpaceLayout: ClipSpaceLayout,

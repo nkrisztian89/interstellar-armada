@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2024 Krisztián Nagy
+ * Copyright 2016-2026 Krisztián Nagy
  * @file Provides the general structure to preview windows of the Interstellar Armada editor that use a WebGL scene 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -335,8 +335,9 @@ define([
      * Updates the canvas render size to match the canvas element's current (client) size
      */
     function _updateCanvasSize() {
-        _elements.canvas.width = _elements.canvas.clientWidth;
-        _elements.canvas.height = _elements.canvas.clientHeight;
+        var dpr = window.devicePixelRatio || 1;
+        _elements.canvas.width = _elements.canvas.clientWidth * dpr;
+        _elements.canvas.height = _elements.canvas.clientHeight * dpr;
     }
     /**
      * Called when a change happens as the result of which the preview scene should rendered again (if it is not rendered continuously)

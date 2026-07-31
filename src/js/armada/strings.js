@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2025 Krisztián Nagy
+ * Copyright 2016-2026 Krisztián Nagy
  * @file Augments the general strings module with constants and functions to conveniently access strings in the game and to verify their 
  * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -403,6 +403,9 @@ define([
         BILINEAR: {name: "graphics.bilinear"},
         TRILINEAR: {name: "graphics.trilinear"},
         ANISOTROPIC: {name: "graphics.anisotropic"},
+        RESOLUTION: {name: "graphics.resolution"},
+        STANDARD: {name: "graphics.standard"},
+        NATIVE: {name: "graphics.native"},
         TEXTURE_QUALITY: {name: "graphics.textureQuality"},
         BACKGROUND_QUALITY: {name: "graphics.backgroundQuality"},
         MODEL_DETAILS: {name: "graphics.modelDetails"},
