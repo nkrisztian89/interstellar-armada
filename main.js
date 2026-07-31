@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2020, 2023-2025 Krisztián Nagy
+ * Copyright 2016-2017, 2020, 2023-2026 Krisztián Nagy
  * @file Electron launch file for the Interstellar Armada game.
  * This file is only used when the game is launched using Electron (https://www.electronjs.org/) and is based on
  * the Quick Start app from https://github.com/electron/electron-quick-start.
