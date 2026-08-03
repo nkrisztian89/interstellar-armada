@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2025 Krisztián Nagy
+ * Copyright 2016-2026 Krisztián Nagy
  * @file Contains the common constants and functions accessible to all screens of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -123,6 +123,11 @@ define([
             // --------------------------------------------------------------------------------------------
             // Constants
             FULLSCREEN_BUTTON_ID = "fullscreenButton",
+            /**
+             * The class added to the fullscreen toggle button while fullscreen mode is active, to switch it to showing the "exit fullscreen" icon
+             * @type String
+             */
+            FULLSCREEN_BUTTON_ACTIVE_CLASS = "active",
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -139,8 +144,16 @@ define([
             _buttonClickSound;
     // --------------------------------------------------------------------------------------------
     // Private functions
+    /**
+     * Returns whether the page is currently displayed in fullscreen mode, checking all the vendor-prefixed variants of the corresponding
+     * DOM property.
+     * @returns {Boolean}
+     */
+    function _isFullscreen() {
+        return !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+    }
     function _toggleFullscreen() {
-        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+        if (!_isFullscreen()) {
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen();
             } else if (document.documentElement.mozRequestFullScreen) {
@@ -161,6 +174,13 @@ define([
                 document.msExitFullscreen();
             }
         }
+    }
+    /**
+     * Updates the passed fullscreen toggle button element to reflect whether fullscreen mode is currently active (see FULLSCREEN_BUTTON_ACTIVE_CLASS)
+     * @param {Element} button
+     */
+    function _updateFullscreenButton(button) {
+        button.classList.toggle(FULLSCREEN_BUTTON_ACTIVE_CLASS, _isFullscreen());
     }
     // ------------------------------------------------------------------------------
     // Public functions
@@ -227,10 +247,16 @@ define([
      * Call on the screen that has a fullscreen button to set up its event handlers
      */
     exports.setupFullscreenButton = function () {
+        var button;
         if (game.usesElectron()) {
             this.getElement(FULLSCREEN_BUTTON_ID).hidden = true;
         } else {
-            this.getElement(FULLSCREEN_BUTTON_ID).onclick = _toggleFullscreen;
+            button = this.getElement(FULLSCREEN_BUTTON_ID);
+            button.onclick = _toggleFullscreen;
+            _updateFullscreenButton(button);
+            document.onfullscreenchange = document.onwebkitfullscreenchange = document.onmozfullscreenchange = document.onMSFullscreenChange = function () {
+                _updateFullscreenButton(button);
+            };
         }
     };
     // ------------------------------------------------------------------------------

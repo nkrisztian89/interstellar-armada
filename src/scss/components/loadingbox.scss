@@ -44,6 +44,7 @@
 
 .loadingBoxImage {
     display: block;
+    width: 4em;
     &[hidden] {
         display: none;
     }

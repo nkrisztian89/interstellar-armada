@@ -1,7 +1,10 @@
 <div class="pageGhost">
     <div class="anyHeightCentered narrowFix outerContainer pageContainer">
         <div id="menuContainer" class="horizontallyCentered wideFluid innerContainer">
-            <img class="menuHeaderImage" src="assets/images/menu_logo_400.png" alt="logo" />
+            <picture>
+                <source media="(min-height: 1441px)" srcset="assets/images/menu_logo@2x.png" />
+                <img class="menuHeaderImage" src="assets/images/menu_logo.png" srcset="assets/images/menu_logo.png 1x, assets/images/menu_logo@2x.png 2x" alt="logo" />
+            </picture>
         </div>
     </div>
     <a id="fullscreenButton" class="fullscreenButton"></a>

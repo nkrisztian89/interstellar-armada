@@ -1,3 +1,5 @@
+@use "../color-scheme";
+
 .ingameMenuContainer {
     width: 18.5em;
 }
@@ -8,5 +10,6 @@
     padding-right: 1em;
     &>h2 {
         padding-bottom: 0.5em;
+        text-shadow: color-scheme.$glow-color 0.0em 0.0em 0.5em;
     }
 }

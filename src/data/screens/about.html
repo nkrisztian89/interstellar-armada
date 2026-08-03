@@ -3,7 +3,10 @@
         <h1 id="title" class="translatable"></h1>
     </div>
     <div class="about pageContent">
-        <img src="assets/images/empire_white_100.png" alt="Logo" class="horizontallyCentered" />
+        <picture>
+            <source media="(min-height: 1441px)" srcset="assets/images/empire_white_large@2x.png" />
+            <img src="assets/images/empire_white_large.png" srcset="assets/images/empire_white_large.png 1x, assets/images/empire_white_large@2x.png 2x" alt="Logo" class="horizontallyCentered aboutLogo" />
+        </picture>
         <h2>Interstellar Armada: Galactic Ace</h2>
         <p id="versionParagraph" class="horizontallyCentered translatable"></p>
         <p id="aboutGameParagraph" class="about translatable"></p>

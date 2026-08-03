@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2021 Krisztián Nagy
+ * Copyright 2016-2026 Krisztián Nagy
  * @file This module manages and provides the Mission debriefing screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -32,7 +32,8 @@ define([
             BACK_BUTTON_ID = "backButton",
             TITLE_ID = "title",
             MEDAL_ID = "medal",
-            MEDAL_IMAGE_SOURCE = "assets/images/empire_{performance}_100.png",
+            MEDAL_IMAGE_SOURCE = "assets/images/empire_{performance}_large.png",
+            MEDAL_IMAGE_SOURCE_2X = "assets/images/empire_{performance}_large@2x.png",
             MEDAL_IMAGE_NO_SCORE = "white",
             SCORE_CONTAINER_ID = "scoreContainer",
             SCORE_SPAN_ID = "score",
@@ -201,7 +202,7 @@ define([
      * @param {DebriefingScreen~Data} data
      */
     DebriefingScreen.prototype.setData = function (data) {
-        var medalText, hasScore, description, i, completed;
+        var medalText, medalPerformance, hasScore, description, i, completed;
         hasScore = (data.missionState === missionEvents.MissionState.COMPLETED);
         _shouldPlayVictoryMusic = (data.missionState === missionEvents.MissionState.COMPLETED) ||
                 (data.missionState === missionEvents.MissionState.NONE);
@@ -211,9 +212,15 @@ define([
                 ((data.missionState === missionEvents.MissionState.NONE) ?
                         strings.get(strings.DEBRIEFING.GENERIC_TITLE) :
                         strings.get(strings.DEBRIEFING.DEFEAT_TITLE)));
+        medalPerformance = (data.missionState !== missionEvents.MissionState.NONE) ? data.performance : MEDAL_IMAGE_NO_SCORE;
         this._medal.getElement().src = utils.formatString(MEDAL_IMAGE_SOURCE, {
-            performance: (data.missionState !== missionEvents.MissionState.NONE) ? data.performance : MEDAL_IMAGE_NO_SCORE
+            performance: medalPerformance
         });
+        this._medal.getElement().srcset = utils.formatString(MEDAL_IMAGE_SOURCE, {
+            performance: medalPerformance
+        }) + " 1x, " + utils.formatString(MEDAL_IMAGE_SOURCE_2X, {
+            performance: medalPerformance
+        }) + " 2x";
         this._scoreContainer.setVisible(hasScore);
         this._scoreSpan.setVisible(hasScore);
         if (this._scoreSpan.isVisible()) {

@@ -113,7 +113,7 @@
         "customMissionSubcaption": "Egyéni küldetés",
         "communityMissionSubcaption": "{author}",
         "notCompleted": "Nem teljesített",
-        "bestScore": "Rekord: {score} ({medal})",
+        "bestScore": "Rekord: {score} {medal}",
         "sandboxCompleted": "teszt kipróbálva",
         "noSelectedName": "Küldetésválasztás",
         "noSelectedDescription": "Válassz egy küldetést a listából.",

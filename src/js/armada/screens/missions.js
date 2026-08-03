@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2024 Krisztián Nagy
+ * Copyright 2016-2026 Krisztián Nagy
  * @file This module manages and provides the Missions screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -130,7 +130,7 @@ define([
                 minDescriptionLength: MIN_DESCRIPTION_LENGTH
             },
             LIST_COMPONENT_NAME = "list",
-            MEDAL_IMAGE_HTML = "<img class='missionMedal' src='assets/images/empire_{performance}_20.png' alt='{performance}'>",
+            MEDAL_IMAGE_HTML = "<img class='missionMedal' src='assets/images/empire_{performance}_small.png' srcset='assets/images/empire_{performance}_small.png 1x, assets/images/empire_{performance}_small@2x.png 2x' alt='{performance}'>",
             // ------------------------------------------------------------------------------
             // private variables
             /**

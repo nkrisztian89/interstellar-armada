@@ -160,10 +160,18 @@ canvas {
 }
 
 .withSmallBackgroundSign {
-    background-image: url(../assets/images/empire_back_dark400.png);
+    background-image: url(../assets/images/empire_back_dark.png);
+    background-image: -webkit-image-set(url(../assets/images/empire_back_dark.png) 1x, url(../assets/images/empire_back_dark@2x.png) 2x);
+    background-image: image-set(url(../assets/images/empire_back_dark.png) 1x, url(../assets/images/empire_back_dark@2x.png) 2x);
     background-position: center 0.75em;
     background-repeat: no-repeat;
     background-size: contain;
+}
+
+@media screen and (min-height: 1441px) {
+    .withSmallBackgroundSign {
+        background-image: url(../assets/images/empire_back_dark@2x.png);
+    }
 }
 
 .horizontallyCentered {
@@ -241,13 +249,29 @@ canvas {
     margin-left: 0;
     margin-right: 0;
     padding: 0.4em;
-    background: 
-        url(../assets/images/empire_white_50.png) left 10px center,
-        url(../assets/images/empire_white_50.png) right 10px center;
+    background-image:
+        url(../assets/images/empire_white_small.png),
+        url(../assets/images/empire_white_small.png);
+    background-image:
+        -webkit-image-set(url(../assets/images/empire_white_small.png) 1x, url(../assets/images/empire_white_small@2x.png) 2x),
+        -webkit-image-set(url(../assets/images/empire_white_small.png) 1x, url(../assets/images/empire_white_small@2x.png) 2x);
+    background-image:
+        image-set(url(../assets/images/empire_white_small.png) 1x, url(../assets/images/empire_white_small@2x.png) 2x),
+        image-set(url(../assets/images/empire_white_small.png) 1x, url(../assets/images/empire_white_small@2x.png) 2x);
+    background-position: left 10px center, right 10px center;
+    background-size: 3em auto;
     background-color: color-scheme.$separator-color;
     background-repeat: no-repeat;
-    box-sizing: border-box; 
+    box-sizing: border-box;
     border: none;
+}
+
+@media screen and (min-height: 1441px) {
+    .separatorBar {
+        background-image:
+            url(../assets/images/empire_white_small@2x.png),
+            url(../assets/images/empire_white_small@2x.png);
+    }
 }
 
 $footer-margin: 1em;
@@ -690,11 +714,29 @@ input[type=range] {
     margin: 0;
     padding: 0;
     background-image: url(../assets/images/fullscreen.png);
+    background-image: -webkit-image-set(url(../assets/images/fullscreen.png) 1x, url(../assets/images/fullscreen@2x.png) 2x);
+    background-image: image-set(url(../assets/images/fullscreen.png) 1x, url(../assets/images/fullscreen@2x.png) 2x);
     background-size: cover;
     background-color: transparent;
-    
+
+    &.active {
+        background-image: url(../assets/images/fullscreen_close.png);
+        background-image: -webkit-image-set(url(../assets/images/fullscreen_close.png) 1x, url(../assets/images/fullscreen_close@2x.png) 2x);
+        background-image: image-set(url(../assets/images/fullscreen_close.png) 1x, url(../assets/images/fullscreen_close@2x.png) 2x);
+    }
+
     &:hover:not(.disabled) {
         background-color: transparent;
+        filter: drop-shadow(color-scheme.$glow-color 0 0 0.3em);
+    }
+}
+
+@media screen and (min-height: 1441px) {
+    .fullscreenButton {
+        background-image: url(../assets/images/fullscreen@2x.png);
+        &.active {
+            background-image: url(../assets/images/fullscreen_close@2x.png);
+        }
     }
 }
 

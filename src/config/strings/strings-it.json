@@ -99,7 +99,7 @@
         "customMissionSubcaption": "Missione personalizzata",
         "communityMissionSubcaption": "Da {author}",
         "notCompleted": "Non ancora completata",
-        "bestScore": "Punteggio migliore: {score} ({medal})",
+        "bestScore": "Punteggio migliore: {score} {medal}",
         "sandboxCompleted": "Test provato",
         "noSelectedName": "Scegli missione",
         "noSelectedDescription": "Scegli una missione dalla lista.",

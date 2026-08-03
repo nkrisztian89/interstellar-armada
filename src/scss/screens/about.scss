@@ -1,5 +1,9 @@
 @use "../_common.scss";
 
+img.aboutLogo {
+    width: 4em;
+}
+
 .about.pageContent {
     height: calc(100% - #{2*common.$separator-height});
 }
