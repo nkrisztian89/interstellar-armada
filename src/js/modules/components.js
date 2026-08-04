@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides various classes that can be used integrated with the Screen module as components on screens. Also manages a shader cache
  * for storing the downloaded source (HTML and CSS) files of the created components.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -64,6 +64,8 @@ define([
             INFO_BOX_HEADER_ID = "header",
             SELECTOR_PROPERTY_LABEL_ID = "property",
             SELECTOR_VALUE_BUTTON_ID = "value",
+            MULTI_BAR_SELECTOR_BARS_ID = "bars",
+            MULTI_BAR_SELECTOR_BAR_CLASS_NAME = "multiBarSelectorBar",
             SLIDER_PROPERTY_LABEL_ID = "property",
             SLIDER_ID = "slider",
             SLIDER_VALUE_LABEL_ID = "valueLabel",
@@ -1983,6 +1985,103 @@ define([
     };
     // #########################################################################
     /**
+     * @typedef {Selector~Style} MultiBarSelector~Style
+     */
+    /**
+     * @class A variant of Selector that, besides the text value, also displays a row of thin bars underneath the value button, indicating
+     * how high the current setting is at a glance. By default, as many bars are shown as there are available values, with as many of
+     * them illuminated (from the left) as the index of the currently selected value, plus one. In "start from zero" mode, one fewer bar
+     * is shown, and the index of the current value (not +1) is illuminated instead - suited for e.g. on/off-style settings, where the
+     * first (off) value then illuminates none of the bars. Whenever only one value is available, a single bar is always shown regardless
+     * of mode, illuminated exactly when the component is not disabled.
+     * @extends Selector
+     * @param {String} name See ExternalComponent.
+     * @param {String} htmlFilename See ExternalComponent.
+     * @param {MultiBarSelector~Style} [style] See ExternalComponent.
+     * @param {Components~LabelDescriptor} propertyLabelDescriptor See Selector.
+     * @param {String[]} valueList See Selector.
+     * @param {Boolean} [startFromZero=false] See the class description.
+     */
+    function MultiBarSelector(name, htmlFilename, style, propertyLabelDescriptor, valueList, startFromZero) {
+        Selector.call(this, name, htmlFilename, style, propertyLabelDescriptor, valueList);
+        /**
+         * A wrapper for the HTML element containing the bars indicating how high the currently selected value is.
+         * @type SimpleComponent
+         */
+        this._bars = this.registerSimpleComponent(MULTI_BAR_SELECTOR_BARS_ID);
+        /**
+         * See the constructor parameter of the same name.
+         * @type Boolean
+         */
+        this._startFromZero = !!startFromZero;
+    }
+    MultiBarSelector.prototype = new Selector();
+    MultiBarSelector.prototype.constructor = MultiBarSelector;
+    /**
+     * Returns how many bars should be shown for the current value list / mode (see the class description).
+     * @returns {Number}
+     */
+    MultiBarSelector.prototype._getBarCount = function () {
+        if (this._valueList.length < 2) {
+            return 1;
+        }
+        return this._startFromZero ? (this._valueList.length - 1) : this._valueList.length;
+    };
+    /**
+     * Returns how many of the bars should currently be illuminated (from the left), for the current value list / mode / selected value
+     * (see the class description).
+     * @returns {Number}
+     */
+    MultiBarSelector.prototype._getLitBarCount = function () {
+        if (this._valueList.length < 2) {
+            return this._valueSelector.isEnabled() ? 1 : 0;
+        }
+        return this._startFromZero ? this._valueIndex : (this._valueIndex + 1);
+    };
+    /**
+     * Removes and recreates the bar elements within the bars container, and updates them to reflect the currently selected value.
+     */
+    MultiBarSelector.prototype._createBars = function () {
+        var i, count = this._getBarCount(), barElement, barsElement = this._bars.getElement();
+        barsElement.innerHTML = "";
+        for (i = 0; i < count; i++) {
+            barElement = document.createElement("div");
+            barElement.className = MULTI_BAR_SELECTOR_BAR_CLASS_NAME;
+            barsElement.appendChild(barElement);
+        }
+        this._updateBars();
+    };
+    /**
+     * Updates which of the bar elements are illuminated, based on the index of the currently selected value.
+     */
+    MultiBarSelector.prototype._updateBars = function () {
+        var i, litCount = this._getLitBarCount(), bars = this._bars.getElement().children;
+        for (i = 0; i < bars.length; i++) {
+            if (i < litCount) {
+                bars[i].classList.add(SELECTED_CLASS_NAME);
+            } else {
+                bars[i].classList.remove(SELECTED_CLASS_NAME);
+            }
+        }
+    };
+    /**
+     * @override
+     */
+    MultiBarSelector.prototype.selectValueWithIndex = function (index, stepping) {
+        Selector.prototype.selectValueWithIndex.call(this, index, stepping);
+        this._updateBars();
+    };
+    /**
+     * @override
+     */
+    MultiBarSelector.prototype.setValueList = function (valueList) {
+        Selector.prototype.setValueList.call(this, valueList);
+        if (this._rootElement) {
+            this._createBars();
+        }
+    };
+    // #########################################################################
+    /**
      * @typedef {Object} Slider~Params
      * @property {Number} min
      * @property {Number} max
@@ -2207,6 +2306,7 @@ define([
         CheckGroup: CheckGroup,
         ListComponent: ListComponent,
         Selector: Selector,
+        MultiBarSelector: MultiBarSelector,
         Slider: Slider
     };
 });

@@ -30,18 +30,3 @@ $margin-bottom: 0.5em;
     width: $div-width;
     margin-bottom: $margin-bottom;
 }
-
-/* On screens at least as wide as full HD, there is enough room to shrink the settings rows a bit, so that
-   all the rows fit without scrolling even when dpr != 1 and so the resolution setting shows.
-   Smaller screens (where scrolling is needed regardless) keep the more easily tappable full-sized buttons. */
-@media screen and (min-width: 1920px) {
-    #generalLevelDiv, .settingsDivLeft, .settingsDivRight {
-        .selector {
-            margin-top: 0.2em;
-            margin-bottom: 0.2em;
-        }
-        button {
-            padding: 0.35em 0.5em;
-        }
-    }
-}

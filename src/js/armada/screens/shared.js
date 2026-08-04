@@ -33,6 +33,8 @@ define([
                 // components
                 SELECTOR_SOURCE: "selector.html",
                 SELECTOR_CSS: "selector.css",
+                MULTI_BAR_SELECTOR_SOURCE: "multibarselector.html",
+                MULTI_BAR_SELECTOR_CSS: "multibarselector.css",
                 SLIDER_SOURCE: "slider.html",
                 SLIDER_CSS: "slider.css",
                 LOADING_BOX_SOURCE: "loadingbox.html",

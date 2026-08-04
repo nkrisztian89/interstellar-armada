@@ -8,7 +8,7 @@
 /**
  * @param utils Used for managing enums.
  * @param application Used for displaying errors.
- * @param components Used for the components (i.e. Selectors) of the screen.
+ * @param components Used for the components (i.e. Selectors and MultiBarSelectors) of the screen.
  * @param screens The graphics screen is an HTMLScreen.
  * @param managedGL Used for the texture filtering enum type.
  * @param game Used for navigation.
@@ -174,6 +174,12 @@ define([
             GENERAL_LEVEL_SELECTOR_ID = "generalLevelSelector",
             GENERAL_LEVEL_SELECTOR_CLASS_NAME = "separateSelector",
             GENERAL_LEVEL_SELECTOR_PROPERTY_CLASS_NAME = "smallSelectorPropertyContainer",
+            /* On screens at least as wide as full HD, there is enough room to shrink the settings rows a bit, so that all the rows fit
+             * without scrolling even when dpr != 1 and so the resolution setting shows. Smaller screens (where scrolling is needed
+             * regardless) keep the more easily tappable full-sized buttons. Use the narrow class for this implemented by both
+             * Selector and MultiBarSelector */
+            NARROW_SELECTOR_CLASS_NAME = "selector narrow",
+            NARROW_MULTI_BAR_SELECTOR_CLASS_NAME = "multiBarSelector narrow",
             AA_SELECTOR_ID = "aaSelector",
             FILTERING_SELECTOR_ID = "filteringSelector",
             RESOLUTION_SELECTOR_ID = "resolutionSelector",
@@ -230,63 +236,63 @@ define([
          */
         this._generalLevelSelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._antialiasingSelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._filteringSelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._resolutionSelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._textureQualitySelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._cubemapQualitySelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._lodSelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._missilesInLaunchersSelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._thrusterLightSourcesSelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._shaderComplexitySelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._shadowMappingSelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._shadowQualitySelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._shadowDistanceSelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._maxDynamicLightsSelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._particleAmountSelector = null;
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._dustParticleAmountSelector = null;
         graphics.executeWhenReady(function () {
@@ -294,49 +300,49 @@ define([
                     strings.GRAPHICS.GENERAL_LEVEL.name,
                     _getGeneralLevelSettingValues().map(_mapCaption), GENERAL_LEVEL_PARENT_ID,
                     GENERAL_LEVEL_SELECTOR_CLASS_NAME, GENERAL_LEVEL_SELECTOR_PROPERTY_CLASS_NAME);
-            this._antialiasingSelector = this._registerSelector(AA_SELECTOR_ID,
+            this._antialiasingSelector = this._registerMultiBarSelector(AA_SELECTOR_ID,
                     strings.GRAPHICS.ANTIALIASING.name,
-                    strings.getOnOffSettingValues(), LEFT_OPTION_PARENT_ID);
-            this._filteringSelector = this._registerSelector(FILTERING_SELECTOR_ID,
+                    strings.getOnOffSettingValues(), LEFT_OPTION_PARENT_ID, undefined, undefined, true);
+            this._filteringSelector = this._registerMultiBarSelector(FILTERING_SELECTOR_ID,
                     strings.GRAPHICS.FILTERING.name,
                     _getFilteringSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
-            this._resolutionSelector = this._registerSelector(RESOLUTION_SELECTOR_ID,
+            this._resolutionSelector = this._registerMultiBarSelector(RESOLUTION_SELECTOR_ID,
                     strings.GRAPHICS.RESOLUTION.name,
                     _getResolutionSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
-            this._textureQualitySelector = this._registerSelector(TEXTURE_QUALITY_SELECTOR_ID,
+            this._textureQualitySelector = this._registerMultiBarSelector(TEXTURE_QUALITY_SELECTOR_ID,
                     strings.GRAPHICS.TEXTURE_QUALITY.name,
                     _getTextureQualitySettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
-            this._cubemapQualitySelector = this._registerSelector(CUBEMAP_QUALITY_SELECTOR_ID,
+            this._cubemapQualitySelector = this._registerMultiBarSelector(CUBEMAP_QUALITY_SELECTOR_ID,
                     strings.GRAPHICS.BACKGROUND_QUALITY.name,
                     _getCubemapQualitySettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
-            this._lodSelector = this._registerSelector(LOD_SELECTOR_ID,
+            this._lodSelector = this._registerMultiBarSelector(LOD_SELECTOR_ID,
                     strings.GRAPHICS.MODEL_DETAILS.name,
                     _getLODSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
-            this._missilesInLaunchersSelector = this._registerSelector(MISSILES_IN_LAUNCHERS_SELECTOR_ID,
+            this._missilesInLaunchersSelector = this._registerMultiBarSelector(MISSILES_IN_LAUNCHERS_SELECTOR_ID,
                     strings.GRAPHICS.MISSILES_IN_LAUNCHERS.name,
-                    strings.getOnOffSettingValues(), LEFT_OPTION_PARENT_ID);
-            this._shaderComplexitySelector = this._registerSelector(SHADER_COMPLEXITY_SELECTOR_ID,
+                    strings.getOnOffSettingValues(), LEFT_OPTION_PARENT_ID, undefined, undefined, true);
+            this._shaderComplexitySelector = this._registerMultiBarSelector(SHADER_COMPLEXITY_SELECTOR_ID,
                     strings.GRAPHICS.SHADERS.name,
                     _getShaderComplexitySettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
-            this._shadowMappingSelector = this._registerSelector(SHADOW_MAPPING_SELECTOR_ID,
+            this._shadowMappingSelector = this._registerMultiBarSelector(SHADOW_MAPPING_SELECTOR_ID,
                     strings.GRAPHICS.SHADOWS.name,
-                    strings.getOnOffSettingValues(), RIGHT_OPTION_PARENT_ID);
-            this._shadowQualitySelector = this._registerSelector(SHADOW_QUALITY_SELECTOR_ID,
+                    strings.getOnOffSettingValues(), RIGHT_OPTION_PARENT_ID, undefined, undefined, true);
+            this._shadowQualitySelector = this._registerMultiBarSelector(SHADOW_QUALITY_SELECTOR_ID,
                     strings.GRAPHICS.SHADOW_QUALITY.name,
                     _getShadowQualitySettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
-            this._shadowDistanceSelector = this._registerSelector(SHADOW_DISTANCE_SELECTOR_ID,
+            this._shadowDistanceSelector = this._registerMultiBarSelector(SHADOW_DISTANCE_SELECTOR_ID,
                     strings.GRAPHICS.SHADOW_DISTANCE.name,
                     _getShadowDistanceSettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
-            this._maxDynamicLightsSelector = this._registerSelector(MAX_DYNAMIC_LIGHTS_SELECTOR_ID,
+            this._maxDynamicLightsSelector = this._registerMultiBarSelector(MAX_DYNAMIC_LIGHTS_SELECTOR_ID,
                     strings.GRAPHICS.MAX_DYNAMIC_LIGHTS.name,
                     _getMaxDynamicLightsSettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
-            this._thrusterLightSourcesSelector = this._registerSelector(THRUSTER_LIGHT_SOURCES_SELECTOR_ID,
+            this._thrusterLightSourcesSelector = this._registerMultiBarSelector(THRUSTER_LIGHT_SOURCES_SELECTOR_ID,
                 strings.GRAPHICS.THRUSTER_LIGHT_SOURCES.name,
-                strings.getOnOffSettingValues(), RIGHT_OPTION_PARENT_ID);
-            this._particleAmountSelector = this._registerSelector(PARTICLE_AMOUNT_SELECTOR_ID,
+                strings.getOnOffSettingValues(), RIGHT_OPTION_PARENT_ID, undefined, undefined, true);
+            this._particleAmountSelector = this._registerMultiBarSelector(PARTICLE_AMOUNT_SELECTOR_ID,
                     strings.GRAPHICS.PARTICLE_AMOUNT.name,
                     _getParticleAmountSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
-            this._dustParticleAmountSelector = this._registerSelector(DUST_PARTICLE_AMOUNT_SELECTOR_ID,
+            this._dustParticleAmountSelector = this._registerMultiBarSelector(DUST_PARTICLE_AMOUNT_SELECTOR_ID,
                     strings.GRAPHICS.DUST_PARTICLE_AMOUNT.name,
                     _getDustParticleAmountSettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
         }.bind(this));
@@ -348,7 +354,7 @@ define([
      * @param {String} propertyLabelID
      * @param {String[]} valueList
      * @param {String} parentID
-     * @param {String} [selectorClassName]
+     * @param {String} [selectorClassName=NARROW_SELECTOR_CLASS_NAME]
      * @param {String} [propertyContainerClassName]
      * @returns {Selector}
      */
@@ -359,11 +365,36 @@ define([
                         armadaScreens.SELECTOR_SOURCE,
                         {
                             cssFilename: armadaScreens.SELECTOR_CSS,
-                            selectorClassName: selectorClassName,
+                            selectorClassName: selectorClassName || NARROW_SELECTOR_CLASS_NAME,
                             propertyContainerClassName: propertyContainerClassName
                         },
                         {id: propertyLabelID},
                         valueList),
+                parentID);
+    };
+    /**
+     * @param {String} name
+     * @param {String} propertyLabelID
+     * @param {String[]} valueList
+     * @param {String} parentID
+     * @param {String} [selectorClassName=NARROW_MULTI_BAR_SELECTOR_CLASS_NAME]
+     * @param {String} [propertyContainerClassName]
+     * @param {Boolean} [startFromZero=false]
+     * @returns {MultiBarSelector}
+     */
+    GraphicsScreen.prototype._registerMultiBarSelector = function (name, propertyLabelID, valueList, parentID, selectorClassName, propertyContainerClassName, startFromZero) {
+        return this.registerExternalComponent(
+                new components.MultiBarSelector(
+                        name,
+                        armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
+                        {
+                            cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS,
+                            selectorClassName: selectorClassName || NARROW_MULTI_BAR_SELECTOR_CLASS_NAME,
+                            propertyContainerClassName: propertyContainerClassName
+                        },
+                        {id: propertyLabelID},
+                        valueList,
+                        startFromZero),
                 parentID);
     };
     /**

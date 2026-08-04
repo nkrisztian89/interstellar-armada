@@ -52,3 +52,14 @@ div.smallSelectorPropertyContainer {
 div.separateSelector {
     display: inline-block;
 }
+
+div.selector.narrow {
+    @media screen and (min-width: 1920px) {
+        margin-top: 0.2em;
+        margin-bottom: 0.2em;
+
+        div.selectorButtonContainer button {
+            padding: 0.35em 0.5em;
+        }
+    }
+}
