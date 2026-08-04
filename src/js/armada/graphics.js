@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021, 2023-2026 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides functionality to parse and load the graphics settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -671,6 +671,18 @@ define([
              * @type Object
              */
             PARTICLE_AMOUNT_DESCRIPTOR_TYPE = types.getNameAndValueDefinitionObject("particleCountFactor"),
+            // ............................................................................................
+            // UI effects
+            /**
+             * An enumeration storing the possible values for the "UI effects" setting, from the least to the most flashy / expensive:
+             * "low" always includes the baseline UI effects (glow, transparency, button state transitions), while "high" adds the more
+             * expensive ones (background blur, appear / disappear animations) on top.
+             * @enum {String}
+             */
+            UIEffectsLevel = {
+                LOW: "low",
+                HIGH: "high"
+            },
             // ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
             // Settings
             /**
@@ -740,6 +752,13 @@ define([
              * @type String
              */
             THRUSTER_LIGHT_SOURCES_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "thrusterLightSources",
+            // ............................................................................................
+            // UI effects
+            /**
+             * The key identifying the location where the UI effects setting is stored in local storage.
+             * @type String
+             */
+            UI_EFFECTS_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "uiEffects",
             // ............................................................................................
             // Shader complexity
             /**
@@ -812,6 +831,7 @@ define([
              * @type GraphicsSettingsContext
              */
             _context;
+    Object.freeze(UIEffectsLevel);
     // --------------------------------------------------------------------------------------------
     // Private functions dealing with shader requirements
     /**
@@ -1202,6 +1222,12 @@ define([
          */
         this._thrusterLightSources = false;
         /**
+         * (enum UIEffectsLevel) The current level of UI effects (glow / transparency / transitions vs. the more expensive background
+         * blur and appear / disappear animations on top of those) to apply to the in-game menu, dialogs and the loading / info boxes.
+         * @type String
+         */
+        this._uiEffects = null;
+        /**
          * The currently set and available texture qualities.
          * @type TextureQuality
          */
@@ -1514,6 +1540,8 @@ define([
         this.setMissilesInLaunchersVisible(types.getBooleanValue(dataJSON.showMissilesInLaunchers, {name: "settings.graphics.showMissilesInLaunchers"}), false);
         // whether to create light sources for thrusters on spacecrafts
         this.setLightSourcesForThrusters(types.getBooleanValue(dataJSON.createLightSourcesForThrusters, {name: "settings.graphics.createLightSourcesForThrusters"}), false);
+        // the level of UI effects to apply to the in-game menu, dialogs and the loading / info boxes
+        this.setUIEffects(types.getEnumValue(UIEffectsLevel, dataJSON.uiEffects, {name: "settings.graphics.uiEffects"}), false);
         // load the particle amount settings
         this.setParticleAmount(dataJSON.particleAmount.amount, false);
         // if the particle amount is limited by screen size, check the current size and apply the limit
@@ -1571,6 +1599,7 @@ define([
         loadSetting(MAX_LOD_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getLODLevels())}, this.getLODLevel(), this.setLODLevel.bind(this));
         loadSetting(MISSILES_IN_LAUNCHERS_LOCAL_STORAGE_ID, "boolean", this.areMissilesInLaunchersVisible(), this.setMissilesInLaunchersVisible.bind(this));
         loadSetting(THRUSTER_LIGHT_SOURCES_LOCAL_STORAGE_ID, "boolean", this.shouldCreateLightSourcesForThrusters(), this.setLightSourcesForThrusters.bind(this));
+        loadSetting(UI_EFFECTS_LOCAL_STORAGE_ID, {baseType: "enum", values: UIEffectsLevel}, this.getUIEffects(), this.setUIEffects.bind(this));
         loadSetting(SHADER_COMPLEXITY_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getShaderComplexities())}, this.getShaderComplexity(), this.setShaderComplexity.bind(this));
         loadSetting(SHADOW_MAPPING_LOCAL_STORAGE_ID, "boolean", this.isShadowMappingEnabled(), this.setShadowMapping.bind(this));
         loadSetting(SHADOW_MAP_QUALITY_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getShadowMapQualities())}, this.getShadowMapQuality(), this.setShadowMapQuality.bind(this));
@@ -1596,6 +1625,7 @@ define([
         localStorage.removeItem(CUBEMAP_QUALITY_LOCAL_STORAGE_ID);
         localStorage.removeItem(MAX_LOD_LOCAL_STORAGE_ID);
         localStorage.removeItem(MISSILES_IN_LAUNCHERS_LOCAL_STORAGE_ID);
+        localStorage.removeItem(UI_EFFECTS_LOCAL_STORAGE_ID);
         localStorage.removeItem(SHADER_COMPLEXITY_LOCAL_STORAGE_ID);
         localStorage.removeItem(SHADOW_MAPPING_LOCAL_STORAGE_ID);
         localStorage.removeItem(SHADOW_MAP_QUALITY_LOCAL_STORAGE_ID);
@@ -1864,6 +1894,27 @@ define([
      */
     GraphicsSettingsContext.prototype.shouldCreateLightSourcesForThrusters = function () {
         return this._thrusterLightSources;
+    };
+    /**
+     * Sets a new UI effects level.
+     * @param {String} value (enum UIEffectsLevel)
+     * @param {Boolean} [saveToLocalStorage=true]
+     */
+    GraphicsSettingsContext.prototype.setUIEffects = function (value, saveToLocalStorage) {
+        if (saveToLocalStorage === undefined) {
+            saveToLocalStorage = true;
+        }
+        this._uiEffects = types.getEnumValue(UIEffectsLevel, value, {name: "uiEffects", defaultValue: this._uiEffects});
+        if (saveToLocalStorage) {
+            localStorage[UI_EFFECTS_LOCAL_STORAGE_ID] = this._uiEffects.toString();
+        }
+    };
+    /**
+     * Returns the current UI effects level.
+     * @returns {String} (enum UIEffectsLevel)
+     */
+    GraphicsSettingsContext.prototype.getUIEffects = function () {
+        return this._uiEffects;
     };
     /**
      * Returns the string identifying the current shader complexity level setting.
@@ -2620,6 +2671,7 @@ define([
     return {
         SHADER_VARIANT_WITHOUT_SHADOWS_NAME: SHADER_VARIANT_WITHOUT_SHADOWS_NAME,
         SHADER_VARIANT_WITHOUT_DYNAMIC_LIGHTS_NAME: SHADER_VARIANT_WITHOUT_DYNAMIC_LIGHTS_NAME,
+        UIEffectsLevel: UIEffectsLevel,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
         loadSettingsFromLocalStorage: _context.loadFromLocalStorage.bind(_context),
@@ -2648,6 +2700,8 @@ define([
         areMissilesInLaunchersVisible: _context.areMissilesInLaunchersVisible.bind(_context),
         setLightSourcesForThrusters: _context.setLightSourcesForThrusters.bind(_context),
         shouldCreateLightSourcesForThrusters: _context.shouldCreateLightSourcesForThrusters.bind(_context),
+        setUIEffects: _context.setUIEffects.bind(_context),
+        getUIEffects: _context.getUIEffects.bind(_context),
         getShaderComplexity: _context.getShaderComplexity.bind(_context),
         setShaderComplexity: _context.setShaderComplexity.bind(_context),
         getShaderComplexities: _context.getShaderComplexities.bind(_context),

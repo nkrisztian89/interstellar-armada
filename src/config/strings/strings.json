@@ -801,7 +801,8 @@
         "shadowDistance": "Shadow distance:",
         "maxDynamicLights": "Dynamic lights:",
         "particleAmount": "Explosion details:",
-        "dustParticleAmount": "Space dust density:"
+        "dustParticleAmount": "Space dust density:",
+        "uiEffects": "UI effects:"
     },
     "audio": {
         "backButton": "Back to menu",

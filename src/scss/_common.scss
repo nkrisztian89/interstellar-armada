@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2018, 2020-2021, 2023-2024 Krisztián Nagy
+Copyright (C) 2017-2026 Krisztián Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -70,6 +70,10 @@ $input-label-width: 16.5em;
 $input-value-width: 9em;
 $input-width: $input-label-width + $input-value-width;
 
+$ui-effects-blur-radius: 6px;
+$ui-effects-appear-duration: 0.2s;
+$ui-effects-appear-scale: 0.9;
+
 @mixin glowing {
     box-shadow: $glow;
 }
@@ -131,5 +135,27 @@ $input-width: $input-label-width + $input-value-width;
     }
     &::-webkit-scrollbar-thumb {
         background: color-scheme.relDarken(color-scheme.$highlight-color,0.333);
+    }
+}
+
+@mixin ui-effects-box-appear($background-selector, $box-selector) {
+    body.uiEffects {
+        .#{$background-selector} {
+            opacity: 0;
+            backdrop-filter: blur($ui-effects-blur-radius);
+            transition: opacity $ui-effects-appear-duration;
+            &.uiEffectsShown {
+                opacity: 1;
+            }
+        }
+        .#{$box-selector} {
+            opacity: 0;
+            transform: scale($ui-effects-appear-scale);
+            transition: opacity $ui-effects-appear-duration ease-out, transform $ui-effects-appear-duration ease-out;
+        }
+        .uiEffectsShown .#{$box-selector} {
+            opacity: 1;
+            transform: scale(1);
+        }
     }
 }

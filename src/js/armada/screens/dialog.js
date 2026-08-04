@@ -1,5 +1,5 @@
 /**
- * Copyright 2017, 2020-2021 Krisztián Nagy
+ * Copyright 2017-2026 Krisztián Nagy
  * @file This module manages and provides the Dialog screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -35,7 +35,7 @@ define([
                 armadaScreens.DIALOG_SCREEN_SOURCE,
                 {
                     cssFilename: armadaScreens.DIALOG_SCREEN_CSS,
-                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME + " " + armadaScreens.DIALOG_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 undefined,

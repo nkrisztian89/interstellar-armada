@@ -30,3 +30,5 @@
     padding: 0 0.5em;
     @include common.styled-scrollbar;
 }
+
+@include common.ui-effects-box-appear("dialogBackground", "dialogContainer");

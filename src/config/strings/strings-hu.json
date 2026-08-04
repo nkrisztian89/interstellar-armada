@@ -849,7 +849,8 @@
         "shadowDistance": "Árnyékok látótávolsága:",
         "maxDynamicLights": "Dinamikus fények:",
         "particleAmount": "Robbanások részletessége:",
-        "dustParticleAmount": "Porrészecskék száma:"
+        "dustParticleAmount": "Porrészecskék száma:",
+        "uiEffects": "UI effektek:"
     },
     "audio": {
         "backButton": "Vissza a menübe",

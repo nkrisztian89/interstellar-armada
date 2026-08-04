@@ -176,6 +176,18 @@ define([
          */
         this._superimposed = false;
         /**
+         * The handle of the timeout set (via components.playDisappearTransition()) to actually
+         * hide the container element, if its disappear transition is currently in progress.
+         * @type Number
+         */
+        this._containerHideTimeout = null;
+        /**
+         * The handle of the timeout set (via components.playDisappearTransition()) to actually
+         * hide the background element, if its disappear transition is currently in progress.
+         * @type Number
+         */
+        this._backgroundHideTimeout = null;
+        /**
          * Stores the list of simple components (wrapped HTML elements) on this screen.
          * @type SimpleComponent[]
          */
@@ -419,7 +431,8 @@ define([
     HTMLScreen.prototype.show = function () {
         if (!this._visible) {
             if (this._container) {
-                this._container.hidden = false;
+                components.playAppearTransition(this._container, this._containerHideTimeout);
+                this._containerHideTimeout = null;
                 this._visible = true;
                 if (this._onShow) {
                     this._onShow();
@@ -447,8 +460,9 @@ define([
                 }
                 // appendChild does not clone the element if it is already part of the DOM, in that
                 // case it will be simply moved to become the last child of parentNode
-                this._background.hidden = false;
                 parentNode.appendChild(this._background);
+                components.playAppearTransition(this._background, this._backgroundHideTimeout);
+                this._backgroundHideTimeout = null;
             }
             parentNode.appendChild(this._container);
             this._superimposed = true;
@@ -457,14 +471,26 @@ define([
     };
     /**
      * Hides the screen (makes it invisible and not take any screen space)
+     * @param {Boolean} [immediate=false] If true, hide right away, skipping any CSS disappear
+     * transition - for navigating away to a whole new screen. Leave false when closing a popup /
+     * superimposed screen back to what was under it, so that case can play the transition.
      * @returns {Boolean} Whether the screen was hidden (false if it was already hidden, and this method didn't do anything
      */
-    HTMLScreen.prototype.hide = function () {
+    HTMLScreen.prototype.hide = function (immediate) {
         if (this._visible) {
             if (this._container) {
-                this._container.hidden = true;
-                if (this._background) {
-                    this._background.hidden = true;
+                if (immediate) {
+                    components.hideImmediately(this._container);
+                    if (this._background) {
+                        components.hideImmediately(this._background);
+                    }
+                } else {
+                    // the container has no disappear transition of its own (only its content does, see e.g. the ingame menu's outer box),
+                    // so it is kept visible for exactly as long as the background's transition, if any
+                    this._containerHideTimeout = components.playDisappearTransition(this._container, this._background || this._container);
+                    if (this._background) {
+                        this._backgroundHideTimeout = components.playDisappearTransition(this._background);
+                    }
                 }
                 this._visible = false;
                 this._superimposed = false;

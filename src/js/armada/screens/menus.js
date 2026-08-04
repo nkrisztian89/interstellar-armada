@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2025 Krisztián Nagy
+ * Copyright 2016-2026 Krisztián Nagy
  * @file Provides the menu screens of the Interstellar Armada game which are simply instances of MenuScreen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -347,7 +347,7 @@ define([
                     armadaScreens.INGAME_MENU_SCREEN_SOURCE,
                     {
                         cssFilename: armadaScreens.INGAME_MENU_SCREEN_CSS,
-                        backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                        backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME + " " + armadaScreens.INGAME_MENU_BACKGROUND_CLASS_NAME,
                         containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                     },
                     armadaScreens.MENU_COMPONENT_SOURCE,

@@ -417,7 +417,8 @@ define([
         SHADOW_DISTANCE: {name: "graphics.shadowDistance"},
         MAX_DYNAMIC_LIGHTS: {name: "graphics.maxDynamicLights"},
         PARTICLE_AMOUNT: {name: "graphics.particleAmount"},
-        DUST_PARTICLE_AMOUNT: {name: "graphics.dustParticleAmount"}
+        DUST_PARTICLE_AMOUNT: {name: "graphics.dustParticleAmount"},
+        UI_EFFECTS: {name: "graphics.uiEffects"}
     };
     strings.GAMEPLAY_SETTINGS = {
         PREFIX: {name: "gameplaySettings.", optional: true},

@@ -800,7 +800,8 @@
         "shadowDistance": "Distanza delle ombre:",
         "maxDynamicLights": "Luci dinamiche:",
         "particleAmount": "Dettagli delle esplosioni:",
-        "dustParticleAmount": "Densità della polvere spaziale:"
+        "dustParticleAmount": "Densità della polvere spaziale:",
+        "uiEffects": "Effetti UI:"
     },
     "audio": {
         "backButton": "Torna al menu",

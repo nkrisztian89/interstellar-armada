@@ -156,6 +156,13 @@ define([
                 return graphics.getDustParticleAmounts().map(_getMapToCaptionAndValueFunction(strings.SETTING));
             },
             /**
+             * In the same format as the other value arrays
+             * @type String[][2]
+             */
+            _getUIEffectsSettingValues = function () {
+                return utils.getEnumValues(graphics.UIEffectsLevel).map(_getMapToCaptionAndValueFunction(strings.SETTING));
+            },
+            /**
              * Helper function for finding the index of a setting in an array storing caption / setting pairs.
              * @param {} value
              * @param {Array} array
@@ -195,6 +202,7 @@ define([
             MAX_DYNAMIC_LIGHTS_SELECTOR_ID = "maxDynamicLightSelector",
             PARTICLE_AMOUNT_SELECTOR_ID = "particleAmountSelector",
             DUST_PARTICLE_AMOUNT_SELECTOR_ID = "dustParticleAmountSelector",
+            UI_EFFECTS_SELECTOR_ID = "uiEffectsSelector",
             GENERAL_LEVEL_PARENT_ID = "generalLevelDiv",
             LEFT_OPTION_PARENT_ID = "settingsDivLeft",
             RIGHT_OPTION_PARENT_ID = "settingsDivRight",
@@ -295,6 +303,10 @@ define([
          * @type MultiBarSelector
          */
         this._dustParticleAmountSelector = null;
+        /**
+         * @type MultiBarSelector
+         */
+        this._uiEffectsSelector = null;
         graphics.executeWhenReady(function () {
             this._generalLevelSelector = this._registerSelector(GENERAL_LEVEL_SELECTOR_ID,
                     strings.GRAPHICS.GENERAL_LEVEL.name,
@@ -308,7 +320,7 @@ define([
                     _getFilteringSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
             this._resolutionSelector = this._registerMultiBarSelector(RESOLUTION_SELECTOR_ID,
                     strings.GRAPHICS.RESOLUTION.name,
-                    _getResolutionSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
+                    _getResolutionSettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
             this._textureQualitySelector = this._registerMultiBarSelector(TEXTURE_QUALITY_SELECTOR_ID,
                     strings.GRAPHICS.TEXTURE_QUALITY.name,
                     _getTextureQualitySettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
@@ -345,6 +357,9 @@ define([
             this._dustParticleAmountSelector = this._registerMultiBarSelector(DUST_PARTICLE_AMOUNT_SELECTOR_ID,
                     strings.GRAPHICS.DUST_PARTICLE_AMOUNT.name,
                     _getDustParticleAmountSettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
+            this._uiEffectsSelector = this._registerMultiBarSelector(UI_EFFECTS_SELECTOR_ID,
+                    strings.GRAPHICS.UI_EFFECTS.name,
+                    _getUIEffectsSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
         }.bind(this));
     }
     GraphicsScreen.prototype = new screens.HTMLScreen();
@@ -411,6 +426,7 @@ define([
         graphics.setLightSourcesForThrusters((this._thrusterLightSourcesSelector.getSelectedIndex() === SETTING_ON_INDEX));
         graphics.setParticleAmount(_getParticleAmountSettingValues()[this._particleAmountSelector.getSelectedIndex()][1]);
         graphics.setDustParticleAmount(_getDustParticleAmountSettingValues()[this._dustParticleAmountSelector.getSelectedIndex()][1]);
+        graphics.setUIEffects(_getUIEffectsSettingValues()[this._uiEffectsSelector.getSelectedIndex()][1]);
         graphics.handleSettingsChanged();
         game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
     };
@@ -464,6 +480,7 @@ define([
         }.bind(this);
         this._particleAmountSelector.onChange = setCustomLevel;
         this._dustParticleAmountSelector.onChange = setCustomLevel;
+        this._uiEffectsSelector.onChange = setCustomLevel;
         this._shaderComplexitySelector.onChange = function (stepping) {
             graphics.setShaderComplexity(_getShaderComplexitySettingValues()[this._shaderComplexitySelector.getSelectedIndex()][1]);
             this._updateShadowMappingSelector();
@@ -519,6 +536,7 @@ define([
         this._maxDynamicLightsSelector.setValueList(_getMaxDynamicLightsSettingValues().map(_mapCaption));
         this._particleAmountSelector.setValueList(_getParticleAmountSettingValues().map(_mapCaption));
         this._dustParticleAmountSelector.setValueList(_getDustParticleAmountSettingValues().map(_mapCaption));
+        this._uiEffectsSelector.setValueList(_getUIEffectsSettingValues().map(_mapCaption));
         this._updateValues();
     };
     /**
@@ -610,6 +628,7 @@ define([
             this._updateMaxDynamicLightsSelector();
             this._particleAmountSelector.selectValueWithIndex(_findIndexOf(graphics.getParticleAmount(), _getParticleAmountSettingValues()));
             this._dustParticleAmountSelector.selectValueWithIndex(_findIndexOf(graphics.getDustParticleAmount(), _getDustParticleAmountSettingValues()));
+            this._uiEffectsSelector.selectValueWithIndex(_findIndexOf(graphics.getUIEffects(), _getUIEffectsSettingValues()));
         }.bind(this));
     };
     /**

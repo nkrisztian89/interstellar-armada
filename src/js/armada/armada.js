@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2025 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Augments the template provided by the game module to define the basic structure and initialization process of the Interstellar
  * Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -80,6 +80,12 @@ define([
     // local variables
     var _progressBar = document.getElementById("splashProgress");
     _progressBar.max = 6;
+    /**
+     * Toggles the body class that CSS uses to gate the "UI effects" animation / background blur rules on the current graphics setting.
+     */
+    function _updateUIEffectsClass() {
+        document.body.classList.toggle(armadaScreens.UI_EFFECTS_BODY_CLASS_NAME, graphics.getUIEffects() === graphics.UIEffectsLevel.HIGH);
+    }
     // -------------------------------------------------------------------------
     // setting game properties
     game.setGameName(constants.GAME_NAME);
@@ -102,7 +108,9 @@ define([
         missions.loadSettingsFromLocalStorage();
         graphics.executeWhenReady(function () {
             lights.setupLiSPSM(graphics.getLispsmMinimumNear(), graphics.getLispsmNearFactor());
+            _updateUIEffectsClass();
         });
+        graphics.onSettingsChange(_updateUIEffectsClass);
         config.executeWhenReady(function () {
             environments.requestLoad();
             environments.executeWhenReady(function () {

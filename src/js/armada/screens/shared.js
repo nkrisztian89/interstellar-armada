@@ -60,6 +60,8 @@ define([
                 SUPERIMPOSE_BACKGROUND_COLOR: [0.25, 0.25, 0.25, 0.5],
                 SCREEN_BACKGROUND_CLASS_NAME: "fullScreenFix",
                 SCREEN_CONTAINER_CLASS_NAME: "fullScreenContainer",
+                // added to the document body while the "UI effects" graphics setting is on
+                UI_EFFECTS_BODY_CLASS_NAME: "uiEffects",
                 // welcome message
                 RELEASE_NOTES_CLASS_NAME: "releaseNotes",
                 // announcements
@@ -118,9 +120,11 @@ define([
                 INGAME_MENU_SCREEN_SOURCE: "ingame-menu.html",
                 INGAME_MENU_SCREEN_CSS: "ingame-menu.css",
                 INGAME_MENU_CONTAINER_ID: "menuContainer",
+                INGAME_MENU_BACKGROUND_CLASS_NAME: "ingameMenuBackground",
                 DIALOG_SCREEN_NAME: "dialog",
                 DIALOG_SCREEN_SOURCE: "dialog.html",
-                DIALOG_SCREEN_CSS: "dialog.css"
+                DIALOG_SCREEN_CSS: "dialog.css",
+                DIALOG_BACKGROUND_CLASS_NAME: "dialogBackground"
             },
             // --------------------------------------------------------------------------------------------
             // Constants

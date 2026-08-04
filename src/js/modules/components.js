@@ -82,6 +82,13 @@ define([
             BOLD_CLASS_NAME = "bold",
             SHIP_CLASS_NAME = "ship",
             HOSTILE_SHIP_CLASS_NAME = "ship-hostile",
+            /**
+             * Added to an element (instead of clearing its "hidden" attribute right away)
+             * to trigger its CSS appear/disappear transition, if it has one set for this class.
+             * See playAppearTransition() / playDisappearTransition()
+             * @type String
+             */
+            UI_EFFECTS_SHOWN_CLASS_NAME = "uiEffectsShown",
             // event names for passing event handlers when components are crated
             SHOW_EVENT_NAME = "show",
             HIDE_EVENT_NAME = "hide",
@@ -244,6 +251,81 @@ define([
                 element.appendChild(p);
             }
         }
+    }
+    /**
+     * Returns the total CSS transition duration (including any delay) currently set
+     * for the passed element, in milliseconds, or 0 if it has no transition set for
+     * its current state (e.g. because the "UI effects" graphics setting is off).
+     * @param {Element} element
+     * @returns {Number}
+     */
+    function getTransitionDuration(element) {
+        var style = window.getComputedStyle(element),
+                durations = style.transitionDuration.split(","),
+                delays = style.transitionDelay.split(","),
+                i, result = 0, value;
+        for (i = 0; i < durations.length; i++) {
+            value = (parseFloat(durations[i]) + parseFloat(delays[i % delays.length])) * 1000;
+            if (value > result) {
+                result = value;
+            }
+        }
+        return result;
+    }
+    /**
+     * Makes the passed element visible (clearing its "hidden" attribute) and, if it
+     * has a CSS transition set for the UI_EFFECTS_SHOWN_CLASS_NAME class, plays it
+     * by adding that class only after a forced reflow, so the browser registers the
+     * pre-transition state first instead of skipping straight to the end state.
+     * @param {Element} element
+     * @param {Number} [pendingHideTimeout] The handle previously returned by
+     * playDisappearTransition() for this same element, if a disappear transition might
+     * still be in progress on it, so that it can be cancelled (interrupting a disappear
+     * with an appear should not result in the element being hidden later on)
+     */
+    function playAppearTransition(element, pendingHideTimeout) {
+        if (pendingHideTimeout) {
+            clearTimeout(pendingHideTimeout);
+        }
+        element.classList.remove(UI_EFFECTS_SHOWN_CLASS_NAME);
+        element.hidden = false;
+        element.offsetWidth; //eslint-disable-line no-unused-expressions
+        element.classList.add(UI_EFFECTS_SHOWN_CLASS_NAME);
+    }
+    /**
+     * Starts hiding the passed element by removing the UI_EFFECTS_SHOWN_CLASS_NAME
+     * class from it (playing its CSS disappear transition, if it has one set), and
+     * sets its "hidden" attribute once that transition has finished
+     * (or right away, if it has none).
+     * @param {Element} element
+     * @param {Element} [durationElement=element] If given, the transition duration to
+     * wait for before hiding is read from this element instead of from the one actually
+     * being hidden - for an element with no transition of its own that needs to stay
+     * visible for exactly as long as another, already transitioning element it forms one
+     * visual unit with.
+     * @returns {Number|null} The handle of the timeout set to hide the element, or null if it was hidden right away
+     */
+    function playDisappearTransition(element, durationElement) {
+        var duration = getTransitionDuration(durationElement || element);
+        element.classList.remove(UI_EFFECTS_SHOWN_CLASS_NAME);
+        if (duration > 0) {
+            return setTimeout(function () {
+                element.hidden = true;
+            }, duration);
+        }
+        element.hidden = true;
+        return null;
+    }
+    /**
+     * Hides the passed element right away, skipping its CSS disappear transition even if it
+     * has one - for hiding as part of navigating away entirely (e.g. to a whole new screen),
+     * as opposed to closing a popup / superimposed screen back to what was under it (see
+     * playDisappearTransition() for that case, which should play the transition).
+     * @param {Element} element
+     */
+    function hideImmediately(element) {
+        element.classList.remove(UI_EFFECTS_SHOWN_CLASS_NAME);
+        element.hidden = true;
     }
     // #########################################################################
     /**
@@ -547,6 +629,19 @@ define([
          */
         this._cssLoaded = false;
         /**
+         * Whether the component is currently set to be visible. Kept as a separate flag (instead of checking
+         * the root element's "hidden" attribute directly) because hiding the root element can be deferred by
+         * a CSS disappear transition - see playDisappearTransition().
+         * @type Boolean
+         */
+        this._visible = true;
+        /**
+         * The handle of the timeout set (via playDisappearTransition()) to actually hide the root element,
+         * if a disappear transition is currently in progress for it.
+         * @type Number
+         */
+        this._hideTimeout = null;
+        /**
          * The array of contained simple components. The components in this array
          * are automatically managed (initialization and reset).
          * @type SimpleComponent[]
@@ -703,16 +798,19 @@ define([
      * @returns {Boolean}
      */
     ExternalComponent.prototype.isVisible = function () {
-        return !this._rootElement.hidden;
+        return this._visible;
     };
     /**
-     * Sets the hidden attribute of the root element of the component to show it.
+     * Shows the root element of the component, playing its CSS appear transition if it has one
+     * (see playAppearTransition()).
      * @returns {Boolean} Whether the component became visible as the result of this call
      */
     ExternalComponent.prototype.show = function () {
         if (this._rootElement) {
-            if (!this.isVisible()) {
-                this._rootElement.hidden = false;
+            if (!this._visible) {
+                this._visible = true;
+                playAppearTransition(this._rootElement, this._hideTimeout);
+                this._hideTimeout = null;
                 return true;
             }
         } else {
@@ -721,13 +819,16 @@ define([
         return false;
     };
     /**
-     * Sets the hidden attribute of the root element of the component to hide it.
+     * Hides the root element of the component, playing its CSS disappear transition if it
+     * has one (see playDisappearTransition()) - the component is considered logically hidden
+     * (isVisible() returns false) right away, even while that transition is still in progress.
      * @returns {Boolean} Whether the component became hidden as the result of this call
      */
     ExternalComponent.prototype.hide = function () {
         if (this._rootElement) {
-            if (this.isVisible()) {
-                this._rootElement.hidden = true;
+            if (this._visible) {
+                this._visible = false;
+                this._hideTimeout = playDisappearTransition(this._rootElement);
                 return true;
             }
         } else {
@@ -795,7 +896,8 @@ define([
             if (this._headerID) {
                 this._header.setElementID(this._getElementID(this._headerID));
             }
-            this.hide();
+            this._visible = false;
+            this._rootElement.hidden = true;
         }
     };
     /**
@@ -960,9 +1062,8 @@ define([
                 this.hide();
                 return false;
             }.bind(this);
-            // at initialization, do not yet run the onHide function, since the box has
-            // not been shown yet
-            ExternalComponent.prototype.hide.call(this);
+            this._visible = false;
+            this._rootElement.hidden = true;
         }
     };
     /**
@@ -2286,6 +2387,7 @@ define([
         HIGHLIGHTED_CLASS_NAME: HIGHLIGHTED_CLASS_NAME,
         EYE_CROSSED_CLASS_NAME: EYE_CROSSED_CLASS_NAME,
         FOCUSING_CLASS_NAME: FOCUSING_CLASS_NAME,
+        UI_EFFECTS_SHOWN_CLASS_NAME: UI_EFFECTS_SHOWN_CLASS_NAME,
         // event names
         SHOW_EVENT_NAME: SHOW_EVENT_NAME,
         HIDE_EVENT_NAME: HIDE_EVENT_NAME,
@@ -2298,6 +2400,10 @@ define([
         // functions
         clearStoredDOMModels: clearStoredDOMModels,
         appendFormattedContent: appendFormattedContent,
+        getTransitionDuration: getTransitionDuration,
+        playAppearTransition: playAppearTransition,
+        playDisappearTransition: playDisappearTransition,
+        hideImmediately: hideImmediately,
         // classes
         SimpleComponent: SimpleComponent,
         LoadingBox: LoadingBox,
