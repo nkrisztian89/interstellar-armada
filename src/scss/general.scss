@@ -124,10 +124,12 @@ canvas {
 }
 
 .horizontallyCentered.innerContainer {
-    @include common.shadowed;
+    background-color: rgba(34, 34, 34, 0.5);
+    box-shadow: black 0 0 5em inset, black 0 0 2em inset, color-scheme.$highlight-color 0 0 0.75em;
 }
 
 .innerContainer {
+    z-index: 100;
     background-color: color-scheme.$panel-color;
     border: none;
 }
@@ -145,6 +147,8 @@ canvas {
 
 /* To use with the outermost container div which houses the page content */
 .pageContainer {
+    position: relative;
+    z-index: 100;
     padding: common.$page-padding;
     margin-bottom: common.$page-padding;
     margin-top: common.$page-padding;
@@ -165,7 +169,7 @@ canvas {
     background-image: image-set(url(../assets/images/empire_back_dark.png) 1x, url(../assets/images/empire_back_dark@2x.png) 2x);
     background-position: center 0.75em;
     background-repeat: no-repeat;
-    background-size: contain;
+    background-size: 75%;
 }
 
 @media screen and (min-height: 1441px) {
@@ -224,7 +228,7 @@ canvas {
 }
 
 .narrowFix {
-    width: 22em;
+    width: 18em;
 }
 
 @media screen and (max-width: 420px) {
@@ -328,7 +332,11 @@ a {
 
 button {
     @include common.shadowed;
-    border: none;
+    border-top: none;
+    border-bottom: none;
+    border-left: 0.15em solid #111;
+    border-right: 0.15em solid #111;
+    border-radius: 0.3em;
     min-width: 8.8em;
     font-family: inherit;
     font-size: common.$button-font-size;
@@ -336,7 +344,6 @@ button {
     padding: common.$button-padding;
     background-color: color-scheme.$panel-color;
     &:active, &:focus {
-        border: none;
         outline: none;
     }
     &.menu {
@@ -361,6 +368,8 @@ button {
     &:hover:not(.disabled):not(.menu), &.selected {
         background-color: color-scheme.$panel-front-color;
         transition: all 0s;
+        border-left: 0.15em solid color-scheme.$highlight-color;
+        border-right: 0.15em solid color-scheme.$highlight-color;
     }
 }
 
@@ -418,7 +427,32 @@ img {
 
 img.menuHeaderImage {
     width: 15em;
-    margin: 0.5em 0 0.5em 0;
+    margin: 1.5em 0 0 0;
+}
+
+div#mainBackgroundImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    background-image: url(../assets/images/background.png);
+    background-image: -webkit-image-set(url(../assets/images/background.png) 1x, url(../assets/images/background@2x.png) 2x);
+    background-image: image-set(url(../assets/images/background.png) 1x, url(../assets/images/background@2x.png) 2x);
+    background-size: cover;
+    background-position: center;
+
+    &.uiEffectsShown {
+        opacity: 1;
+    }
+}
+
+@media screen and (min-width: 1921px), screen and (min-height: 1081px) {
+    div#mainBackgroundImage {
+        background-image: url(../assets/images/background@2x.png);
+    }
 }
 
 div#splashBackground {
@@ -604,7 +638,7 @@ input[type=range] {
     background: transparent; /* Otherwise white in Chrome */
     height: 2.5em;
 
-    margin: 0.25em 0 0 0.25em;
+    margin: 0.25em 0 0 0;
     padding: 0;
     cursor: common.$cursor, pointer;
 
@@ -679,17 +713,32 @@ input[type=range] {
 
     /* Styling of sliders - track */
 
+    /* the filled (left, up to the thumb) portion of the track is given a highlight color - Chrome has no native pseudo-element
+       for this, so it is faked with a hard-stop gradient positioned by the --value-percent custom property, which components.js'
+       Slider keeps up to date on the element whenever its value changes.  */
     &::-webkit-slider-runnable-track {
         width: 100%;
         height: 1.0em;
         @include common.inset-bordered-panel;
+        background-image: linear-gradient(to right,
+                color-scheme.relDarken(color-scheme.$highlight-color, 0.067) var(--value-percent, 0%),
+                transparent var(--value-percent, 0%));
     }
 
+    /* Firefox has a native pseudo-element for the filled portion of the track (::-moz-range-progress),
+       but it doesn't produce good looking result, so we use the same trick */
     &::-moz-range-track {
         width: 100%;
         height: 0.6em;
         @include common.inset-bordered-panel;
+        background-image: linear-gradient(to right,
+                color-scheme.relDarken(color-scheme.$highlight-color, 0.067) var(--value-percent, 0%),
+                transparent var(--value-percent, 0%));
     }
+
+    // not used, didn't look good when tested:
+    // &::-moz-range-progress {
+    // }
 
     &::-ms-track {
         width: 100%;
@@ -697,11 +746,7 @@ input[type=range] {
         @include common.inset-bordered-panel;
     }
 
-    /* having different tracks to the left and right are only supported in IE and Firefox, not using for now */
-
-    /* IE pseudo elements: -ms-fill-lower, -ms-fill-upper
-       Firefox preudo element: -moz-range-progress 
-    */
+    /* IE pseudo elements -ms-fill-lower / -ms-fill-upper (for a similarly filled track) not in use, IE/legacy Edge not supported */
 }
 
 .fullscreenButton {
@@ -840,4 +885,5 @@ div.helpButton {
     position: absolute;
     left: 1em;
     bottom: 1em;
+    z-index: 10;
 }

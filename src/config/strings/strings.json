@@ -333,7 +333,6 @@
         "defaults": "Reset to defaults"
     },
     "ingameMenu": {
-        "title": "Menu",
         "resume": "Resume game",
         "restart": "Restart mission",
         "restartDialog": {

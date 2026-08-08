@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022, Krisztián Nagy
+ * Copyright 2014-2026, Krisztián Nagy
  * @file This module manages and provides the Control settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -40,7 +40,6 @@ define([
             TABLES_CONTAINER_ID = "tablesContainer",
             MOUSE_TURN_SENSITIVITY_SLIDER_ID = "mouseTurnSensitivitySlider",
             POINTER_LOCK_SELECTOR_ID = "pointerLockSelector",
-            POINTER_LOCK_SELECTOR_CLASS = "pointerLock selector",
             CONTROLLER_SELECTOR_ID = "controllerSelector",
             CONTROLLER_PROFILE_SELECTOR_ID = "controllerProfileSelector",
             VIBRATION_ENABLED_SELECTOR_ID = "vibrationEnabledSelector",
@@ -304,51 +303,54 @@ define([
                         }),
                 MOUSE_SETTINGS_CONTAINER_ID);
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._pointerLockSelector = this.registerExternalComponent(
-                new components.Selector(
+                new components.MultiBarSelector(
                         POINTER_LOCK_SELECTOR_ID,
-                        armadaScreens.SELECTOR_SOURCE,
-                        {
-                            cssFilename: armadaScreens.SELECTOR_CSS,
-                            selectorClassName: POINTER_LOCK_SELECTOR_CLASS
-                        },
+                        armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
+                        {cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS},
                         {id: strings.CONTROLS.POINTER_LOCK.name},
-                        strings.getOnOffSettingValues()),
+                        strings.getOnOffSettingValues(),
+                        true),
                 MOUSE_SETTINGS_CONTAINER_ID);
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._controllerSelector = this.registerExternalComponent(
-                new components.Selector(
+                new components.MultiBarSelector(
                         CONTROLLER_SELECTOR_ID,
-                        armadaScreens.SELECTOR_SOURCE,
-                        {cssFilename: armadaScreens.SELECTOR_CSS},
+                        armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
+                        {cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS},
                         {id: strings.CONTROLS.CONTROLLER.name},
-                        []),
+                        [],
+                        true,
+                        true),
                 CONTROLLER_SETTINGS_CONTAINER_ID);
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._controllerProfileSelector = this.registerExternalComponent(
-                new components.Selector(
+                new components.MultiBarSelector(
                         CONTROLLER_PROFILE_SELECTOR_ID,
-                        armadaScreens.SELECTOR_SOURCE,
-                        {cssFilename: armadaScreens.SELECTOR_CSS},
+                        armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
+                        {cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS},
                         {id: strings.CONTROLS.CONTROLLER_PROFILE.name},
-                        _getControllerProfiles()),
+                        _getControllerProfiles(),
+                        false,
+                        true),
                 CONTROLLER_SETTINGS_CONTAINER_ID);
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._vibrationEnabledSelector = this.registerExternalComponent(
-                new components.Selector(
+                new components.MultiBarSelector(
                         VIBRATION_ENABLED_SELECTOR_ID,
-                        armadaScreens.SELECTOR_SOURCE,
-                        {cssFilename: armadaScreens.SELECTOR_CSS},
+                        armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
+                        {cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS},
                         {id: strings.CONTROLS.VIBRATION_ENABLED.name},
-                        strings.getOnOffSettingValues()),
+                        strings.getOnOffSettingValues(),
+                        true),
                 CONTROLLER_SETTINGS_CONTAINER_ID);
         /**
          * @type SimpleComponent
@@ -385,7 +387,7 @@ define([
             if (stepping !== 0) {
                 index = this._controllerSelector.getSelectedIndex();
                 control.getInputInterpreter(control.GAMEPAD_NAME)
-                        .setGamepad((index < this._gamepadOptions.length) ? this._gamepadOptions[index] : null);
+                        .setGamepad(((index > 0) && (index <= this._gamepadOptions.length)) ? this._gamepadOptions[index - 1] : null);
             }
             this._updateValues();
         }.bind(this);
@@ -515,18 +517,18 @@ define([
             }
         }
         if (gamepadIds.length > 0) {
-            gamepadIds.push(strings.get(strings.CONTROLS.CONTROLLER_DISABLED));
+            gamepadIds.unshift(strings.get(strings.CONTROLS.CONTROLLER_DISABLED));
             this._controllerSelector.setValueList(gamepadIds);
             currentGamepad = gamepadInterpreter.updateGamepad();
             index = this._gamepadOptions.indexOf(currentGamepad);
-            this._controllerSelector.selectValueWithIndex(currentGamepad ? ((index >= 0) ? index : 0) : this._gamepadOptions.length);
+            this._controllerSelector.selectValueWithIndex(currentGamepad ? ((index >= 0) ? index + 1 : 1) : 0);
             this._noController.hide();
             this._controllerSettingsContainer.show();
         } else {
             this._noController.show();
             this._controllerSettingsContainer.hide();
         }
-        if (this._controllerSelector.getSelectedIndex() < this._gamepadOptions.length) {
+        if (this._controllerSelector.getSelectedIndex() > 0) {
             this._controllerProfileSelector.setValueList(_getControllerProfiles());
             this._controllerProfileSelector.selectValueWithIndex(gamepadInterpreter.getProfiles().indexOf(gamepadInterpreter.getProfile()));
             this._vibrationEnabledSelector.setValueList(gamepadInterpreter.isVibrationSupported() ? strings.getOnOffSettingValues() : strings.getOffSettingValue());

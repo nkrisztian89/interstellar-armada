@@ -3,11 +3,8 @@
 .controls.pageContent {
     height: calc(100% - #{2*common.$separator-height+common.$page-padding});
 
-    & .selector {
+    & .multiBarSelector {
         margin: 0.25em auto;
-
-        & button {
-        }
     }
 
     & div.noController {
@@ -26,10 +23,4 @@
 
 .controls.tableTitle:hover {
     @include common.highlight-text;
-}
-
-.pointerLock.selector>.selectorButtonContainer>button {
-    min-width: 6.95em;
-    margin-left: auto;
-    margin-right: 0.2em;
 }

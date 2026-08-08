@@ -241,7 +241,7 @@ define([
         this._missionTitle = this.registerSimpleComponent(MISSION_TITLE_ID);
         /** @type SimpleComponent */
         this._missionLocation = this.registerSimpleComponent(MISSION_LOCATION_ID);
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._difficultySelector = null;
         /** @type SimpleComponent */
         this._missionDescription = this.registerSimpleComponent(MISSION_DESCRIPTION_ID);
@@ -384,16 +384,19 @@ define([
         ), SUBMIT_MISSION_TERMS_CONTAINER_ID);
         missions.executeWhenReady(function () {
             this._difficultySelector = this.registerExternalComponent(
-                    new components.Selector(
+                    new components.MultiBarSelector(
                             DIFFICULTY_SELECTOR_ID,
-                            armadaScreens.SELECTOR_SOURCE,
+                            armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
                             {
-                                cssFilename: armadaScreens.SELECTOR_CSS,
-                                selectorClassName: "smallSelector",
+                                cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS,
+                                selectorClassName: "smallMultiBarSelector",
                                 propertyContainerClassName: "smallSelectorPropertyContainer"
                             },
                             {id: strings.MISSIONS.DIFFICULTY.name},
-                            getDifficultyValues()),
+                            getDifficultyValues(),
+                            false,
+                            false,
+                            true),
                     DIFFICULTY_CONTAINER_ID);
         }.bind(this));
         this._updateSubmitMissionButton = this._updateSubmitMissionButton.bind(this);

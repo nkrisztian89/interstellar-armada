@@ -1,16 +1,17 @@
 @use "../_common.scss";
 @use "../color-scheme";
 
-$horizontal-padding: 0.7em;
+$horizontal-padding: 0.5em;
 $vertical-padding: 0.7em;
 
 div.slider {
     display: table;
+    table-layout: fixed;
     width: common.$input-width;
     height: 3em;
     padding: $vertical-padding $horizontal-padding;
     margin: 0.25em auto;
-    
+
     background-color: color-scheme.$panel-back-color;
     @include common.bordered;
 }
@@ -19,10 +20,8 @@ div.sliderValueContainer {
     display: table-cell;
     box-sizing: border-box;
     vertical-align: middle;
-    width: common.$input-value-width;
+    width: common.$input-value-width-percent;
     margin: 0;
-    padding-left: $horizontal-padding;
-    padding-right: 0;
 }
 
 div.sliderPropertyContainer {
@@ -31,7 +30,7 @@ div.sliderPropertyContainer {
     display: table-cell;
     text-align: left;
     vertical-align: middle;
-    width: common.$input-label-width;
+    width: common.$input-label-width-percent;
     margin: 0;
     padding: 0.5em 0;
 }

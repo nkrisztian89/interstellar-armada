@@ -163,6 +163,7 @@ define([
                     {
                         show: function () {
                             var message, newReleases, i;
+                            armadaScreens.showMenuBackground();
                             audio.resetMasterVolume();
                             audio.resetMusicVolume();
                             if (_announcements !== null) {
@@ -234,6 +235,9 @@ define([
                             }
                             armadaScreens.setupFullscreenButton.call(this);
                         },
+                        hide: function () {
+                            armadaScreens.hideMenuBackground();
+                        },
                         optionselect: armadaScreens.playButtonSelectSound,
                         optionclick: armadaScreens.playButtonClickSound
                     });
@@ -285,7 +289,7 @@ define([
                             }
                         }],
                     armadaScreens.SINGLE_PLAYER_MENU_CONTAINER_ID,
-                    armadaScreens.MENU_EVENT_HANDLERS,
+                    armadaScreens.MENU_WITH_BACKGROUND_EVENT_HANDLERS,
                     {
                         "escape": function () {
                             game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
@@ -334,7 +338,7 @@ define([
                             }
                         }],
                     armadaScreens.SETTINGS_MENU_CONTAINER_ID,
-                    armadaScreens.MENU_EVENT_HANDLERS,
+                    armadaScreens.MENU_WITH_BACKGROUND_EVENT_HANDLERS,
                     {
                         "escape": function () {
                             game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);

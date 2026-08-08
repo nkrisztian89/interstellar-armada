@@ -202,7 +202,6 @@ define([
         DEFAULTS: {name: "settings.defaults"}
     };
     strings.INGAME_MENU = {
-        TITLE: {name: "ingameMenu.title"},
         RESUME: {name: "ingameMenu.resume"},
         RESTART: {name: "ingameMenu.restart"},
         RESTART_HEADER: {name: "ingameMenu.restartDialog.header"},

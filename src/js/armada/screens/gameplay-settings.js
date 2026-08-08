@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 Krisztián Nagy
+ * Copyright 2017-2026 Krisztián Nagy
  * @file This module manages and provides the gameplay settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -51,7 +51,7 @@ define([
                 return _shipViewOptions.map(_getMapToCaptionFunction(strings.OBJECT_VIEW));
             },
             _getPlayRadioMessagesSettingValues = function () {
-                return [strings.get(strings.SETTING.OFF), strings.get(strings.SETTING.ALL), strings.get(strings.SETTING.MISSION_ONLY)];
+                return [strings.get(strings.SETTING.OFF), strings.get(strings.SETTING.MISSION_ONLY), strings.get(strings.SETTING.ALL)];
             },
             // ------------------------------------------------------------------------------
             // constants
@@ -97,62 +97,62 @@ define([
         this._backButton = this.registerSimpleComponent(BACK_BUTTON_ID);
         /** @type SimpleComponent */
         this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._targetHullAtCenterSelector = null;
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._offsetImpactIndicatorsSelector = null;
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._relativeTargetOrientationSelector = null;
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._showVersionInfoSelector = null;
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._showFpsCounterSelector = null;
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._preferredFighterViewSelector = null;
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._preferredShipViewSelector = null;
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._demoViewSwitchingSelector = null;
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._defaultSalvoModeSelector = null;
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._showGenericRadioMessagesSelector = null;
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._playRadioMessagesSelector = null;
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._showReadyMessageSelector = null;
         config.executeWhenReady(function () {
-            this._targetHullAtCenterSelector = this._registerSelector(TARGET_HULL_AT_CENTER_SELECTOR_ID,
-                    strings.GAMEPLAY_SETTINGS.TARGET_HEALTH_AT_CENTER.name);
-            this._offsetImpactIndicatorsSelector = this._registerSelector(OFFSET_IMPACT_INDICATORS_SELECTOR_ID,
-                    strings.GAMEPLAY_SETTINGS.OFFSET_IMPACT_INDICATORS.name);
-            this._relativeTargetOrientationSelector = this._registerSelector(RELATIVE_TARGET_ORIENTATION_SELECTOR_ID,
-                    strings.GAMEPLAY_SETTINGS.RELATIVE_TARGET_ORIENTATION.name);
-            this._showVersionInfoSelector = this._registerSelector(SHOW_VERSION_INFO_SELECTOR_ID,
-                    strings.GAMEPLAY_SETTINGS.SHOW_VERSION_INFO.name);
-            this._showFpsCounterSelector = this._registerSelector(SHOW_FPS_COUNTER_SELECTOR_ID,
-                    strings.GAMEPLAY_SETTINGS.SHOW_FPS_COUNTER.name);
-            this._preferredFighterViewSelector = this._registerSelector(PREFERRED_FIGHTER_VIEW_SELECTOR_ID,
+            this._targetHullAtCenterSelector = this._registerMultiBarSelector(TARGET_HULL_AT_CENTER_SELECTOR_ID,
+                    strings.GAMEPLAY_SETTINGS.TARGET_HEALTH_AT_CENTER.name, undefined, undefined, true);
+            this._offsetImpactIndicatorsSelector = this._registerMultiBarSelector(OFFSET_IMPACT_INDICATORS_SELECTOR_ID,
+                    strings.GAMEPLAY_SETTINGS.OFFSET_IMPACT_INDICATORS.name, undefined, undefined, true);
+            this._relativeTargetOrientationSelector = this._registerMultiBarSelector(RELATIVE_TARGET_ORIENTATION_SELECTOR_ID,
+                    strings.GAMEPLAY_SETTINGS.RELATIVE_TARGET_ORIENTATION.name, undefined, undefined, true);
+            this._showVersionInfoSelector = this._registerMultiBarSelector(SHOW_VERSION_INFO_SELECTOR_ID,
+                    strings.GAMEPLAY_SETTINGS.SHOW_VERSION_INFO.name, undefined, undefined, true);
+            this._showFpsCounterSelector = this._registerMultiBarSelector(SHOW_FPS_COUNTER_SELECTOR_ID,
+                    strings.GAMEPLAY_SETTINGS.SHOW_FPS_COUNTER.name, undefined, undefined, true);
+            this._preferredFighterViewSelector = this._registerMultiBarSelector(PREFERRED_FIGHTER_VIEW_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.PREFERRED_FIGHTER_VIEW.name,
-                    CAMERA_OPTION_PARENT_ID, _getFighterViewSettingValues());
-            this._preferredShipViewSelector = this._registerSelector(PREFERRED_SHIP_VIEW_SELECTOR_ID,
+                    CAMERA_OPTION_PARENT_ID, _getFighterViewSettingValues(), false, true);
+            this._preferredShipViewSelector = this._registerMultiBarSelector(PREFERRED_SHIP_VIEW_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.PREFERRED_SHIP_VIEW.name,
-                    CAMERA_OPTION_PARENT_ID, _getShipViewSettingValues());
-            this._demoViewSwitchingSelector = this._registerSelector(DEMO_VIEW_SWITCHING_SELECTOR_ID,
+                    CAMERA_OPTION_PARENT_ID, _getShipViewSettingValues(), false, true);
+            this._demoViewSwitchingSelector = this._registerMultiBarSelector(DEMO_VIEW_SWITCHING_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.DEMO_VIEW_SWITCHING.name,
-                    CAMERA_OPTION_PARENT_ID);
-            this._defaultSalvoModeSelector = this._registerSelector(DEFAULT_SALVO_MODE_SELECTOR_ID,
+                    CAMERA_OPTION_PARENT_ID, undefined, true);
+            this._defaultSalvoModeSelector = this._registerMultiBarSelector(DEFAULT_SALVO_MODE_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.DEFAULT_SALVO_MODE.name,
-                    CONTROLS_OPTION_PARENT_ID);
-            this._showGenericRadioMessagesSelector = this._registerSelector(SHOW_GENERIC_RADIO_MESSAGES_SELECTOR_ID,
+                    CONTROLS_OPTION_PARENT_ID, undefined, true);
+            this._showGenericRadioMessagesSelector = this._registerMultiBarSelector(SHOW_GENERIC_RADIO_MESSAGES_SELECTOR_ID,
                         strings.GAMEPLAY_SETTINGS.SHOW_GENERIC_RADIO_MESSAGES.name,
-                        RADIO_OPTION_PARENT_ID);
-            this._playRadioMessagesSelector = this._registerSelector(PLAY_RADIO_MESSAGES_SELECTOR_ID,
+                        RADIO_OPTION_PARENT_ID, undefined, true);
+            this._playRadioMessagesSelector = this._registerMultiBarSelector(PLAY_RADIO_MESSAGES_SELECTOR_ID,
                         strings.GAMEPLAY_SETTINGS.PLAY_RADIO_MESSAGES.name,
-                        RADIO_OPTION_PARENT_ID);
-            this._showReadyMessageSelector = this._registerSelector(SHOW_READY_MESSAGE_SELECTOR_ID,
+                        RADIO_OPTION_PARENT_ID, _getPlayRadioMessagesSettingValues(), true);
+            this._showReadyMessageSelector = this._registerMultiBarSelector(SHOW_READY_MESSAGE_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.SHOW_READY_MESSAGE.name,
-                    OTHER_OPTION_PARENT_ID);
+                    OTHER_OPTION_PARENT_ID, undefined, true);
         }.bind(this));
     }
     GameplaySettingsScreen.prototype = new screens.HTMLScreen();
@@ -162,16 +162,20 @@ define([
      * @param {String} propertyLabelID
      * @param {String} [parentID=HUD_OPTION_PARENT_ID]
      * @param {String[]} [valueList]
-     * @returns {Selector}
+     * @param {Boolean} [startFromZero=false]
+     * @param {Boolean} [singleBarLit=false]
+     * @returns {MultiBarSelector}
      */
-    GameplaySettingsScreen.prototype._registerSelector = function (name, propertyLabelID, parentID, valueList) {
+    GameplaySettingsScreen.prototype._registerMultiBarSelector = function (name, propertyLabelID, parentID, valueList, startFromZero, singleBarLit) {
         return this.registerExternalComponent(
-                new components.Selector(
+                new components.MultiBarSelector(
                         name,
-                        armadaScreens.SELECTOR_SOURCE,
-                        {cssFilename: armadaScreens.SELECTOR_CSS},
+                        armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
+                        {cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS},
                         {id: propertyLabelID},
-                        valueList || strings.getOnOffSettingValues()),
+                        valueList || strings.getOnOffSettingValues(),
+                        startFromZero,
+                        singleBarLit),
                 parentID || HUD_OPTION_PARENT_ID);
     };
     /**

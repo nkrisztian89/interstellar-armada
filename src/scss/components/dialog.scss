@@ -1,14 +1,23 @@
 @use "../_common.scss";
+@use "../color-scheme";
+
+.dialogBackground {
+    z-index: 100;
+}
 
 .dialogContainer {
     width: 46em;
     max-width: 90vw;
+    padding: 0.5em;
+    box-sizing: border-box;
 }
 
-.dialogInnerContainer {
-    padding: 0.5em;
-    width: 100%;
-    box-sizing: border-box;
+body:not(.uiEffects) .dialogContainer {
+    background-color: color-scheme.$panel-color;
+}
+
+body.uiEffects .dialogContainer {
+    backdrop-filter: blur(common.$ui-effects-heavy-blur-radius);
 }
 
 .dialogContent {

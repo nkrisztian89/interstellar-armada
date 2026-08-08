@@ -6,11 +6,14 @@
 $bar-gap: math.div(2, 1080) * 100vh;
 $bar-height: 2 * $bar-gap;
 
+$horizontal-padding: 0.5em;
+$vertical-padding: 0;
+
 div.multiBarSelector {
     display: table;
+    table-layout: fixed;
     width: common.$input-width;
-    padding-left: 0.4em;
-    padding-right: 0.4em;
+    padding: $vertical-padding $horizontal-padding;
     margin: 0.25em 0.5em;
 
     background-color: color-scheme.$panel-back-color;
@@ -24,7 +27,7 @@ div.multiBarSelector {
 div.multiBarSelectorButtonContainer {
     display: table-cell;
     vertical-align: middle;
-    width: common.$input-value-width;
+    width: common.$input-value-width-percent;
     margin: 0;
 }
 
@@ -33,9 +36,11 @@ div.multiBarSelectorPropertyContainer {
     display: table-cell;
     text-align: left;
     vertical-align: middle;
-    width: common.$input-label-width;
+    width: common.$input-label-width-percent;
     margin: 0;
     padding: 0;
+    padding-right: 1em;
+    box-sizing: border-box;
 }
 
 div.multiBarSelectorValueWrapper {
@@ -45,7 +50,12 @@ div.multiBarSelectorValueWrapper {
     margin-top: common.mulpercent(common.$button-font-size, common.$horizontal-menu-margin);
     margin-bottom: common.mulpercent(common.$button-font-size, common.$horizontal-menu-margin);
 
+    border-radius: 0.3em;
+    overflow: hidden;
+
     button.separate {
+        border-radius: 0.3em 0.3em 0 0;
+        border: none;
         margin-top: 0;
         margin-bottom: 0;
         /* reduce vertical padding to fit the bars within the same height as a regular button -
@@ -53,6 +63,9 @@ div.multiBarSelectorValueWrapper {
            using small capitals (that leaves more space at the top) */
         padding-top: calc(#{common.$button-padding} - #{2 * $bar-gap});
         padding-bottom: calc(#{common.$button-padding} - #{1 * $bar-gap});
+        &:hover {
+            border: none;
+        }
     }
 
     div.multiBarSelectorBars {
@@ -71,6 +84,44 @@ div.multiBarSelectorValueWrapper {
                         color-scheme.relDarken(color-scheme.$highlight-color, 0.333));
                 box-shadow: common.$faint-glow;
             }
+        }
+
+        &.colorTransition div.multiBarSelectorBar.selected {
+            background-image: linear-gradient(to bottom,
+                    hsl(var(--bar-hue), 100%, 45%),
+                    hsl(var(--bar-hue), 100%, 30%));
+            box-shadow: 0 0 0.4em hsl(var(--bar-hue), 100%, 43%);
+        }
+    }
+}
+
+div.multiBarSelector div.multiBarSelectorValueWrapper {
+    width: 100%;
+
+    button.separate {
+        box-sizing: border-box;
+        min-width: 0; // override min-width from general.scss's button.separate, so the button does not overflow the container
+        width: 100%;
+    }
+}
+
+/* Matches Selector's .smallSelector: a chromeless variant with no panel background/border/margin.
+   Used for missions.js's difficulty selector. */
+div.smallMultiBarSelector {
+    display: table;
+    &[hidden] {
+        display: none;
+    }
+
+    div.multiBarSelectorButtonContainer {
+        width: auto; // override default percentage based width, so the total width of the selector is just label + button
+    }
+
+    div.multiBarSelectorValueWrapper {
+        @include common.shadowed;
+
+        button.separate {
+            box-shadow: none;
         }
     }
 }

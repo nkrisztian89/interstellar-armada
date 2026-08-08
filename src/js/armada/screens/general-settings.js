@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016, 2020-2023 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file This module manages and provides the general settings screen of the application (where e.g. the language of the game can be changed)
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -73,30 +73,30 @@ define([
          */
         this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
         /**
-         * @type ExternalComponent
+         * @type MultiBarSelector
          */
-        this._languageSelector = this._registerSelector(LANGUAGE_SELECTOR_ID,
+        this._languageSelector = this._registerMultiBarSelector(LANGUAGE_SELECTOR_ID,
                 strings.GENERAL_SETTINGS.LANGUAGE.name,
-                _settingLanguageValues);
+                _settingLanguageValues, undefined, false, true);
         /**
-         * @type ExternalComponent
+         * @type MultiBarSelector
          */
-        this._analyticsSelector = this._registerSelector(ANALYTICS_SELECTOR_ID,
+        this._analyticsSelector = this._registerMultiBarSelector(ANALYTICS_SELECTOR_ID,
                 strings.GENERAL_SETTINGS.ANALYTICS.name,
-                strings.getOnOffSettingValues());
+                strings.getOnOffSettingValues(), undefined, true);
         /**
          * @type SimpleComponent
          */
         this._analyticsNote = this.registerSimpleComponent(ANALYTICS_NOTE_ID);
         /**
-         * @type ExternalComponent
+         * @type MultiBarSelector
          */
         this._showDemoButtonSelector = null;
         config.executeWhenReady(function () {
-            this._showDemoButtonSelector = this._registerSelector(SHOW_DEMO_BUTTON_SELECTOR_ID,
+            this._showDemoButtonSelector = this._registerMultiBarSelector(SHOW_DEMO_BUTTON_SELECTOR_ID,
                     strings.GENERAL_SETTINGS.SHOW_DEMO_BUTTON.name,
                     strings.getOnOffSettingValues(),
-                    LOWER_OPTION_PARENT_ID);
+                    LOWER_OPTION_PARENT_ID, true);
         }.bind(this));
     }
     GeneralSettingsScreen.prototype = new screens.HTMLScreen();
@@ -118,17 +118,21 @@ define([
      * @param {String} name
      * @param {String} propertyLabelID
      * @param {String[]} valueList
-     * @param {String} parent
-     * @returns {Selector}
+     * @param {String} [parent]
+     * @param {Boolean} [startFromZero=false]
+     * @param {Boolean} [singleBarLit=false]
+     * @returns {MultiBarSelector}
      */
-    GeneralSettingsScreen.prototype._registerSelector = function (name, propertyLabelID, valueList, parent) {
+    GeneralSettingsScreen.prototype._registerMultiBarSelector = function (name, propertyLabelID, valueList, parent, startFromZero, singleBarLit) {
         return this.registerExternalComponent(
-                new components.Selector(
+                new components.MultiBarSelector(
                         name,
-                        armadaScreens.SELECTOR_SOURCE,
-                        {cssFilename: armadaScreens.SELECTOR_CSS},
+                        armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
+                        {cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS},
                         {id: propertyLabelID},
-                        valueList),
+                        valueList,
+                        startFromZero,
+                        singleBarLit),
                 parent || OPTION_PARENT_ID);
     };
     /**

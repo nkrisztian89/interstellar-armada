@@ -1,6 +1,7 @@
 .menuContainer {
     min-width: 10em;
     button.menu {
-        width: 100%;
+        width: calc(100% - 0.4em);
+        box-sizing: border-box;
     }
 }

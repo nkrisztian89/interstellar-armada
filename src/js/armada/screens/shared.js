@@ -60,6 +60,8 @@ define([
                 SUPERIMPOSE_BACKGROUND_COLOR: [0.25, 0.25, 0.25, 0.5],
                 SCREEN_BACKGROUND_CLASS_NAME: "fullScreenFix",
                 SCREEN_CONTAINER_CLASS_NAME: "fullScreenContainer",
+                // shared background image behind the main / single player / settings menu screens (see showMenuBackground())
+                MAIN_BACKGROUND_IMAGE_ID: "mainBackgroundImage",
                 // added to the document body while the "UI effects" graphics setting is on
                 UI_EFFECTS_BODY_CLASS_NAME: "uiEffects",
                 // welcome message
@@ -147,7 +149,19 @@ define([
              * enabled button)
              * @type SoundSource
              */
-            _buttonClickSound;
+            _buttonClickSound,
+            /**
+             * The shared background image element displayed behind the main / single player / settings menu screens, lazily created and kept
+             * alive across navigation between those screens (see showMenuBackground() / hideMenuBackground()).
+             * @type Element
+             */
+            _mainBackgroundImage,
+            /**
+             * Whether the appear transition of _mainBackgroundImage has already been played once. It is only meant to play once, when the
+             * game starts - not every time the menus are (re)entered from another screen - see showMenuBackground().
+             * @type Boolean
+             */
+            _mainBackgroundShown = false;
     // --------------------------------------------------------------------------------------------
     // Private functions
     /**
@@ -187,6 +201,20 @@ define([
      */
     function _updateFullscreenButton(button) {
         button.classList.toggle(FULLSCREEN_BUTTON_ACTIVE_CLASS, _isFullscreen());
+    }
+    /**
+     * Creates (if not created yet) and returns the shared main background image element, inserted as the very first child of the document
+     * body so that it is always stacked behind every screen, regardless of when it gets created.
+     * @returns {Element}
+     */
+    function _getMainBackgroundImage() {
+        if (!_mainBackgroundImage) {
+            _mainBackgroundImage = document.createElement("div");
+            _mainBackgroundImage.id = exports.MAIN_BACKGROUND_IMAGE_ID;
+            _mainBackgroundImage.hidden = true;
+            document.body.insertBefore(_mainBackgroundImage, document.body.firstChild);
+        }
+        return _mainBackgroundImage;
     }
     // ------------------------------------------------------------------------------
     // Public functions
@@ -250,6 +278,30 @@ define([
         return '<p class="sub fadedText">' + text + "</p>";
     };
     /**
+     * Shows the shared background image displayed behind the main / single player / settings menu screens. Safe to call from all three of
+     * those screens' show handlers. Only plays the fade-in transition the very first time it is called (when the game starts) - every
+     * subsequent call (re-entering the menus from another screen, or navigating between these three screens) shows it instantly, without
+     * replaying the transition.
+     */
+    exports.showMenuBackground = function () {
+        var element = _getMainBackgroundImage();
+        if (!_mainBackgroundShown) {
+            _mainBackgroundShown = true;
+            components.playAppearTransition(element);
+        } else {
+            element.hidden = false;
+        }
+    };
+    /**
+     * Instantly hides the shared background image shown by showMenuBackground(). Call from all three of the main / single player / settings
+     * menu screens' hide handlers.
+     */
+    exports.hideMenuBackground = function () {
+        if (_mainBackgroundImage) {
+            _mainBackgroundImage.hidden = true;
+        }
+    };
+    /**
      * Call on the screen that has a fullscreen button to set up its event handlers
      */
     exports.setupFullscreenButton = function () {
@@ -293,6 +345,24 @@ define([
             if (!this.isSuperimposed()) {
                 audio.playMusic(exports.MENU_THEME);
             }
+        },
+        optionselect: exports.playButtonSelectSound,
+        optionclick: exports.playButtonClickSound
+    };
+    /**
+     * Same as MENU_EVENT_HANDLERS, but also shows / hides the shared main background image behind the screen - for the single player and
+     * settings menu screens (the main menu screen sets up its own show/hide handlers, calling showMenuBackground() / hideMenuBackground()
+     * directly, as it needs a custom show handler anyway). Not used for the in-game menu, which is superimposed over the running battle and
+     * must not show this background over it.
+     * @type Object.<String, Function>
+     */
+    exports.MENU_WITH_BACKGROUND_EVENT_HANDLERS = {
+        show: function () {
+            exports.showMenuBackground();
+            exports.MENU_EVENT_HANDLERS.show.call(this);
+        },
+        hide: function () {
+            exports.hideMenuBackground();
         },
         optionselect: exports.playButtonSelectSound,
         optionclick: exports.playButtonClickSound

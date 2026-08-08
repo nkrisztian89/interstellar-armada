@@ -2,17 +2,18 @@
 @use "../color-scheme";
 
 .ingameMenuContainer {
-    width: 18.5em;
-}
-
-.ingameMenuInnerContainer {
-    padding-top: 1.5em;
+    width: 15em;
+    padding-top: 5.5em;
     padding-left: 1em;
     padding-right: 1em;
-    &>h2 {
-        padding-bottom: 0.5em;
-        text-shadow: color-scheme.$glow-color 0.0em 0.0em 0.5em;
+
+    .menuContainer {
+        margin: 0 auto;
     }
+}
+
+body:not(.uiEffects) .ingameMenuContainer {
+    background-color: color-scheme.$panel-color;
 }
 
 @include common.ui-effects-box-appear("ingameMenuBackground", "ingameMenuContainer");

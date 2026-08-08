@@ -66,11 +66,15 @@ $image-margin: 0.5em;
 $border-width: 0.1em;
 $border-style: solid;
 
-$input-label-width: 16.5em;
-$input-value-width: 9em;
+$input-label-width: 14.5em;
+$input-value-width: 11em;
 $input-width: $input-label-width + $input-value-width;
+// percentage equivalents, for use with table-layout: fixed
+$input-label-width-percent: math.percentage(math.div($input-label-width, $input-width));
+$input-value-width-percent: math.percentage(math.div($input-value-width, $input-width));
 
 $ui-effects-blur-radius: 6px;
+$ui-effects-heavy-blur-radius: 14px;
 $ui-effects-appear-duration: 0.2s;
 $ui-effects-appear-scale: 0.9;
 

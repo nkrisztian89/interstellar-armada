@@ -347,7 +347,6 @@
         "defaults": "Alapértelmezések visszaállítása"
     },
     "ingameMenu": {
-        "title": "Menü",
         "resume": "Vissza a játékba",
         "restart": "Küldetés újrakezdése",
         "restartDialog": {
