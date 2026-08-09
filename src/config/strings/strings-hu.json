@@ -643,7 +643,7 @@
             "wingmenHeader": "Kötelékek:",
             "flightMode": "Repülési mód:",
             "missiles": "Rakéták:",
-            "objectives": "Feladatok:",
+            "objectives": "Feladatok ({completed}/{total}):",
             "escortedShipsHeader": "Megvédendő:"
         },
         "objectiveSubjects": {

@@ -1,9 +1,11 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides various simple, general usage utility methods.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  */
+
+/* global WeakMap */
 
 define(function () {
     "use strict";
@@ -61,6 +63,12 @@ define(function () {
             RAD = Math.PI / 180,
             HALF_PI = 0.5 * Math.PI,
             DOUBLE_PI = 2 * Math.PI,
+            /**
+             * Reusable regex that matches a single {placeholder} token for formatString() / formatStringCached(),
+             * so that it doesn't have to be recompiled on every call.
+             * @type RegExp
+             */
+            FORMAT_STRING_PLACEHOLDER_REGEX = /\{(\w+)\}/g,
             // ------------------------------------------------------------------------------
             // private variables
             _keyCodeTable = {
@@ -97,6 +105,13 @@ define(function () {
                 ";": 186, "=": 187, ",": 188, "-": 189, ".": 190, "/": 191, "`": 192, "[": 219, "\\": 220, "]": 221, "'": 222
                         // Firefox: "-": 173, "=": 61, ";": 59
             },
+            /**
+             * Caches the replacer function built for a given replacements object by cacheReplacements(), keyed by the
+             * replacements object itself, so formatStringCached() can format a string against it with no per-call
+             * allocation.
+             * @type WeakMap<Object, Function>
+             */
+            _replacementsCache = new WeakMap(),
             // ------------------------------------------------------------------------------
             // interface
             exports = {};
@@ -551,13 +566,34 @@ define(function () {
      * @returns {String}
      */
     exports.formatString = function (string, replacements) {
-        var replacementName, str = string.toString();
-        for (replacementName in replacements) {
-            if (replacements.hasOwnProperty(replacementName)) {
-                str = str.replace(new RegExp("\\{" + replacementName + "\\}", "gi"), replacements[replacementName]);
-            }
-        }
-        return str;
+        return string.toString().replace(FORMAT_STRING_PLACEHOLDER_REGEX, function (match, name) {
+            return replacements.hasOwnProperty(name) ? replacements[name] : match;
+        });
+    };
+    /**
+     * Builds and caches the replacer function to use for formatting strings against the passed replacements object via
+     * formatStringCached(), so that repeated calls (e.g. once per frame) allocate no closure. Call this once, when the
+     * replacements object is created; formatStringCached() will then pick up any later changes made to its properties,
+     * since the cached replacer function closes over the object itself, not a snapshot of its values. Only useful for a
+     * replacements object that is created once and reused (with its properties mutated in place) for the lifetime of
+     * whatever it formats - do not call this for a replacements object literal that gets recreated on every call.
+     * @param {Object} replacements
+     */
+    exports.cacheReplacements = function (replacements) {
+        _replacementsCache.set(replacements, function (match, name) {
+            return replacements.hasOwnProperty(name) ? replacements[name] : match;
+        });
+    };
+    /**
+     * Same as formatString(), but instead of building a new replacer function for this call, reuses the one cached for
+     * the passed replacements object by a prior cacheReplacements() call - avoiding a closure allocation on every call.
+     * The replacements object must have already been passed to cacheReplacements() once.
+     * @param {String} string
+     * @param {Object} replacements
+     * @returns {String}
+     */
+    exports.formatStringCached = function (string, replacements) {
+        return string.toString().replace(FORMAT_STRING_PLACEHOLDER_REGEX, _replacementsCache.get(replacements));
     };
     /**
      * Returns a MM:SS format string representing the time duration / interval of the passed amount of milliseconds

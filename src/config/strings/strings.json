@@ -595,7 +595,7 @@
             "wingmenHeader": "Wingmen:",
             "flightMode": "Flight mode:",
             "missiles": "Missiles:",
-            "objectives": "Objectives:",
+            "objectives": "Objectives ({completed}/{total}):",
             "escortedShipsHeader": "Protect:"
         },
         "objectiveSubjects": {

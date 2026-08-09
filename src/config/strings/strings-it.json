@@ -594,7 +594,7 @@
             "wingmenHeader": "Pilota:",
             "flightMode": "Modalità di volo:",
             "missiles": "Missili:",
-            "objectives": "Obiettivi:",
+            "objectives": "Obiettivi ({completed}/{total}):",
             "escortedShipsHeader": "Proteggi:"
         },
         "objectiveSubjects": {

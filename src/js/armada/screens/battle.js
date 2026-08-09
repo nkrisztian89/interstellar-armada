@@ -1036,6 +1036,11 @@ define([
              * @type CanvasText
              */
             _scoreText,
+            /**
+             * A cached object to reuse for replacing the score value in the score text.
+             * @type {score: Number}
+             */
+            _scoreTextReplacements,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // objectives indicator
             /**
@@ -1053,6 +1058,11 @@ define([
              * @type CanvasText
              */
             _objectivesHeaderText,
+            /** 
+             * A cached object to reuse for replacing the mission objective progress value in the text.
+             * @type {completed: Number, total: Number}
+             */
+            _objectiveProgressReplacements,
             /**
              * Displays the objectives on the mission objective indicator panel.
              * @type CanvasText[]
@@ -3283,7 +3293,6 @@ define([
                 config.BATTLE_SETTINGS.HUD.OBJECTIVES_HEADER_TEXT,
                 _objectivesBackgroundLayout,
                 _objectivesTextLayer);
-        _objectivesHeaderText.setText(strings.get(strings.BATTLE.HUD_OBJECTIVES));
         if (!_objectivesTexts) {
             _objectivesTexts = [];
             n = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MAX_OBJECTIVES_DISPLAYED);
@@ -3507,9 +3516,8 @@ define([
             if (control.isInPilotMode()) {
                 _subheaderText.hide();
                 if (_hudSectionIsVisible(HUDSection.SCORE)) {
-                    _scoreText.setText(utils.formatString(strings.get(strings.BATTLE.SCORE), {
-                        score: Math.round(craft.getScore())
-                    }));
+                    _scoreTextReplacements.score = Math.round(craft.getScore());
+                    _scoreText.setText(utils.formatStringCached(strings.get(strings.BATTLE.SCORE), _scoreTextReplacements));
                     _scoreText.show();
                 } else {
                     _scoreText.hide();
@@ -3855,6 +3863,7 @@ define([
                     _objectivesBackground.show();
                     objectivesState = _mission.getObjectivesState();
                     colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors;
+                    _objectiveProgressReplacements.completed = 0;
                     for (i = 0; i < _objectivesTexts.length; i++) {
                         if (i < objectivesState.length) {
                             _objectivesTexts[i].setText(objectivesState[i].text);
@@ -3864,6 +3873,7 @@ define([
                                     break;
                                 case ObjectiveState.COMPLETED:
                                     _objectivesTexts[i].setColor(colors.completed);
+                                    _objectiveProgressReplacements.completed++;
                                     break;
                                 case ObjectiveState.FAILED:
                                     _objectivesTexts[i].setColor(colors.failed);
@@ -3874,6 +3884,8 @@ define([
                             _objectivesTexts[i].hide();
                         }
                     }
+                    _objectiveProgressReplacements.total = objectivesState.length;
+                    _objectivesHeaderText.setText(utils.formatStringCached(strings.get(strings.BATTLE.HUD_OBJECTIVES), _objectiveProgressReplacements));
                     _objectivesTextLayer.show();
                 } else {
                     _objectivesBackground.hide();
@@ -5583,6 +5595,16 @@ define([
         _combatThemeDurationAfterFire = config.getSetting(config.BATTLE_SETTINGS.COMBAT_THEME_DURATION_AFTER_FIRE) * 1000;
         // multi
         _disconnectThreshold = config.getSetting(config.MULTI_SETTINGS.DISCONNECT_THRESHOLD);
+        // replacements
+        _scoreTextReplacements = {
+            score: 0
+        };
+        utils.cacheReplacements(_scoreTextReplacements);
+        _objectiveProgressReplacements = {
+            completed: 0,
+            total: 0
+        };
+        utils.cacheReplacements(_objectiveProgressReplacements);
     });
     // initializing anaglyph text rendering if needed
     graphics.executeWhenReady(function () {

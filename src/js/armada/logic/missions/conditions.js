@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file The classes defining conditions which can trigger events during missions
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -466,6 +466,12 @@ define([
          * @type Boolean
          */
         this._all = !this._params || !this._params.which || (this._params.which === ConditionSubjectsWhich.ALL);
+        /**
+         * A cached object to reuse for building the objective-state display string, avoiding a per-frame allocation.
+         * @type {subjects: String}
+         */
+        this._objectiveStateReplacements = {subjects: ""};
+        utils.cacheReplacements(this._objectiveStateReplacements);
         return true;
     };
     /**
@@ -506,15 +512,14 @@ define([
         }
         count = this._subjects.getLiveSubjectCount(true);
         suffix = (count > 1) ? (" (" + count + ")") : "";
-        result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.DESTROY_SUFFIX.name), {
-            subjects: this._subjects.getShortString()
-        }) + suffix;
+        this._objectiveStateReplacements.subjects = this._subjects.getShortString();
+        result = utils.formatStringCached(strings.get(stringPrefix, strings.OBJECTIVE.DESTROY_SUFFIX.name), this._objectiveStateReplacements) + suffix;
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
     };
     /**
      * Note: this is only correct if this condition belongs to the trigger of a WIN event
-     * @param {Mission} mission 
+     * @param {Mission} mission
      * @returns {Spacecraft[]}
      */
     DestroyedCondition.prototype.getTargetSpacecrafts = function (mission) {
@@ -559,6 +564,12 @@ define([
             this._handleWrongParams();
             return false;
         }
+        /**
+         * A cached object to reuse for building the objective-state display string, avoiding a per-frame allocation.
+         * @type {subjects: String, count: Number, live: Number, remaining: Number}
+         */
+        this._objectiveStateReplacements = {subjects: "", count: this._params.count, live: 0, remaining: 0};
+        utils.cacheReplacements(this._objectiveStateReplacements);
         return true;
     };
     /**
@@ -610,12 +621,10 @@ define([
             return "";
         }
         count = this._subjects.getLiveSubjectCount();
-        result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.COUNT_BELOW_SUFFIX.name), {
-            subjects: this._subjects.getShortString(),
-            count: this._params.count,
-            live: count,
-            remaining: Math.max(0, count - this._params.count)
-        });
+        this._objectiveStateReplacements.subjects = this._subjects.getShortString();
+        this._objectiveStateReplacements.live = count;
+        this._objectiveStateReplacements.remaining = Math.max(0, count - this._params.count);
+        result = utils.formatStringCached(strings.get(stringPrefix, strings.OBJECTIVE.COUNT_BELOW_SUFFIX.name), this._objectiveStateReplacements);
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
     };
@@ -712,6 +721,12 @@ define([
             this._handleWrongParams();
             return false;
         }
+        /**
+         * A cached object to reuse for building the objective-state display string, avoiding a per-frame allocation.
+         * @type {time: String}
+         */
+        this._objectiveStateReplacements = {time: ""};
+        utils.cacheReplacements(this._objectiveStateReplacements);
         return true;
     };
     /**
@@ -806,9 +821,8 @@ define([
     TimeCondition.prototype.getObjectiveStateString = function (stringPrefix, multipleConditions) {
         var result, timeRemaining;
         timeRemaining = Math.ceil(Math.max(0, this._params.time - this._timeElapsed) * 0.001) * 1000;
-        result = utils.formatString(strings.get(stringPrefix, multipleConditions ? strings.OBJECTIVE.TIME_MULTI_SUFFIX.name : strings.OBJECTIVE.TIME_SUFFIX.name), {
-            time: utils.formatTimeToMinutes(timeRemaining)
-        });
+        this._objectiveStateReplacements.time = utils.formatTimeToMinutes(timeRemaining);
+        result = utils.formatStringCached(strings.get(stringPrefix, multipleConditions ? strings.OBJECTIVE.TIME_MULTI_SUFFIX.name : strings.OBJECTIVE.TIME_SUFFIX.name), this._objectiveStateReplacements);
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
     };
@@ -911,6 +925,12 @@ define([
          * @type Boolean
          */
         this._all = !this._params || !this._params.which || (this._params.which === ConditionSubjectsWhich.ALL);
+        /**
+         * A cached object to reuse for building the objective-state display string, avoiding a per-frame allocation.
+         * @type {subjects: String}
+         */
+        this._objectiveStateReplacements = {subjects: ""};
+        utils.cacheReplacements(this._objectiveStateReplacements);
         return true;
     };
     /**
@@ -964,9 +984,8 @@ define([
         } else {
             suffix = "";
         }
-        result = utils.formatString(strings.get(stringPrefix, this._subjectIsSelf ? strings.OBJECTIVE.MAX_HULL_INTEGRITY_SELF_SUFFIX.name : strings.OBJECTIVE.MAX_HULL_INTEGRITY_SUFFIX.name), {
-            subjects: this._subjects.getShortString()
-        }) + suffix;
+        this._objectiveStateReplacements.subjects = this._subjects.getShortString();
+        result = utils.formatStringCached(strings.get(stringPrefix, this._subjectIsSelf ? strings.OBJECTIVE.MAX_HULL_INTEGRITY_SELF_SUFFIX.name : strings.OBJECTIVE.MAX_HULL_INTEGRITY_SUFFIX.name), this._objectiveStateReplacements) + suffix;
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
     };
@@ -1135,6 +1154,12 @@ define([
          * @type SubjectGroup
          */
         this._target = new SubjectGroup({spacecrafts: [this._params.target]});
+        /**
+         * A cached object to reuse for building the objective-state display string, avoiding a per-frame allocation.
+         * @type {target: String}
+         */
+        this._objectiveStateReplacements = {target: ""};
+        utils.cacheReplacements(this._objectiveStateReplacements);
         return true;
     };
     /**
@@ -1226,10 +1251,9 @@ define([
         } else {
             suffix = "";
         }
-        result = utils.formatString(strings.get(stringPrefix,
-                (this._params.minDistance !== undefined) ? strings.OBJECTIVE.DISTANCE_MIN_SUFFIX.name : strings.OBJECTIVE.DISTANCE_MAX_SUFFIX.name), {
-            target: (target[0] === mission.getPilotedSpacecraft()) ? this._subjects.getShortString() : this._target.getShortString()
-        }) + suffix;
+        this._objectiveStateReplacements.target = (target[0] === mission.getPilotedSpacecraft()) ? this._subjects.getShortString() : this._target.getShortString();
+        result = utils.formatStringCached(strings.get(stringPrefix,
+                (this._params.minDistance !== undefined) ? strings.OBJECTIVE.DISTANCE_MIN_SUFFIX.name : strings.OBJECTIVE.DISTANCE_MAX_SUFFIX.name), this._objectiveStateReplacements) + suffix;
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
     };
