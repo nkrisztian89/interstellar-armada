@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Implementation of loading and managing missions - including the main game simulation loop
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -379,7 +379,7 @@ define([
      * @param {Spacecraft} craft 
      */
     Team.prototype.addSpacecraft = function (craft) {
-        var i, maxMembers, team = craft.getTeam(), squad = craft.getSquad();
+        var i, team = craft.getTeam(), squad = craft.getSquad();
         if (team) {
             team._removeSpacecraft(craft);
         }
@@ -400,10 +400,6 @@ define([
                     name: squad,
                     crafts: [craft]
                 });
-            }
-            maxMembers = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_POSITIONS).length;
-            if (this._squads[i].crafts.length > maxMembers) {
-                application.showError("Warning: squad '" + squad + "' of team '" + this._name + "' has more than " + maxMembers + " members, and thus cannot be displayed correctly in the wingmen status panel!");
             }
         }
         // using this counter the survival rate can be calculated at the end of the mission (and in case of the player's team, whether it

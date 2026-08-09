@@ -392,7 +392,10 @@
         "targets": "Gyakorló cél"
     },
     "squad": {
+        "practiceTarget": "Gyakorló cél",
+        "targetContainer": "Célkonténer",
         "drone": "Drón",
+        "targetDrone": "Céldrón",
         "alpha": "Alfa",
         "beta": "Béta",
         "gamma": "Gamma",

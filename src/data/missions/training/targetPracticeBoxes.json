@@ -35,6 +35,41 @@
   ],
   "events": [
     {
+      "trigger": {
+        "conditions": [
+          {
+            "type": "destroyed",
+            "subjects": {
+              "squads": [
+                "targetContainer"
+              ]
+            }
+          },
+          {
+            "type": "destroyed",
+            "subjects": {
+              "squads": [
+                "practiceTarget"
+              ]
+            }
+          },
+          {
+            "type": "destroyed",
+            "subjects": {
+              "squads": [
+                "targetDrone"
+              ]
+            }
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "win"
+        }
+      ]
+    },
+    {
       "trigger": {},
       "actions": [
         {
@@ -47,6 +82,20 @@
           "type": "hud",
           "params": {
             "section": "targetIndicator",
+            "state": "highlighted"
+          }
+        },
+        {
+          "type": "hud",
+          "params": {
+            "section": "weaponImpactIndicators",
+            "state": "visible"
+          }
+        },
+        {
+          "type": "hud",
+          "params": {
+            "section": "objectives",
             "state": "visible"
           }
         },
@@ -356,9 +405,9 @@
           "type": "command",
           "subjects": {
             "spacecrafts": [
-              "drone 1",
-              "drone 2",
-              "drone 3"
+              "targetDrone 1",
+              "targetDrone 2",
+              "targetDrone 3"
             ]
           },
           "params": {
@@ -528,9 +577,9 @@
           "type": "command",
           "subjects": {
             "spacecrafts": [
-              "drone 4",
-              "drone 5",
-              "drone 6"
+              "targetDrone 4",
+              "targetDrone 5",
+              "targetDrone 6"
             ]
           },
           "params": {
@@ -684,9 +733,10 @@
     {
       "team": "targets",
       "class": "container",
+      "squad": "targetContainer",
       "position": [
-        700,
-        -500,
+        715,
+        -535,
         15
       ],
       "rotations": [
@@ -696,6 +746,7 @@
     {
       "team": "targets",
       "class": "container",
+      "squad": "practiceTarget",
       "position": [
         -240,
         500,
@@ -708,6 +759,7 @@
     {
       "team": "targets",
       "class": "container",
+      "squad": "practiceTarget",
       "position": [
         -200,
         460,
@@ -720,6 +772,7 @@
     {
       "team": "targets",
       "class": "container",
+      "squad": "practiceTarget",
       "position": [
         -200,
         500,
@@ -732,6 +785,7 @@
     {
       "team": "targets",
       "class": "container",
+      "squad": "practiceTarget",
       "position": [
         -160,
         500,
@@ -744,6 +798,7 @@
     {
       "team": "targets",
       "class": "container",
+      "squad": "practiceTarget",
       "position": [
         -200,
         540,
@@ -756,6 +811,7 @@
     {
       "team": "targets",
       "class": "container",
+      "squad": "practiceTarget",
       "position": [
         -240,
         500,
@@ -768,6 +824,7 @@
     {
       "team": "targets",
       "class": "container",
+      "squad": "practiceTarget",
       "position": [
         -200,
         460,
@@ -780,6 +837,7 @@
     {
       "team": "targets",
       "class": "container",
+      "squad": "practiceTarget",
       "position": [
         -200,
         500,
@@ -792,6 +850,7 @@
     {
       "team": "targets",
       "class": "container",
+      "squad": "practiceTarget",
       "position": [
         -160,
         500,
@@ -804,6 +863,7 @@
     {
       "team": "targets",
       "class": "container",
+      "squad": "practiceTarget",
       "position": [
         -200,
         540,
@@ -817,7 +877,7 @@
       "team": "targets",
       "class": "drone",
       "ai": "fighter",
-      "squad": "drone 1",
+      "squad": "targetDrone",
       "position": [
         -3000,
         -3000,
@@ -833,7 +893,7 @@
       "team": "targets",
       "class": "drone",
       "ai": "fighter",
-      "squad": "drone 2",
+      "squad": "targetDrone",
       "away": true,
       "loadout": "unarmed"
     },
@@ -841,7 +901,7 @@
       "team": "targets",
       "class": "drone",
       "ai": "fighter",
-      "squad": "drone 3",
+      "squad": "targetDrone",
       "away": true,
       "loadout": "unarmed"
     },
@@ -854,7 +914,7 @@
         -2000,
         0
       ],
-      "squad": "drone 4",
+      "squad": "targetDrone",
       "away": true,
       "loadout": "unarmed"
     },
@@ -862,7 +922,7 @@
       "team": "targets",
       "class": "drone",
       "ai": "fighter",
-      "squad": "drone 5",
+      "squad": "targetDrone",
       "away": true,
       "loadout": "unarmed"
     },
@@ -870,7 +930,7 @@
       "team": "targets",
       "class": "drone",
       "ai": "fighter",
-      "squad": "drone 6",
+      "squad": "targetDrone",
       "away": true,
       "loadout": "unarmed"
     },

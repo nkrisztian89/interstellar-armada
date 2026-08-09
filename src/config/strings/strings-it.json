@@ -555,7 +555,10 @@
         "targets": "Obiettivo di pratica"
     },
     "squad": {
+        "practiceTarget": "Obiettivo di pratica",
+        "targetContainer": "Contenitore obiettivo",
         "drone": "Drone",
+        "targetDrone": "Drone obiettivo",
         "alpha": "Alpha",
         "beta": "Beta",
         "gamma": "Gamma",
