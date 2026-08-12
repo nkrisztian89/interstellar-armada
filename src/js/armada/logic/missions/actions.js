@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file The classes defining actions which can be executed during mission events
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -114,7 +114,7 @@ define([
      * Shows the error message indicating that there was a problem validating the parameters defined for this action
      */
     Action.prototype._handleWrongParams = function () {
-        application.showError("Wrong parameters specified for action of type: '" + this._type + "'!");
+        application.showError("Data validation error: Wrong parameters specified for action of type: '" + this._type + "'!");
     };
     /**
      * If the action has a delay set, it is added to the execution queue of the passed mission with the set delay, otherwise

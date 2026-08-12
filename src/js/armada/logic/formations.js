@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Krisztián Nagy
+ * Copyright 2022-2026 Krisztián Nagy
  * @file Spacecraft formation related code
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -84,7 +84,7 @@ define([
                 ];
                 break;
             default:
-                application.showError("Unknown formation type specified: '" + formation.type + "!");
+                application.showError("Data validation error: Unknown formation type specified: '" + formation.type + "!");
                 return [0, 0, 0];
         }
         if (orientation) {

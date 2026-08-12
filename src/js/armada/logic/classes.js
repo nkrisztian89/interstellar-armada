@@ -472,7 +472,7 @@ define([
      */
     function _showMissingPropertyError(classInstance, propertyName) {
         application.showError(
-                "Cannot initialize " + classInstance.constructor.name + " without correctly specifying its property '" + propertyName + "'!",
+                "Data validation error: Cannot initialize " + classInstance.constructor.name + " without correctly specifying its property '" + propertyName + "'!",
                 application.ErrorSeverity.SEVERE,
                 "The property was either not specified, or it was specified with a wrong type or an invalid value." +
                 (((typeof classInstance._name) === "string") ?
@@ -3725,9 +3725,9 @@ define([
                     }
                 }
                 if (circular) {
-                    application.showError("Circular reference detected in loadout '" + dataJSON.name + "'!");
+                    application.showError("Data validation error: Circular reference detected in loadout '" + dataJSON.name + "'!");
                 } else if (!found) {
-                    application.showError("Could not find referenced loadout '" + basedOn + "'!");
+                    application.showError("Data validation error: Could not find referenced loadout '" + basedOn + "'!");
                     basedOn = null;
                 }
             }
@@ -3891,16 +3891,16 @@ define([
          * @type Number[2]
          */
         this._alphaRange = (dataJSON && this._fps) ? (dataJSON.alphaRange || [-360, 360]) : [0, 0];
-        if (dataJSON && dataJSON.alphaRange && !(this._fps && this._turnable)) {
-            application.showError("Invalid view configuration ('" + this._name + "'): alphaRange has no effect unless both fps and turnable are set to true!", application.ErrorSeverity.MINOR);
+        if (dataJSON && dataJSON.alphaRange && !this._fps || dataJSON && dataJSON.alphaRange && !this._turnable) {
+            application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): alphaRange has no effect unless both fps and turnable are set to true!", application.ErrorSeverity.MINOR);
         }
         /**
          * The minimum and maximum beta angle that this view (camera configurations based on it) can be set to, if in FPS-mode, in degrees.
          * @type Number[2]
          */
         this._betaRange = (dataJSON && this._fps) ? (dataJSON.betaRange || [-90, 90]) : [0, 0];
-        if (dataJSON && dataJSON.betaRange && !(this._fps && this._turnable)) {
-            application.showError("Invalid view configuration ('" + this._name + "'): betaRange has no effect unless both fps and turnable are set to true!", application.ErrorSeverity.MINOR);
+        if (dataJSON && dataJSON.betaRange && !this._fps || dataJSON && dataJSON.betaRange && !this._turnable) {
+            application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): betaRange has no effect unless both fps and turnable are set to true!", application.ErrorSeverity.MINOR);
         }
         /**
          * The initial (horizontal) span of the view in degrees. Zero value means that a default value should be asked from the logic module
@@ -3961,20 +3961,20 @@ define([
         this._rollLagAngularFrequency = dataJSON ? (dataJSON.rollLagAngularFrequency || 0) : 0;
         if (dataJSON) {
             if (dataJSON.lagDampingRatio && !dataJSON.lagAngularFrequency) {
-                application.showError("Invalid view configuration ('" + this._name + "'): lagDampingRatio has no effect without lagAngularFrequency also set!", application.ErrorSeverity.MINOR);
+                application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): lagDampingRatio has no effect without lagAngularFrequency also set!", application.ErrorSeverity.MINOR);
             } else if (dataJSON.lagAngularFrequency && !dataJSON.lagDampingRatio) {
-                application.showError("Invalid view configuration ('" + this._name + "'): lagAngularFrequency has no effect without lagDampingRatio also set!", application.ErrorSeverity.MINOR);
+                application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): lagAngularFrequency has no effect without lagDampingRatio also set!", application.ErrorSeverity.MINOR);
             }
-            if ((dataJSON.lagScale !== undefined) && !(dataJSON.lagDampingRatio && dataJSON.lagAngularFrequency)) {
-                application.showError("Invalid view configuration ('" + this._name + "'): lagScale has no effect unless both lagDampingRatio and lagAngularFrequency are set!", application.ErrorSeverity.MINOR);
+            if (dataJSON.lagScale !== undefined && !dataJSON.lagDampingRatio || dataJSON.lagScale !== undefined && !dataJSON.lagAngularFrequency) {
+                application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): lagScale has no effect unless both lagDampingRatio and lagAngularFrequency are set!", application.ErrorSeverity.MINOR);
             }
-            if (dataJSON.maxLagDistance && !(dataJSON.lagDampingRatio && dataJSON.lagAngularFrequency)) {
-                application.showError("Invalid view configuration ('" + this._name + "'): maxLagDistance has no effect unless both lagDampingRatio and lagAngularFrequency are set!", application.ErrorSeverity.MINOR);
+            if (dataJSON.maxLagDistance && !dataJSON.lagDampingRatio || dataJSON.maxLagDistance && !dataJSON.lagAngularFrequency) {
+                application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): maxLagDistance has no effect unless both lagDampingRatio and lagAngularFrequency are set!", application.ErrorSeverity.MINOR);
             }
             if (dataJSON.rollLagDampingRatio && !dataJSON.rollLagAngularFrequency) {
-                application.showError("Invalid view configuration ('" + this._name + "'): rollLagDampingRatio has no effect without rollLagAngularFrequency also set!", application.ErrorSeverity.MINOR);
+                application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): rollLagDampingRatio has no effect without rollLagAngularFrequency also set!", application.ErrorSeverity.MINOR);
             } else if (dataJSON.rollLagAngularFrequency && !dataJSON.rollLagDampingRatio) {
-                application.showError("Invalid view configuration ('" + this._name + "'): rollLagAngularFrequency has no effect without rollLagDampingRatio also set!", application.ErrorSeverity.MINOR);
+                application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): rollLagAngularFrequency has no effect without rollLagDampingRatio also set!", application.ErrorSeverity.MINOR);
             }
         }
         /**
@@ -3986,7 +3986,7 @@ define([
         this._baseOrientation = dataJSON ? (dataJSON.baseOrientation ?
                 (utils.getSafeEnumValue(camera.CameraOrientationConfiguration.BaseOrientation, dataJSON.baseOrientation) ||
                         application.showError(
-                                "Invalid value '" + dataJSON.baseOrientation + "' specified for view baseOrientation!",
+                                "Data validation error: Invalid value '" + dataJSON.baseOrientation + "' specified for view baseOrientation!",
                                 application.ErrorSeverity.MINOR,
                                 "Valid values are: " + utils.getEnumValues(camera.CameraOrientationConfiguration.BaseOrientation).join(", ") + ".")) :
                 null) : null;
@@ -3999,7 +3999,7 @@ define([
         this._pointToFallback = dataJSON ? (dataJSON.pointToFallback ?
                 (utils.getSafeEnumValue(camera.CameraOrientationConfiguration.PointToFallback, dataJSON.pointToFallback) ||
                         application.showError(
-                                "Invalid value '" + dataJSON.pointToFallback + "' specified for view pointToFallback!",
+                                "Data validation error: Invalid value '" + dataJSON.pointToFallback + "' specified for view pointToFallback!",
                                 application.ErrorSeverity.MINOR,
                                 "Valid values are: " + utils.getEnumValues(camera.CameraOrientationConfiguration.PointToFallback).join(", ") + ".")) :
                 null) : null;
@@ -4177,7 +4177,7 @@ define([
          */
         this._lookAtSelf = (lookAt === ObjectViewLookAtMode.SELF) ?
                 ((this._followsPosition || this._followsOrientation || this._turnable) ?
-                        application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'self' if followsPosition, followsOrientation or turnable are true!") :
+                        application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'self' if followsPosition, followsOrientation or turnable are true!") :
                         true) :
                 false;
         /**
@@ -4186,7 +4186,7 @@ define([
          */
         this._lookAtTarget = (lookAt === ObjectViewLookAtMode.TARGET) ?
                 ((this._followsOrientation || this._turnable) ?
-                        application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'target' if followsOrientation or turnable are true!") :
+                        application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'target' if followsOrientation or turnable are true!") :
                         true) :
                 false;
         /**
@@ -4196,7 +4196,7 @@ define([
         this._rotationCenterIsObject = (typeof dataJSON.rotationCenterIsObject) === "boolean" ?
                 (dataJSON.rotationCenterIsObject ?
                         ((this._lookAtSelf || !this._followsPosition) ?
-                                application.showError("Invalid view configuration ('" + this._name + "'): rotationCenterIsObject with lookAtSelf or without followsPosition!") :
+                                application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): rotationCenterIsObject with lookAtSelf or without followsPosition!") :
                                 true) :
                         false) :
                 false;
@@ -4207,7 +4207,7 @@ define([
          */
         this._startsWithRelativePosition = (dataJSON.startsWithRelativePosition === true) ?
                 ((this._followsPosition || this._rotationCenterIsObject) ?
-                        application.showError("Invalid view configuration ('" + this._name + "'): startsWithRelativePosition cannot be set to true if followsPosition or rotationCenterIsObject are true!") :
+                        application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): startsWithRelativePosition cannot be set to true if followsPosition or rotationCenterIsObject are true!") :
                         true) :
                 false;
         /**
@@ -4223,7 +4223,7 @@ define([
          */
         this._movesRelativeToObject = (dataJSON.movesRelativeToObject === true) ?
                 ((this._rotationCenterIsObject || !this._followsPosition || !this._followsOrientation) ?
-                        application.showError("Invalid view configuration ('" + this._name + "'): movesRelativeToObject can only be set if both position and orientation is followed and rotationCenterIsObject is false!") :
+                        application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): movesRelativeToObject can only be set if both position and orientation is followed and rotationCenterIsObject is false!") :
                         true) :
                 false;
         /**
@@ -4238,23 +4238,24 @@ define([
          */
         this._excludeFromCycle = (typeof dataJSON.excludeFromCycle) === "boolean" ? dataJSON.excludeFromCycle : false;
         // further invalid configuration errors
-        if (!this._followsPosition && !this._startsWithRelativePosition && (this._lookAtSelf || this._lookAtTarget) && this._confines && this._distanceRange) {
+        if (!this._followsPosition && !this._startsWithRelativePosition && this._lookAtSelf && this._confines && this._distanceRange ||
+                !this._followsPosition && !this._startsWithRelativePosition && this._lookAtTarget && this._confines && this._distanceRange) {
             application.showError(
-                    "Invalid view configuration ('" + this._name + "'): A lookAt configuration with absolute position cannot have both position and distance confines!",
+                    "Data validation error: Invalid view configuration ('" + this._name + "'): A lookAt configuration with absolute position cannot have both position and distance confines!",
                     application.ErrorSeverity.SEVERE,
                     "Setting this configuration will likely cause a crash as position confines are absolute (if the position is absolute) but distance confines are relative to the lookAt object.");
         }
         if (!this._followsPosition && !this._startsWithRelativePosition && this._resetsWhenLeavingConfines) {
-            application.showError("Invalid view configuration ('" + this._name + "'): resetsWhenLeavingConfines cannot be set if position is absolute!");
+            application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): resetsWhenLeavingConfines cannot be set if position is absolute!");
         }
-        if (dataJSON.baseOrientation && !(this._fps && (this._lookAtSelf || this._lookAtTarget))) {
-            application.showError("Invalid view configuration ('" + this._name + "'): baseOrientation has no effect unless fps is true and the view points towards an object (lookAt)!", application.ErrorSeverity.MINOR);
+        if (dataJSON.baseOrientation && !this._fps || dataJSON.baseOrientation && !this._lookAtSelf && !this._lookAtTarget) {
+            application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): baseOrientation has no effect unless fps is true and the view points towards an object (lookAt)!", application.ErrorSeverity.MINOR);
         }
-        if (dataJSON.pointToFallback && !(this._lookAtSelf || this._lookAtTarget)) {
-            application.showError("Invalid view configuration ('" + this._name + "'): pointToFallback has no effect unless the view points towards an object (lookAt)!", application.ErrorSeverity.MINOR);
+        if (dataJSON.pointToFallback && !this._lookAtSelf && !this._lookAtTarget) {
+            application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): pointToFallback has no effect unless the view points towards an object (lookAt)!", application.ErrorSeverity.MINOR);
         }
-        if (dataJSON.rotations && (this._lookAtSelf || this._lookAtTarget)) {
-            application.showError("Invalid view configuration ('" + this._name + "'): rotations has no effect when the view points towards an object (lookAt)!", application.ErrorSeverity.MINOR);
+        if (dataJSON.rotations && this._lookAtSelf || dataJSON.rotations && this._lookAtTarget) {
+            application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): rotations has no effect when the view points towards an object (lookAt)!", application.ErrorSeverity.MINOR);
         }
     }
     ObjectView.prototype = new GenericView();
@@ -4400,7 +4401,7 @@ define([
          */
         this._lookAtAll = (utils.getSafeEnumValue(SceneViewLookAtMode, dataJSON.lookAt, SceneViewLookAtMode.NONE) === SceneViewLookAtMode.ALL) ?
                 ((this._turnAroundAll || this._turnable) ?
-                        application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'all' if turnAroundAll or turnable are true!") :
+                        application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'all' if turnAroundAll or turnable are true!") :
                         true) :
                 false;
         /**
@@ -4415,27 +4416,27 @@ define([
          */
         this._startsWithRelativePosition = (dataJSON.startsWithRelativePosition === true) ?
                 (this._turnAroundAll ?
-                        application.showError("Invalid view configuration ('" + this._name + "'): startsWithRelativePosition cannot be true if the view is set to turn around the objects!") :
+                        application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): startsWithRelativePosition cannot be true if the view is set to turn around the objects!") :
                         true) :
                 false;
         // further invalid configuration errors
         if (!this._turnAroundAll && !this._startsWithRelativePosition && this._lookAtAll && this._confines && this._distanceRange) {
             application.showError(
-                    "Invalid view configuration ('" + this._name + "'): A lookAt configuration with absolute position cannot have both position and distance confines!",
+                    "Data validation error: Invalid view configuration ('" + this._name + "'): A lookAt configuration with absolute position cannot have both position and distance confines!",
                     application.ErrorSeverity.SEVERE,
                     "Setting this configuration will likely cause a crash as position confines are absolute (if the position is absolute) but distance confines are relative to the lookAt object.");
         }
         if (!this._turnAroundAll && !this._startsWithRelativePosition && this._resetsWhenLeavingConfines) {
-            application.showError("Invalid view configuration ('" + this._name + "'): resetsWhenLeavingConfines cannot be set if position is absolute!");
+            application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): resetsWhenLeavingConfines cannot be set if position is absolute!");
         }
-        if (dataJSON.baseOrientation && !(this._fps && this._lookAtAll)) {
-            application.showError("Invalid view configuration ('" + this._name + "'): baseOrientation has no effect unless fps is true and lookAt is 'all'!", application.ErrorSeverity.MINOR);
+        if (dataJSON.baseOrientation && !this._fps || dataJSON.baseOrientation && !this._lookAtAll) {
+            application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): baseOrientation has no effect unless fps is true and lookAt is 'all'!", application.ErrorSeverity.MINOR);
         }
         if (dataJSON.pointToFallback && !this._lookAtAll) {
-            application.showError("Invalid view configuration ('" + this._name + "'): pointToFallback has no effect unless lookAt is 'all'!", application.ErrorSeverity.MINOR);
+            application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): pointToFallback has no effect unless lookAt is 'all'!", application.ErrorSeverity.MINOR);
         }
         if (dataJSON.rotations && this._lookAtAll) {
-            application.showError("Invalid view configuration ('" + this._name + "'): rotations has no effect when lookAt is 'all'!", application.ErrorSeverity.MINOR);
+            application.showError("Data validation error: Invalid view configuration ('" + this._name + "'): rotations has no effect when lookAt is 'all'!", application.ErrorSeverity.MINOR);
         }
     }
     SceneView.prototype = new GenericView();
@@ -4937,7 +4938,7 @@ define([
                 (dataJSON.defaultLoadout || null);
         if (this._defaultLoadout && !this._loadouts[this._defaultLoadout]) {
             application.showError(
-                    "Non-existing default loadout '" + this._defaultLoadout + "' specified for spacecraft class " + this.getName() + "!",
+                    "Data validation error: Non-existing default loadout '" + this._defaultLoadout + "' specified for spacecraft class " + this.getName() + "!",
                     application.ErrorSeverity.MINOR);
             this._defaultLoadout = null;
         }

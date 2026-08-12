@@ -247,7 +247,7 @@ define([
                     }
                     if (formation) {
                         if (positions) {
-                            application.showError("Both positions and formation have been defined for spacecraft group - formation will be used!", application.ErrorSeverity.MINOR);
+                            application.showError("Data validation error: Both positions and formation have been defined for spacecraft group - formation will be used!", application.ErrorSeverity.MINOR);
                         }
                         spacecraftData.position = formations.getPositionInFormation(formation, j, spacecraftData.position, orientation);
                     }
@@ -266,7 +266,7 @@ define([
                     index = spacecraft.getSquadIndex(spacecrafts[i].squad);
                     if (index > 0) {
                         if (index <= squads[squad]) {
-                            application.showError("Spacecraft " + spacecrafts[i].squad + " defined after squad " + squad + " already having " + squads[squad] + " defined members!", application.ErrorSeverity.MINOR);
+                            application.showError("Data validation error: Spacecraft " + spacecrafts[i].squad + " defined after squad " + squad + " already having " + squads[squad] + " defined members!", application.ErrorSeverity.MINOR);
                         }
                         squads[squad] = index;
                         result.push(spacecrafts[i]);
@@ -326,12 +326,12 @@ define([
             this._name = nameOrParams;
             this._faction = nameOrParams;
         } else if (typeof nameOrParams === "object") {
-            this._name = nameOrParams.name || nameOrParams.faction || application.showError("Team defined without a name or faction!");
+            this._name = nameOrParams.name || nameOrParams.faction || application.showError("Data validation error: Team defined without a name or faction!");
             this._faction = nameOrParams.faction;
             this._displayNameReplacements.index = nameOrParams.index;
             this._color = nameOrParams.color || null;
         } else {
-            application.showError("Invalid parameter specified for Team constructor!");
+            application.showError("Data validation error: Invalid parameter specified for Team constructor!");
         }
         /**
          * The number of spacecrafts belonging to this team at the start of the current mission
@@ -1147,7 +1147,7 @@ define([
                 return this._teams[i];
             }
         }
-        application.showError("No team exists with name '" + name + "'!");
+        application.showError("Data validation error: No team exists with name '" + name + "'!");
         return null;
     };
     /**
@@ -1162,7 +1162,7 @@ define([
                 return this._events[i];
             }
         }
-        application.showError("No mission event exists with name '" + name + "'!");
+        application.showError("Data validation error: No mission event exists with name '" + name + "'!");
         return null;
     };
     /**
@@ -1238,14 +1238,14 @@ define([
         if ((typeof dataJSON.environment) === "string") {
             this._environment = environments.getEnvironment(dataJSON.environment);
             if (!this._environment) {
-                application.showError("Cannot load environment '" + dataJSON.environment + "' for mission: no such environment exists!");
+                application.showError("Data validation error: Cannot load environment '" + dataJSON.environment + "' for mission: no such environment exists!");
             }
             this._ownsEnvironment = false;
         } else if ((typeof dataJSON.environment) === "object") {
             this._environment = new environments.Environment(dataJSON.environment);
             this._ownsEnvironment = true;
         } else {
-            application.showError("Invalid environment specified for mission!");
+            application.showError("Data validation error: Invalid environment specified for mission!");
         }
     };
     /**
@@ -1419,7 +1419,7 @@ define([
                 if (team) {
                     team.addSpacecraft(craft);
                 } else {
-                    application.showError("Invalid team ID '" + teamID + "' specified for " + craft.getClassName() + "!");
+                    application.showError("Data validation error: Invalid team ID '" + teamID + "' specified for " + craft.getClassName() + "!");
                 }
             } else if (params.demoMode) {
                 team = new Team({
@@ -1813,7 +1813,7 @@ define([
                                             if (data.jump.anchorSpacecraft) {
                                                 jumpMarkers.set(spacecraft, vec.diff3(data.jump.anchorSpacecraft.getPhysicalPositionVector(), spacecraft.getPhysicalPositionVector()));
                                             } else {
-                                                application.showError(spacecraft.getDisplayName() + " has invalid anchor: " + data.jump.anchor + "!");
+                                                application.showError("Data validation error: " + spacecraft.getDisplayName() + " has invalid anchor: " + data.jump.anchor + "!");
                                             }
                                         }
                                         break;

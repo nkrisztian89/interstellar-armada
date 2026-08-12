@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Implementations of the various classes that represent all the different types of equipment to be added to spacecrafts
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1317,7 +1317,7 @@ define([
             case ThrusterUse.PITCH_DOWN:
                 return this._pitchDown;
             default:
-                application.showError("Invalid thruster use specified for missile: '" + name + "'!", application.ErrorSeverity.SEVERE);
+                application.showError("Data validation error: Invalid thruster use specified for missile: '" + name + "'!", application.ErrorSeverity.SEVERE);
                 return null;
         }
     };
@@ -3776,7 +3776,7 @@ define([
             case ThrusterUse.ROLL_RIGHT:
                 return this._rollRight;
             default:
-                application.showError("Invalid thruster use specified: '" + name + "'!", application.ErrorSeverity.SEVERE);
+                application.showError("Data validation error: Invalid thruster use specified: '" + name + "'!", application.ErrorSeverity.SEVERE);
                 return null;
         }
     };

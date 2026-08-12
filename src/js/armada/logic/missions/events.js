@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Implementation of mission events - a list of actions that can be triggered by conditions
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -179,11 +179,11 @@ define([
         }
         // invalid state checks
         if (!this._conditions && !this._once) {
-            application.showError("A trigger has no conditions, 'once' cannot be set to false!");
+            application.showError("Data validation error: A trigger has no conditions, 'once' cannot be set to false!");
             this._once = true;
         }
         if (!this._once && this._delay) {
-            application.showError("Triggers without 'once' cannot have delays!");
+            application.showError("Data validation error: Triggers without 'once' cannot have delays!");
             this._delay = 0;
         }
     }
@@ -271,15 +271,15 @@ define([
     Trigger.prototype.getObjectiveStrings = function (stringPrefix, triggersWinAction, mission) {
         var i, result = [], multi, text;
         if (!this._conditions) {
-            application.showError("Win and lose events must have conditions!");
+            application.showError("Data validation error: Win and lose events must have conditions!");
             return null;
         }
         if (!this._all) {
-            application.showError("Triggers for mission objectives must be set to 'which' = '" + TriggerWhich.ALL + "'!");
+            application.showError("Data validation error: Triggers for mission objectives must be set to 'which' = '" + TriggerWhich.ALL + "'!");
             return null;
         }
         if (this._falsy) {
-            application.showError("Triggers for mission objectives must be set to 'when' = '" + TriggerWhen.BECOMES_TRUE + "'!");
+            application.showError("Data validation error: Triggers for mission objectives must be set to 'when' = '" + TriggerWhen.BECOMES_TRUE + "'!");
             return null;
         }
         multi = this._conditions.length > 1;

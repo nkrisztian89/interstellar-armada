@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2024 Krisztián Nagy
+ * Copyright 2016-2026 Krisztián Nagy
  * @file A stateful module providing a collection to which AIs of different types (at the moment only one type, an AI for fighters) can be
  * added which control their respective spacecraft when the control function of the module is called.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -1166,7 +1166,7 @@ define([
                         } else if (data.target.none) {
                             this._targetList = null;
                         } else {
-                            application.showError("'" + this._spacecraft.getDisplayName() + "' has no target specified for targeting command!");
+                            application.showError("Data validation error: '" + this._spacecraft.getDisplayName() + "' has no target specified for targeting command!");
                         }
                         // save the target list for further spacecrafts executing the same command
                         if (this._targetList) {
@@ -1205,7 +1205,7 @@ define([
                 this._cancelMoveCommand();
                 break;
             default:
-                application.showError("Unknown spacecraft command: '" + data.command + "'!");
+                application.showError("Data validation error: Unknown spacecraft command: '" + data.command + "'!");
         }
     };
     /**

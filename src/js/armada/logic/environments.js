@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Implementation of loading and managing environments
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -622,11 +622,11 @@ define([
             for (i = 0; i < dataJSON.backgroundObjects.length; i++) {
                 backgroundObjectClass = classes.getBackgroundObjectClass(dataJSON.backgroundObjects[i].class);
                 if (!dataJSON.backgroundObjects[i].position) {
-                    application.showError("No position specified for background object of class '" + backgroundObjectClass.getName() + "' in environment '" + this._name + "'!", application.ErrorSeverity.MINOR);
+                    application.showError("Data validation error: No position specified for background object of class '" + backgroundObjectClass.getName() + "' in environment '" + this._name + "'!", application.ErrorSeverity.MINOR);
                 }
                 this._backgroundObjects.push(new BackgroundObject(
                         backgroundObjectClass,
-                        dataJSON.backgroundObjects[i].size || application.showError("No size specified for background object of class '" + backgroundObjectClass.getName() + "' in environment '" + this._name + "'!", application.ErrorSeverity.MINOR) || 0,
+                        dataJSON.backgroundObjects[i].size || application.showError("Data validation error: No size specified for background object of class '" + backgroundObjectClass.getName() + "' in environment '" + this._name + "'!", application.ErrorSeverity.MINOR) || 0,
                         (dataJSON.backgroundObjects[i].position && dataJSON.backgroundObjects[i].position.angleAlpha) || 0,
                         (dataJSON.backgroundObjects[i].position && dataJSON.backgroundObjects[i].position.angleBeta) || 0,
                         (dataJSON.backgroundObjects[i].position && dataJSON.backgroundObjects[i].position.angleGamma) || 0

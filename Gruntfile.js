@@ -478,6 +478,46 @@ module.exports = function (grunt) {
                     replacement: ""
                 };
             }),
+            // application.showError() calls that report invalid/missing data in resources.json, classes.json, environments.json or
+            // mission JSON content are prefixed in the source with "Data validation error: ". Such content is verified
+            // via the dev-build, so these calls serve no purpose for the prod build and are stripped from it;
+            // the editor keeps them to warn about mistakes made while editing content.
+            dataValidationErrorRemovals = (function () {
+                var i, parenContent = "[^()]*", callPattern;
+                // tolerate up to 5 levels of nested parentheses inside the call,
+                // also literal parentheses in the error message text itself (e.g. "an object (lookAt)")
+                for (i = 0; i < 5; i++) {
+                    // use single-character [^()] (not [^()]+) inside the alternation to avoid catastrophic backtracking
+                    parenContent = "(?:[^()]|\\(" + parenContent + "\\))*";
+                }
+                callPattern = "application\\.showError\\(\\s*\"Data validation error: " + parenContent + "\\)";
+                return [
+                    {
+                        // "|| application.showError(...)" in a logical expression
+                        match: new RegExp("\\s*\\|\\|\\s*" + callPattern, "g"),
+                        replacement: ""
+                    }, {
+                        // standalone "application.showError(...);"
+                        match: new RegExp(callPattern + ";", "g"),
+                        replacement: ""
+                    }, {
+                        // other instances, such as part of a ternary expression: "? application.showError(...) : ..."
+                        match: new RegExp(callPattern, "g"),
+                        replacement: "undefined"
+                    }
+                ];
+            }()),
+            // Remove empty if statements left after the previous removals stripped the whole block content.
+            // Only if the condition doesn't contain parentheses, to guarantee that we don't remove any side effects
+            // (assignments not wrapped in parentheses are disallowed by eslint, property accessors are not used
+            // in this projects, function calls always need parentheses)
+            // Also ignore statements with "else", to avoid changing the control flow.
+            emptyIfRemoval = {
+                match: /if\s*\([^()]*\)\s*\{\s*\}(?!\s*else\b)/g,
+                replacement: function (match, offset, string) {
+                    return ((/else\s+$/).test(string.slice(0, offset))) ? match : "";
+                }
+            },
             settingsToReplace = [
                 ["missileAutoChangeCooldown", "battle"],
                 ["cameraPilotingSwitchTransitionDuration", "battle"],
@@ -1003,7 +1043,7 @@ module.exports = function (grunt) {
                             match: '_hitZoneColor,',
                             replacement: '//'
                         }
-                    ],
+                    ].concat(dataValidationErrorRemovals),
                     usePrefix: false
                 },
                 files: [
@@ -1061,7 +1101,8 @@ module.exports = function (grunt) {
                         }, {
                             match: 'if (hitbox) {',
                             replacement: 'if (false) {'
-                        }
+                        },
+                        emptyIfRemoval
                     ]))))),
                     usePrefix: false
                 },

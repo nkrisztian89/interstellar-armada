@@ -403,7 +403,7 @@ define([
      * Shows the error message indicating that there was a problem validating the parameters defined for this condition
      */
     Condition.prototype._handleWrongParams = function () {
-        application.showError("Wrong parameters specified for condition of type: '" + this._type + "'!");
+        application.showError("Data validation error: Wrong parameters specified for condition of type: '" + this._type + "'!");
     };
     /**
      * Returns true if this condition has a chance of becoming impossible to satisfy
@@ -601,7 +601,7 @@ define([
     CountCondition.prototype.getObjectiveString = function (stringPrefix) {
         var result;
         if (this._params.relation !== CountConditionRelation.BELOW) {
-            application.showError("Count conditions for mission objectives must have relation set to '" + CountConditionRelation.BELOW + "'!");
+            application.showError("Data validation error: Count conditions for mission objectives must have relation set to '" + CountConditionRelation.BELOW + "'!");
             return null;
         }
         result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.COUNT_BELOW_SUFFIX.name), {
@@ -797,11 +797,11 @@ define([
     TimeCondition.prototype.getObjectiveString = function (stringPrefix, multipleConditions) {
         var result;
         if (!multipleConditions && (!this._params || (this._params.when !== TimeConditionWhen.AFTER))) {
-            application.showError("Single time conditions for mission objectives must have 'when' = '" + TimeConditionWhen.AFTER + "'!");
+            application.showError("Data validation error: Single time conditions for mission objectives must have 'when' = '" + TimeConditionWhen.AFTER + "'!");
             return null;
         }
         if (multipleConditions && (!this._params || ((this._params.when !== TimeConditionWhen.BEFORE) && (this._params.when !== TimeConditionWhen.WITHIN)))) {
-            application.showError("Time conditions used in combination with other conditions for mission objectives must have 'when' = '" + TimeConditionWhen.BEFORE + +" or " + TimeConditionWhen.WITHIN + "'!");
+            application.showError("Data validation error: Time conditions used in combination with other conditions for mission objectives must have 'when' = '" + TimeConditionWhen.BEFORE + "' or '" + TimeConditionWhen.WITHIN + "'!");
             return null;
         }
         result = utils.formatString(strings.get(stringPrefix, multipleConditions ? strings.OBJECTIVE.TIME_MULTI_SUFFIX.name : strings.OBJECTIVE.TIME_SUFFIX.name), {
@@ -955,7 +955,7 @@ define([
     HullIntegrityCondition.prototype.getObjectiveString = function (stringPrefix) {
         var result;
         if (!this._params || (this._params.maxIntegrity === undefined) || (this._params.minIntegrity !== undefined)) {
-            application.showError("Hull integrity conditions for mission objectives must specify a maximum and no minimum integrity!");
+            application.showError("Data validation error: Hull integrity conditions for mission objectives must specify a maximum and no minimum integrity!");
             return null;
         }
         result = utils.formatString(strings.get(stringPrefix,
@@ -1069,14 +1069,14 @@ define([
      * @returns {String}
      */
     ShieldIntegrityCondition.prototype.getObjectiveString = function () {
-        application.showError("Shield integrity conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: Shield integrity conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
      * @returns {String}
      */
     ShieldIntegrityCondition.prototype.getObjectiveStateString = function () {
-        application.showError("Shield integrity conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: Shield integrity conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
@@ -1214,11 +1214,11 @@ define([
         var result;
         if (!this._params || ((this._params.minDistance === undefined) && (this._params.maxDistance === undefined)) ||
                 ((this._params.minDistance !== undefined) && (this._params.maxDistance !== undefined))) {
-            application.showError("Distance conditions for mission objectives must specify either a minimum or a maximum distance!");
+            application.showError("Data validation error: Distance conditions for mission objectives must specify either a minimum or a maximum distance!");
             return null;
         }
         if (!this._subjects.isPilotedSpacecraft(mission) && !this._target.isPilotedSpacecraft(mission)) {
-            application.showError("Distance conditions for mission objectives must specify the piloted spacecraft as the only subject or as the target!");
+            application.showError("Data validation error: Distance conditions for mission objectives must specify the piloted spacecraft as the only subject or as the target!");
             return null;
         }
         result = utils.formatString(strings.get(stringPrefix,
@@ -1366,14 +1366,14 @@ define([
      * @returns {String}
      */
     HitCondition.prototype.getObjectiveString = function () {
-        application.showError("Hit conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: Hit conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
      * @returns {String}
      */
     HitCondition.prototype.getObjectiveStateString = function () {
-        application.showError("Hit conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: Hit conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
@@ -1464,14 +1464,14 @@ define([
      * @returns {String}
      */
     CollisionCondition.prototype.getObjectiveString = function () {
-        application.showError("Collision conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: Collision conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
      * @returns {String}
      */
     CollisionCondition.prototype.getObjectiveStateString = function () {
-        application.showError("Collision conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: Collision conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
@@ -1551,14 +1551,14 @@ define([
      * @returns {String}
      */
     AwayCondition.prototype.getObjectiveString = function () {
-        application.showError("Away conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: Away conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
      * @returns {String}
      */
     AwayCondition.prototype.getObjectiveStateString = function () {
-        application.showError("Away conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: Away conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
@@ -1636,14 +1636,14 @@ define([
      * @returns {String}
      */
     OnTeamCondition.prototype.getObjectiveString = function () {
-        application.showError("OnTeam conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: OnTeam conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
      * @returns {String}
      */
     OnTeamCondition.prototype.getObjectiveStateString = function () {
-        application.showError("OnTeam conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: OnTeam conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
@@ -1718,14 +1718,14 @@ define([
      * @returns {String}
      */
     MissionStateCondition.prototype.getObjectiveString = function () {
-        application.showError("Mission state conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: Mission state conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
      * @returns {String}
      */
     MissionStateCondition.prototype.getObjectiveStateString = function () {
-        application.showError("Mission state conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: Mission state conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
@@ -1816,14 +1816,14 @@ define([
      * @returns {String}
      */
     GetsTargetedCondition.prototype.getObjectiveString = function () {
-        application.showError("GetsTargeted conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: GetsTargeted conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
      * @returns {String}
      */
     GetsTargetedCondition.prototype.getObjectiveStateString = function () {
-        application.showError("GetsTargeted conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: GetsTargeted conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
@@ -1913,14 +1913,14 @@ define([
      * @returns {String}
      */
     IsTargetedCondition.prototype.getObjectiveString = function () {
-        application.showError("IsTargeted conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: IsTargeted conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
      * @returns {String}
      */
     IsTargetedCondition.prototype.getObjectiveStateString = function () {
-        application.showError("IsTargeted conditions cannot be used as win/lose conditions!");
+        application.showError("Data validation error: IsTargeted conditions cannot be used as win/lose conditions!");
         return null;
     };
     /**
