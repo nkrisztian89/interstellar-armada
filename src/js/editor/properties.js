@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2019-2024 Krisztián Nagy
+ * Copyright 2016-2026 Krisztián Nagy
  * @file Provides the content and event handlers for the Properties window of the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -482,7 +482,7 @@ define([
                             topParent,
                             true,
                             true,
-                            type.getName(),
+                            type.getTypeName(),
                             propertyOfArrayElement ? undefined : arrayIndex,
                             (arrayIndex !== undefined));
                 }

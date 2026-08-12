@@ -5410,10 +5410,10 @@ define([
         return undefined;
     };
     /**
-     * Returns the name of the type 
+     * Returns the name of the type
      * @returns {String}
      */
-    Type.prototype.getName = function () {
+    Type.prototype.getTypeName = function () {
         return this._descriptor.name;
     };
     /**
