@@ -790,12 +790,6 @@ define([
         this._lastScene = null;
     }
     /**
-     * @returns {TrailDescriptor}
-     */
-    TrailEmitter.prototype.getDescriptor = function () {
-        return this._descriptor;
-    };
-    /**
      * Whether there is a currently active / growing section of this trail to
      * which new points / segments can be added.
      * @returns {Boolean}

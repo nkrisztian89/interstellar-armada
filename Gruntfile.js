@@ -249,7 +249,10 @@ module.exports = function (grunt) {
                 ["rollLagDampingRatio"],
                 ["rollLagAngularFrequency"],
                 ["positionConfiguration"],
-                ["orientationConfiguration"]
+                ["orientationConfiguration"],
+                ["class"],
+                ["descriptor"],
+                ["distanceRange"]
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [
