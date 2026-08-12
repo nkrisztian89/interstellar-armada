@@ -2215,6 +2215,10 @@ define([
     };
     // #########################################################################
     /**
+     * @typedef {ExternalComponent~Style} Slider~Style
+     * @property {String} [sliderClassName] The root element of the Slider will have this CSS class
+     */
+    /**
      * @typedef {Object} Slider~Params
      * @property {Number} min
      * @property {Number} max
@@ -2224,12 +2228,12 @@ define([
      * will be displayed next to the slider, showing the currently selected item from this list
      */
     /**
-     * @class A component that consists of a label describing a property, and a slider that can be used to select from a range of possible 
+     * @class A component that consists of a label describing a property, and a slider that can be used to select from a range of possible
      * numeric values for that property.
      * @extends ExternalComponent
      * @param {String} name See ExternalComponent.
      * @param {String} htmlFilename See ExternalComponent.
-     * @param {ExternalComponent~Style} [style] See ExternalComponent.
+     * @param {Slider~Style} [style] See ExternalComponent.
      * @param {Components~LabelDescriptor} propertyLabelDescriptor The caption and id of the property label element that is displayed on this
      * selector, indicating what property can be set with it
      * @param {Slider~Params} params
@@ -2305,6 +2309,9 @@ define([
         }.bind(this);
         ExternalComponent.prototype._initializeComponents.call(this);
         if (this._rootElement) {
+            if (this._style.sliderClassName) {
+                this._rootElement.className = this._style.sliderClassName;
+            }
             if (this._propertyLabelDescriptor.id) {
                 this._propertyLabel.setElementID(this._getElementID(this._propertyLabelDescriptor.id));
             }

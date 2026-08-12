@@ -434,6 +434,7 @@ define([
         SHOW_FPS_COUNTER: {name: "gameplaySettings.showFpsCounter"},
         PREFERRED_FIGHTER_VIEW: {name: "gameplaySettings.preferredFighterView"},
         PREFERRED_SHIP_VIEW: {name: "gameplaySettings.preferredShipView"},
+        CAMERA_ELASTICITY: {name: "gameplaySettings.cameraElasticity"},
         DEMO_VIEW_SWITCHING: {name: "gameplaySettings.demoViewSwitching"},
         DEFAULT_SALVO_MODE: {name: "gameplaySettings.defaultSalvoMode"},
         SHOW_GENERIC_RADIO_MESSAGES: {name: "gameplaySettings.showGenericRadioMessages"},

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides functionality for loading the definitions for in-game classes from a JSON file and then accessing the loaded classes by
  * type and name. Also provides constructors for those classes of which custom instances can be created.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -3891,11 +3891,17 @@ define([
          * @type Number[2]
          */
         this._alphaRange = (dataJSON && this._fps) ? (dataJSON.alphaRange || [-360, 360]) : [0, 0];
+        if (dataJSON && dataJSON.alphaRange && !(this._fps && this._turnable)) {
+            application.showError("Invalid view configuration ('" + this._name + "'): alphaRange has no effect unless both fps and turnable are set to true!", application.ErrorSeverity.MINOR);
+        }
         /**
          * The minimum and maximum beta angle that this view (camera configurations based on it) can be set to, if in FPS-mode, in degrees.
          * @type Number[2]
          */
         this._betaRange = (dataJSON && this._fps) ? (dataJSON.betaRange || [-90, 90]) : [0, 0];
+        if (dataJSON && dataJSON.betaRange && !(this._fps && this._turnable)) {
+            application.showError("Invalid view configuration ('" + this._name + "'): betaRange has no effect unless both fps and turnable are set to true!", application.ErrorSeverity.MINOR);
+        }
         /**
          * The initial (horizontal) span of the view in degrees. Zero value means that a default value should be asked from the logic module
          * upon the creation of a camera configuration.
@@ -3915,7 +3921,64 @@ define([
          */
         this._resetsWhenLeavingConfines = dataJSON ? ((typeof dataJSON.resetsWhenLeavingConfines) === "boolean" ? dataJSON.resetsWhenLeavingConfines : false) : false;
         /**
-         * (enum CameraOrientationConfiguration.BaseOrientation) The base orientation for FPS-mode views, the axes of which will be used 
+         * If given (along with lagAngularFrequency), the camera position will not instantly follow its target when using this view, but
+         * elastically lag behind it, as if connected to it via a damped spring. 1 means critically damped (fastest approach with no
+         * overshoot), less than 1 means underdamped (elastic, overshoots the target before settling), more than 1 means overdamped
+         * (slower than critical damping, no overshoot). See CameraPositionConfiguration.
+         * @type Number
+         */
+        this._lagDampingRatio = dataJSON ? (dataJSON.lagDampingRatio || 0) : 0;
+        /**
+         * If given (along with lagDampingRatio), determines how fast the position lag spring settles, in rad/s - higher is faster (less lag).
+         * @type Number
+         */
+        this._lagAngularFrequency = dataJSON ? (dataJSON.lagAngularFrequency || 0) : 0;
+        /**
+         * A flat scalar multiplier applied to the position lag spring's offset from the target, before it is added to the target
+         * position to get the camera's actual position - lets the visible amplitude of the lag be tuned independently of its timing
+         * (lagDampingRatio / lagAngularFrequency). Also scaled by the camera's global elasticity setting.
+         * @type Number
+         */
+        this._lagScale = dataJSON ? ((dataJSON.lagScale !== undefined) ? dataJSON.lagScale : 1) : 1;
+        /**
+         * If given, hard-caps the length of the (already scaled) position lag offset vector to this distance (in meters) before it is
+         * added to the target position, without altering the internal spring state - so the spring calculation itself is unaffected, but
+         * the rendered camera position can never end up farther than this from the target. See CameraPositionConfiguration.
+         * @type Number
+         */
+        this._maxLagDistance = dataJSON ? (dataJSON.maxLagDistance || 0) : 0;
+        /**
+         * If given (along with rollLagAngularFrequency), the camera orientation's roll (rotation around the aim direction) will not
+         * instantly follow its target when using this view, but elastically lag behind it, as if turning against a damped rotational
+         * spring. The aim direction itself is never lagged. See CameraOrientationConfiguration.
+         * @type Number
+         */
+        this._rollLagDampingRatio = dataJSON ? (dataJSON.rollLagDampingRatio || 0) : 0;
+        /**
+         * If given (along with rollLagDampingRatio), determines how fast the roll lag spring settles, in rad/s - higher is faster (less lag).
+         * @type Number
+         */
+        this._rollLagAngularFrequency = dataJSON ? (dataJSON.rollLagAngularFrequency || 0) : 0;
+        if (dataJSON) {
+            if (dataJSON.lagDampingRatio && !dataJSON.lagAngularFrequency) {
+                application.showError("Invalid view configuration ('" + this._name + "'): lagDampingRatio has no effect without lagAngularFrequency also set!", application.ErrorSeverity.MINOR);
+            } else if (dataJSON.lagAngularFrequency && !dataJSON.lagDampingRatio) {
+                application.showError("Invalid view configuration ('" + this._name + "'): lagAngularFrequency has no effect without lagDampingRatio also set!", application.ErrorSeverity.MINOR);
+            }
+            if ((dataJSON.lagScale !== undefined) && !(dataJSON.lagDampingRatio && dataJSON.lagAngularFrequency)) {
+                application.showError("Invalid view configuration ('" + this._name + "'): lagScale has no effect unless both lagDampingRatio and lagAngularFrequency are set!", application.ErrorSeverity.MINOR);
+            }
+            if (dataJSON.maxLagDistance && !(dataJSON.lagDampingRatio && dataJSON.lagAngularFrequency)) {
+                application.showError("Invalid view configuration ('" + this._name + "'): maxLagDistance has no effect unless both lagDampingRatio and lagAngularFrequency are set!", application.ErrorSeverity.MINOR);
+            }
+            if (dataJSON.rollLagDampingRatio && !dataJSON.rollLagAngularFrequency) {
+                application.showError("Invalid view configuration ('" + this._name + "'): rollLagDampingRatio has no effect without rollLagAngularFrequency also set!", application.ErrorSeverity.MINOR);
+            } else if (dataJSON.rollLagAngularFrequency && !dataJSON.rollLagDampingRatio) {
+                application.showError("Invalid view configuration ('" + this._name + "'): rollLagAngularFrequency has no effect without rollLagDampingRatio also set!", application.ErrorSeverity.MINOR);
+            }
+        }
+        /**
+         * (enum CameraOrientationConfiguration.BaseOrientation) The base orientation for FPS-mode views, the axes of which will be used
          * for turning around. If null, the default setting will be acquired from the logic module upon the creation of a camera configuration
          * based on this view.
          * @type String 
@@ -3940,12 +4003,6 @@ define([
                                 application.ErrorSeverity.MINOR,
                                 "Valid values are: " + utils.getEnumValues(camera.CameraOrientationConfiguration.PointToFallback).join(", ") + ".")) :
                 null) : null;
-        /**
-         * When true, this view should be skipped when switching between views using cycling (switching to next / previous views), and should
-         * only be possible to invoke it by switching to it explicitly
-         * @type Boolean
-         */
-        this._excludeFromCycle = dataJSON ? ((typeof dataJSON.excludeFromCycle) === "boolean" ? dataJSON.excludeFromCycle : false) : false;
     }
     /**
      * @returns {String}
@@ -4026,6 +4083,42 @@ define([
         return this._resetsWhenLeavingConfines;
     };
     /**
+     * @returns {Number}
+     */
+    GenericView.prototype.getLagDampingRatio = function () {
+        return this._lagDampingRatio;
+    };
+    /**
+     * @returns {Number}
+     */
+    GenericView.prototype.getLagAngularFrequency = function () {
+        return this._lagAngularFrequency;
+    };
+    /**
+     * @returns {Number}
+     */
+    GenericView.prototype.getLagScale = function () {
+        return this._lagScale;
+    };
+    /**
+     * @returns {Number}
+     */
+    GenericView.prototype.getMaxLagDistance = function () {
+        return this._maxLagDistance;
+    };
+    /**
+     * @returns {Number}
+     */
+    GenericView.prototype.getRollLagDampingRatio = function () {
+        return this._rollLagDampingRatio;
+    };
+    /**
+     * @returns {Number}
+     */
+    GenericView.prototype.getRollLagAngularFrequency = function () {
+        return this._rollLagAngularFrequency;
+    };
+    /**
      * (enum CameraOrientationConfiguration.BaseOrientation)
      * @returns {String}
      */
@@ -4038,12 +4131,6 @@ define([
      */
     GenericView.prototype.getPointToFallback = function () {
         return this._pointToFallback;
-    };
-    /**
-     * @returns {Boolean}
-     */
-    GenericView.prototype.shouldExcludeFromCycle = function () {
-        return this._excludeFromCycle;
     };
     /*
      * Removes all references from the object
@@ -4079,7 +4166,7 @@ define([
          */
         this._followsPosition = (dataJSON.followsPosition !== undefined) ? dataJSON.followsPosition : (lookAt !== ObjectViewLookAtMode.SELF);
         /**
-         * Whether the orienration of the view should follow the orientation of the object it is associated with (making the set orientation relative
+         * Whether the orientation of the view should follow the orientation of the object it is associated with (making the set orientation relative
          * to it). It defaults to true, however, the default changes to false if a lookAt mode is set.
          * @type Boolean
          */
@@ -4144,6 +4231,12 @@ define([
          * @type Boolean
          */
         this._resetsOnFocusChange = (typeof dataJSON.resetsOnFocusChange) === "boolean" ? dataJSON.resetsOnFocusChange : false;
+        /**
+         * When true, this view should be skipped when switching between views using cycling (switching to next / previous views), and should
+         * only be possible to invoke it by switching to it explicitly
+         * @type Boolean
+         */
+        this._excludeFromCycle = (typeof dataJSON.excludeFromCycle) === "boolean" ? dataJSON.excludeFromCycle : false;
         // further invalid configuration errors
         if (!this._followsPosition && !this._startsWithRelativePosition && (this._lookAtSelf || this._lookAtTarget) && this._confines && this._distanceRange) {
             application.showError(
@@ -4153,6 +4246,15 @@ define([
         }
         if (!this._followsPosition && !this._startsWithRelativePosition && this._resetsWhenLeavingConfines) {
             application.showError("Invalid view configuration ('" + this._name + "'): resetsWhenLeavingConfines cannot be set if position is absolute!");
+        }
+        if (dataJSON.baseOrientation && !(this._fps && (this._lookAtSelf || this._lookAtTarget))) {
+            application.showError("Invalid view configuration ('" + this._name + "'): baseOrientation has no effect unless fps is true and the view points towards an object (lookAt)!", application.ErrorSeverity.MINOR);
+        }
+        if (dataJSON.pointToFallback && !(this._lookAtSelf || this._lookAtTarget)) {
+            application.showError("Invalid view configuration ('" + this._name + "'): pointToFallback has no effect unless the view points towards an object (lookAt)!", application.ErrorSeverity.MINOR);
+        }
+        if (dataJSON.rotations && (this._lookAtSelf || this._lookAtTarget)) {
+            application.showError("Invalid view configuration ('" + this._name + "'): rotations has no effect when the view points towards an object (lookAt)!", application.ErrorSeverity.MINOR);
         }
     }
     ObjectView.prototype = new GenericView();
@@ -4214,6 +4316,12 @@ define([
         return this._resetsOnFocusChange;
     };
     /**
+     * @returns {Boolean}
+     */
+    ObjectView.prototype.shouldExcludeFromCycle = function () {
+        return this._excludeFromCycle;
+    };
+    /**
      * Creates and returns a camera configuration set up for following the passed object according to the view's parameters.
      * Specify the default values to use for those settings which are not obligatory to set for views!
      * The configuration module stores values for these defaults, but that module itself builds on the classes module.
@@ -4238,7 +4346,11 @@ define([
                 mat.copy(this.getPositionMatrix()),
                 this.getDistanceRange(),
                 this.getConfines(),
-                this.resetsWhenLeavingConfines());
+                this.resetsWhenLeavingConfines(),
+                this.getLagDampingRatio(),
+                this.getLagAngularFrequency(),
+                this.getLagScale(),
+                this.getMaxLagDistance());
         orientationConfiguration = new camera.CameraOrientationConfiguration(
                 !this.isTurnable(),
                 this.pointsTowardsObjects(),
@@ -4249,7 +4361,9 @@ define([
                 this.getAlphaRange(),
                 this.getBetaRange(),
                 this.getBaseOrientation() || defaultCameraBaseOrientation,
-                this.getPointToFallback() || defaultCameraPointToFallback);
+                this.getPointToFallback() || defaultCameraPointToFallback,
+                this.getRollLagDampingRatio(),
+                this.getRollLagAngularFrequency());
         return new camera.CameraConfiguration(
                 this.getName(),
                 positionConfiguration, orientationConfiguration,
@@ -4313,6 +4427,15 @@ define([
         }
         if (!this._turnAroundAll && !this._startsWithRelativePosition && this._resetsWhenLeavingConfines) {
             application.showError("Invalid view configuration ('" + this._name + "'): resetsWhenLeavingConfines cannot be set if position is absolute!");
+        }
+        if (dataJSON.baseOrientation && !(this._fps && this._lookAtAll)) {
+            application.showError("Invalid view configuration ('" + this._name + "'): baseOrientation has no effect unless fps is true and lookAt is 'all'!", application.ErrorSeverity.MINOR);
+        }
+        if (dataJSON.pointToFallback && !this._lookAtAll) {
+            application.showError("Invalid view configuration ('" + this._name + "'): pointToFallback has no effect unless lookAt is 'all'!", application.ErrorSeverity.MINOR);
+        }
+        if (dataJSON.rotations && this._lookAtAll) {
+            application.showError("Invalid view configuration ('" + this._name + "'): rotations has no effect when lookAt is 'all'!", application.ErrorSeverity.MINOR);
         }
     }
     SceneView.prototype = new GenericView();

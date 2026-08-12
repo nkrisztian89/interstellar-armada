@@ -2,13 +2,12 @@
 @use "../color-scheme";
 
 $horizontal-padding: 0.5em;
-$vertical-padding: 0.7em;
+$vertical-padding: 0.6em;
 
 div.slider {
     display: table;
     table-layout: fixed;
     width: common.$input-width;
-    height: 3em;
     padding: $vertical-padding $horizontal-padding;
     margin: 0.25em auto;
 
@@ -33,4 +32,13 @@ div.sliderPropertyContainer {
     width: common.$input-label-width-percent;
     margin: 0;
     padding: 0.5em 0;
+}
+
+/* Matches height reduction to Selector .narrow */
+div.slider.narrow {
+    @media screen and (min-width: 1920px) {
+        padding: 0.45em 0.5em;
+        margin-top: 0.2em;
+        margin-bottom: 0.2em;
+    }
 }

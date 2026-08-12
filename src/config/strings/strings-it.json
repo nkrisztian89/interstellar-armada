@@ -829,6 +829,7 @@
         "showFpsCounter": "Mostra contatore FPS:",
         "preferredFighterView": "Vista preferita del combattente:",
         "preferredShipView": "Vista dell'astronave preferita:",
+        "cameraElasticity": "Elasticità della camera:",
         "demoViewSwitching": "Cambio automatico di visuale in modalità dimostrazione:",
         "defaultSalvoMode": "Modalità missile in serie per impostazione predefinita:",
         "showGenericRadioMessages": "Mostra il testo dei messaggi radio dinamici dei piloti AI:",

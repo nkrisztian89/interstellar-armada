@@ -1343,12 +1343,14 @@ define([
     }
     /**
      * Executes one simulation (and control) step for the battle.
+     * @param {Number} dt The time elapsed since the last simulation step, in milliseconds. Pass it to sync the simulation
+     * update with the rendering update. If not passed, the time elapsed since the last simulation step is calculated automatically.
      */
-    function _simulationLoopFunction() {
-        var followedCraft, curDate, dt, i, players;
+    function _simulationLoopFunction(dt) {
+        var followedCraft, curDate, i, players;
         if (_simulationLoop !== LOOP_CANCELED) {
             curDate = performance.now();
-            dt = curDate - _prevDate;
+            dt = (dt !== undefined) ? dt : (curDate - _prevDate);
             _timeSinceHostUpdate += dt;
             control.control(dt);
             if (_multi && !networking.isHost()) {
@@ -2995,6 +2997,9 @@ define([
                         application.ErrorSeverity.MINOR,
                         "No action was taken, to avoid double-running the simulation.");
             }
+        }
+        if (_battleScene) {
+            _battleScene.getCamera().setElasticity(config.getBattleSetting(config.BATTLE_SETTINGS.CAMERA_ELASTICITY));
         }
         audio.resetMusicVolume();
         audio.resetSFXVolume();
@@ -4901,7 +4906,9 @@ define([
         // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
         // is performed right before each render and not in a separate loop for best performance
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
-            _simulationLoopFunction();
+            // pass in dt instead of letting the simulation step measure its own to sync camera and
+            // simulation updates to render updates (avoid camera jitter)
+            _simulationLoopFunction(dt);
         }
         if (_battleScene) {
             // manually updating the camera so the HUD update has up-to-date information
@@ -5120,7 +5127,8 @@ define([
                     fov: INITIAL_CAMERA_FOV,
                     span: INITIAL_CAMERA_SPAN,
                     transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
-                    transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
+                    transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE),
+                    elasticity: config.getBattleSetting(config.BATTLE_SETTINGS.CAMERA_ELASTICITY)
                 });
         // we manually update the camera separately before the HUD rendering to make sure it is up-to-date
         _battleScene.setShouldUpdateCamera(false);

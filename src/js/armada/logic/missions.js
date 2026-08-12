@@ -1602,7 +1602,11 @@ define([
                 mat.copy(view.getPositionMatrix()),
                 view.getDistanceRange(),
                 view.getConfines(),
-                view.resetsWhenLeavingConfines());
+                view.resetsWhenLeavingConfines(),
+                view.getLagDampingRatio(),
+                view.getLagAngularFrequency(),
+                view.getLagScale(),
+                view.getMaxLagDistance());
         orientationConfiguration = new camera.CameraOrientationConfiguration(
                 !view.isTurnable(),
                 view.pointsTowardsObjects(),
@@ -1613,7 +1617,9 @@ define([
                 view.getAlphaRange(),
                 view.getBetaRange(),
                 view.getBaseOrientation() || config.getDefaultCameraBaseOrientation(),
-                view.getPointToFallback() || config.getDefaultCameraPointToFallback());
+                view.getPointToFallback() || config.getDefaultCameraPointToFallback(),
+                view.getRollLagDampingRatio(),
+                view.getRollLagAngularFrequency());
         return new camera.CameraConfiguration(
                 view.getName(),
                 positionConfiguration, orientationConfiguration,

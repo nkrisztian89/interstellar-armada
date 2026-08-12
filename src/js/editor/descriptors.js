@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2019-2025 Krisztián Nagy
+ * Copyright 2016-2026 Krisztián Nagy
  * @file Provides the descriptor objects that outline the structure of properties for the various resource / class categories of 
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -2226,6 +2226,18 @@ define([
             _canLookAt = function (data) {
                 return !_followsOrientation(data) && !data.turnable;
             },
+            _canHaveBaseOrientation = function (data) {
+                return _isFPS(data) && _pointsTowardObjects(data);
+            },
+            _canHaveRotations = function (data) {
+                return !_pointsTowardObjects(data);
+            },
+            _hasLagDampingRatio = function (data) {
+                return !!data.lagDampingRatio;
+            },
+            _hasRollLagDampingRatio = function (data) {
+                return !!data.rollLagDampingRatio;
+            },
             _canStartRelative = function (data) {
                 return !_followsPosition(data) && !data.rotationCenterIsObject;
             },
@@ -2259,83 +2271,149 @@ define([
                 properties: {
                     NAME: {
                         name: "name",
+                        description: "A descriptive name for the view, used to select it in-game (as one of the settings-defined default view names) and to look it up from the mission scripts.",
                         type: BaseType.STRING
                     },
                     AIMING_VIEW: {
                         name: "aimingView",
+                        description: "Whether this view points in the same direction as the followed spacecraft's weapons; used by the HUD to decide when to show the center crosshair.",
                         type: BaseType.BOOLEAN,
                         defaultValue: false
                     },
                     FOV: {
                         name: "fov",
+                        description: "The initial (vertical - see settings.logic.general.useVerticalCameraValues) field of view of the camera, in degrees.",
                         type: POSITIVE_DEGREES_180,
                         getDerivedDefault: config.getDefaultCameraFOV
                     },
                     FOV_RANGE: {
                         name: "fovRange",
+                        description: "The range within which the field of view can be changed (zoomed) by the player.",
                         type: _createRangeType(true, true, POSITIVE_DEGREES_180),
                         optional: true,
                         defaultText: "fixed"
                     },
                     SPAN: {
                         name: "span",
+                        description: "The height (see settings.logic.general.useVerticalCameraValues) of the viewing frustum at zero depth, in meters, used to derive the near clipping plane. Rarely needs to be set explicitly.",
                         type: POSITIVE_LENGTH,
                         getDerivedDefault: config.getDefaultCameraSpan
                     },
                     FPS: {
                         name: "fps",
+                        description: "Whether turning happens FPS-style, around axes relative to the followed object or the world, instead of around the camera's own axes. Also enables alphaRange, betaRange and, together with lookAt, baseOrientation.",
                         type: BaseType.BOOLEAN,
                         defaultValue: false
                     },
                     FOLLOWS_POSITION: {
                         name: "followsPosition",
+                        description: "Whether the camera's position continuously follows the position of the associated object (making the configured position relative to it), instead of staying at a fixed position in space.",
                         type: BaseType.BOOLEAN,
                         defaultValue: true,
                         isValid: _noLookAtSelf
                     },
                     FOLLOWS_ORIENTATION: {
                         name: "followsOrientation",
+                        description: "Whether the camera's orientation continuously follows the orientation of the associated object (making the configured rotation relative to it), instead of staying at a fixed orientation in space.",
                         type: BaseType.BOOLEAN,
                         defaultValue: true,
                         isValid: _canTurn
                     },
                     BASE_ORIENTATION: {
                         name: "baseOrientation",
+                        description: "The coordinate axes used as the basis for FPS-style turning while the view points towards an object.",
                         type: BASE_ORIENTATION,
                         getDerivedDefault: config.getDefaultCameraBaseOrientation,
-                        isValid: _isFPS
+                        isValid: _canHaveBaseOrientation
                     },
                     POINT_TO_FALLBACK: {
                         name: "pointToFallback",
+                        description: "The basis used for the camera's orientation if the view points towards an object but that object has been destroyed.",
                         type: POINT_TO_FALLBACK,
                         getDerivedDefault: config.getDefaultCameraPointToFallback,
                         isValid: _pointsTowardObjects
                     },
                     STARTS_WITH_RELATIVE_POSITION: {
                         name: "startsWithRelativePosition",
+                        description: "Whether the position is only calculated relative to the associated object when the view starts or resets, and treated as absolute afterwards, instead of continuously following the object.",
                         type: BaseType.BOOLEAN,
                         defaultValue: false,
                         isValid: _canStartRelative
                     },
                     LOOK_AT: {
                         name: "lookAt",
+                        description: "Makes the camera's orientation always point towards the associated object itself ('self') or its target ('target').",
                         type: OBJECT_VIEW_LOOK_AT_MODE,
                         defaultValue: classes.ObjectViewLookAtMode.NONE,
                         isValid: _canLookAt
                     },
+                    LAG_DAMPING_RATIO: {
+                        name: "lagDampingRatio",
+                        description: "Set to make the camera lag behind as if it was connected by a damped spring. Values: 1 is critically damped (no overshoot), below 1 is underdamped (springy, overshoots before settling), above 1 is overdamped (slower, no overshoot).",
+                        type: POSITIVE_SCALE,
+                        optional: true,
+                        defaultText: "no lag",
+                        newValue: 0.7
+                    },
+                    LAG_ANGULAR_FREQUENCY: {
+                        name: "lagAngularFrequency",
+                        description: "How fast the position lag spring settles, in radians/second. Higher: faster catch-up, shorter give - lower: smoother, slower catch-up, longer give.",
+                        type: POSITIVE_PER_SECOND,
+                        newValue: 1,
+                        isRequired: _hasLagDampingRatio,
+                        isValid: _hasLagDampingRatio,
+                        updateOnValidate: true
+                    },
+                    LAG_SCALE: {
+                        name: "lagScale",
+                        description: "A multiplier applied to the distance the camera lags behind by the dampened spring setup.",
+                        type: NON_NEGATIVE_SCALE,
+                        defaultValue: 1,
+                        isValid: _hasLagDampingRatio,
+                        updateOnValidate: true
+                    },
+                    MAX_LAG_DISTANCE: {
+                        name: "maxLagDistance",
+                        description: "Limits how far the camera can lag behind, in meters.",
+                        type: POSITIVE_LENGTH,
+                        optional: true,
+                        defaultText: "no limit",
+                        isValid: _hasLagDampingRatio,
+                        updateOnValidate: true
+                    },
+                    ROLL_LAG_DAMPING_RATIO: {
+                        name: "rollLagDampingRatio",
+                        description: "Like lagDampingRatio, but for the camera's roll (rotation around the aim direction) only — the aim direction itself always instantly matches its target.",
+                        type: POSITIVE_SCALE,
+                        optional: true,
+                        defaultText: "no lag",
+                        newValue: 1
+                    },
+                    ROLL_LAG_ANGULAR_FREQUENCY: {
+                        name: "rollLagAngularFrequency",
+                        description: "Like lagAngularFrequency, but for the roll lag spring.",
+                        type: POSITIVE_PER_SECOND,
+                        newValue: 1,
+                        isRequired: _hasRollLagDampingRatio,
+                        isValid: _hasRollLagDampingRatio,
+                        updateOnValidate: true
+                    },
                     MOVABLE: {
                         name: "movable",
+                        description: "Whether the position of the view can be changed by the player.",
                         type: BaseType.BOOLEAN,
                         defaultValue: false
                     },
                     TURNABLE: {
                         name: "turnable",
+                        description: "Whether the direction of the view can be changed by the player.",
                         type: BaseType.BOOLEAN,
                         defaultValue: false,
                         isValid: _canTurn
                     },
                     ALPHA_RANGE: {
                         name: "alphaRange",
+                        description: "The minimum and maximum horizontal (yaw) turning angle allowed while turning the view, in degrees.",
                         type: _createRangeType(true, true, DEGREES),
                         optional: true,
                         defaultText: "unlimited",
@@ -2343,18 +2421,21 @@ define([
                     },
                     BETA_RANGE: {
                         name: "betaRange",
+                        description: "The minimum and maximum vertical (pitch) turning angle allowed while turning the view, in degrees.",
                         type: _createRangeType(true, true, DEGREES_BETA),
                         defaultValue: [-90, 90],
                         isValid: _turnableFPS
                     },
                     ROTATION_CENTER_IS_OBJECT: {
                         name: "rotationCenterIsObject",
+                        description: "Whether turning the camera rotates it around the associated object instead of around the camera's own position.",
                         type: BaseType.BOOLEAN,
                         defaultValue: false,
                         isValid: _canRotateAroundObject
                     },
                     DISTANCE_RANGE: {
                         name: "distanceRange",
+                        description: "The minimum and maximum distance the camera can be moved to from the object it turns around or looks at.",
                         type: _createRangeType(false, false, DISTANCE),
                         isRequired: _requiresDistanceRange,
                         updateOnValidate: true,
@@ -2363,6 +2444,7 @@ define([
                     },
                     CONFINES: {
                         name: "confines",
+                        description: "If given, limits the camera's movement to these ranges on the X, Y and Z axes respectively; an axis/direction can be left unconfined by not checking it.",
                         type: BaseType.CONFINES,
                         optional: true,
                         defaultText: "no confines",
@@ -2370,33 +2452,40 @@ define([
                     },
                     RESETS_WHEN_LEAVING_CONFINES: {
                         name: "resetsWhenLeavingConfines",
+                        description: "Whether the camera automatically resets to its default state whenever it moves outside its distance or position confines.",
                         type: BaseType.BOOLEAN,
                         defaultValue: false,
                         isValid: _canResetWhenLeavingConfines
                     },
                     POSITION: {
                         name: "position",
+                        description: "The position of the view relative to the associated object (or its initial/absolute position, if the position does not follow the object).",
                         type: BaseType.VECTOR3
                     },
                     ROTATIONS: {
                         name: "rotations",
+                        description: "The orientation of the view relative to the associated object (or its initial/absolute orientation), as a sequence of axis rotations.",
                         type: BaseType.ROTATIONS,
-                        optional: true
+                        optional: true,
+                        isValid: _canHaveRotations
                     },
                     MOVES_RELATIVE_TO_OBJECT: {
                         name: "movesRelativeToObject",
+                        description: "Whether movement of the camera happens along the associated object's own axes instead of the camera's world axes.",
                         type: BaseType.BOOLEAN,
                         defaultValue: false,
                         isValid: _canMoveRelative
                     },
                     RESETS_ON_FOCUS_CHANGE: {
                         name: "resetsOnFocusChange",
+                        description: "Whether the view resets to its default state whenever the camera controls lose and then regain focus.",
                         type: BaseType.BOOLEAN,
                         defaultValue: false,
                         isValid: _canResetOnFocusChange
                     },
                     EXCLUDE_FROM_CYCLE: {
                         name: "excludeFromCycle",
+                        description: "Whether this view is skipped when cycling between views (switching to next/previous); it can then only be selected by switching to it explicitly.",
                         type: BaseType.BOOLEAN,
                         defaultValue: false
                     }
@@ -4551,6 +4640,36 @@ define([
                 baseType: BaseType.ENUM,
                 values: classes.SceneViewLookAtMode
             },
+            _sceneLooksAtAll = function (data) {
+                return data.lookAt === classes.SceneViewLookAtMode.ALL;
+            },
+            _sceneCanTurn = function (data) {
+                return !_sceneLooksAtAll(data);
+            },
+            _sceneCanHaveBaseOrientation = function (data) {
+                return _isFPS(data) && _sceneLooksAtAll(data);
+            },
+            _sceneCanStartRelative = function (data) {
+                return !data.turnAroundAll;
+            },
+            _sceneRelativePosition = function (data) {
+                return data.turnAroundAll || data.startsWithRelativePosition;
+            },
+            _sceneRequiresDistanceRange = function (data) {
+                return (data.turnAroundAll || _sceneLooksAtAll(data)) && data.movable;
+            },
+            _sceneCanHaveDistanceRange = function (data) {
+                return !!data.movable && (_sceneRelativePosition(data) || _sceneCanTurn(data) || !data.confines);
+            },
+            _sceneCanHaveConfines = function (data) {
+                return !!data.movable && (_sceneRelativePosition(data) || _sceneCanTurn(data) || !data.distanceRange);
+            },
+            _sceneCanResetWhenLeavingConfines = function (data) {
+                return (data.distanceRange || data.confines) && _sceneRelativePosition(data);
+            },
+            _sceneCanLookAtAll = function (data) {
+                return !data.turnAroundAll && !data.turnable;
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -4560,50 +4679,64 @@ define([
                 properties: {
                     NAME: {
                         name: "name",
+                        description: "A descriptive name for the view, used to select it in-game and to look it up from the mission scripts.",
                         type: BaseType.STRING
                     },
                     FOV: {
                         name: "fov",
-                        type: DEGREES,
+                        description: "The initial (vertical - see settings.logic.general.useVerticalCameraValues) field of view of the camera, in degrees.",
+                        type: POSITIVE_DEGREES_180,
                         getDerivedDefault: config.getDefaultCameraFOV
                     },
                     FOV_RANGE: {
                         name: "fovRange",
-                        type: BaseType.RANGE,
+                        description: "The range within which the field of view can be changed (zoomed) by the player.",
+                        type: _createRangeType(true, true, POSITIVE_DEGREES_180),
                         optional: true,
                         defaultText: "fixed"
                     },
                     SPAN: {
                         name: "span",
-                        type: DISTANCE,
+                        description: "The height (see settings.logic.general.useVerticalCameraValues) of the viewing frustum at zero depth, in meters, used to derive the near clipping plane. Rarely needs to be set explicitly.",
+                        type: POSITIVE_LENGTH,
                         getDerivedDefault: config.getDefaultCameraSpan
                     },
                     FPS: {
                         name: "fps",
+                        description: "Whether turning happens FPS-style, around axes relative to the world, instead of around the camera's own axes. Also enables alphaRange, betaRange and, together with lookAt: 'all', baseOrientation.",
                         type: BaseType.BOOLEAN,
                         defaultValue: false
                     },
                     BASE_ORIENTATION: {
                         name: "baseOrientation",
+                        description: "The coordinate axes used as the basis for FPS-style turning while the view points towards all scene objects.",
                         type: BASE_ORIENTATION,
                         getDerivedDefault: config.getDefaultCameraBaseOrientation,
-                        isValid: _isFPS
+                        isValid: _sceneCanHaveBaseOrientation
                     },
                     POINT_TO_FALLBACK: {
                         name: "pointToFallback",
+                        description: "The basis used for the camera's orientation if the view points towards all scene objects but none remain.",
                         type: POINT_TO_FALLBACK,
-                        optional: true
+                        getDerivedDefault: config.getDefaultCameraPointToFallback,
+                        isValid: _sceneLooksAtAll
                     },
                     MOVABLE: {
                         name: "movable",
-                        type: BaseType.BOOLEAN
+                        description: "Whether the position of the view can be changed by the player.",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false
                     },
                     TURNABLE: {
                         name: "turnable",
-                        type: BaseType.BOOLEAN
+                        description: "Whether the direction of the view can be changed by the player.",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false,
+                        isValid: _sceneCanTurn
                     },
                     ALPHA_RANGE: {
                         name: "alphaRange",
+                        description: "The minimum and maximum horizontal (yaw) turning angle allowed while turning the view, in degrees.",
                         type: _createRangeType(true, true, DEGREES),
                         optional: true,
                         defaultText: "unlimited",
@@ -4611,52 +4744,118 @@ define([
                     },
                     BETA_RANGE: {
                         name: "betaRange",
+                        description: "The minimum and maximum vertical (pitch) turning angle allowed while turning the view, in degrees.",
                         type: _createRangeType(true, true, DEGREES_BETA),
                         defaultValue: [-90, 90],
                         isValid: _turnableFPS
                     },
                     CONFINES: {
                         name: "confines",
+                        description: "If given, limits the camera's movement to these ranges on the X, Y and Z axes respectively; an axis/direction can be left unconfined by not checking it.",
                         type: BaseType.CONFINES,
-                        optional: true
+                        optional: true,
+                        defaultText: "no confines",
+                        isValid: _sceneCanHaveConfines
                     },
                     RESETS_WHEN_LEAVING_CONFINES: {
                         name: "resetsWhenLeavingConfines",
+                        description: "Whether the camera automatically resets to its default state whenever it moves outside its distance or position confines.",
                         type: BaseType.BOOLEAN,
-                        optional: true
+                        defaultValue: false,
+                        isValid: _sceneCanResetWhenLeavingConfines
                     },
                     POSITION: {
                         name: "position",
+                        description: "The position of the view relative to all objects in the scene (or its initial/absolute position, if the position does not follow them).",
                         type: BaseType.VECTOR3
                     },
                     ROTATIONS: {
                         name: "rotations",
+                        description: "The orientation of the view relative to all objects in the scene (or its initial/absolute orientation), as a sequence of axis rotations.",
                         type: BaseType.ROTATIONS,
-                        optional: true
-                    },
-                    EXCLUDE_FROM_CYCLE: {
-                        name: "excludeFromCycle",
-                        type: BaseType.BOOLEAN,
-                        optional: true
+                        optional: true,
+                        isValid: _sceneCanTurn
                     },
                     TURN_AROUND_ALL: {
                         name: "turnAroundAll",
+                        description: "Whether turning the camera rotates it around all objects in the scene instead of around the camera's own position.",
                         type: BaseType.BOOLEAN,
-                        defaultValue: false
+                        defaultValue: false,
+                        isValid: _sceneCanTurn
                     },
                     LOOK_AT: {
                         name: "lookAt",
-                        type: SCENE_VIEW_LOOK_AT_MODE
+                        description: "Makes the camera's orientation always point towards the average position of all objects in the scene ('all').",
+                        type: SCENE_VIEW_LOOK_AT_MODE,
+                        defaultValue: classes.SceneViewLookAtMode.NONE,
+                        isValid: _sceneCanLookAtAll
                     },
                     DISTANCE_RANGE: {
                         name: "distanceRange",
-                        type: BaseType.RANGE,
-                        optional: true
+                        description: "The minimum and maximum distance the camera can be moved to from the objects it turns around or looks at.",
+                        type: _createRangeType(false, false, DISTANCE),
+                        isRequired: _sceneRequiresDistanceRange,
+                        updateOnValidate: true,
+                        defaultText: "unlimited",
+                        isValid: _sceneCanHaveDistanceRange
                     },
                     STARTS_WITH_RELATIVE_POSITION: {
                         name: "startsWithRelativePosition",
+                        description: "Whether the position is only calculated relative to all scene objects when the view starts or resets, and treated as absolute afterwards, instead of continuously following them.",
                         type: BaseType.BOOLEAN,
-                        optional: true
+                        defaultValue: false,
+                        isValid: _sceneCanStartRelative
+                    },
+                    LAG_DAMPING_RATIO: {
+                        name: "lagDampingRatio",
+                        description: "Set to make the camera lag behind as if it was connected by a damped spring. Values: 1 is critically damped (no overshoot), below 1 is underdamped (springy, overshoots before settling), above 1 is overdamped (slower, no overshoot).",
+                        type: POSITIVE_SCALE,
+                        optional: true,
+                        defaultText: "no lag",
+                        newValue: 0.7
+                    },
+                    LAG_ANGULAR_FREQUENCY: {
+                        name: "lagAngularFrequency",
+                        description: "How fast the position lag spring settles, in radians/second. Higher: faster catch-up, shorter give - lower: smoother, slower catch-up, longer give.",
+                        type: POSITIVE_PER_SECOND,
+                        newValue: 1,
+                        isRequired: _hasLagDampingRatio,
+                        isValid: _hasLagDampingRatio,
+                        updateOnValidate: true
+                    },
+                    LAG_SCALE: {
+                        name: "lagScale",
+                        description: "A multiplier applied to the distance the camera lags behind by the dampened spring setup.",
+                        type: NON_NEGATIVE_SCALE,
+                        defaultValue: 1,
+                        isValid: _hasLagDampingRatio,
+                        updateOnValidate: true
+                    },
+                    MAX_LAG_DISTANCE: {
+                        name: "maxLagDistance",
+                        description: "Limits how far the camera can lag behind, in meters.",
+                        type: POSITIVE_LENGTH,
+                        optional: true,
+                        defaultText: "no limit",
+                        isValid: _hasLagDampingRatio,
+                        updateOnValidate: true
+                    },
+                    ROLL_LAG_DAMPING_RATIO: {
+                        name: "rollLagDampingRatio",
+                        description: "Like lagDampingRatio, but for the camera's roll (rotation around the aim direction) only — the aim direction itself always instantly matches its target.",
+                        type: POSITIVE_SCALE,
+                        optional: true,
+                        defaultText: "no lag",
+                        newValue: 1
+                    },
+                    ROLL_LAG_ANGULAR_FREQUENCY: {
+                        name: "rollLagAngularFrequency",
+                        description: "Like lagAngularFrequency, but for the roll lag spring.",
+                        type: POSITIVE_PER_SECOND,
+                        newValue: 1,
+                        isRequired: _hasRollLagDampingRatio,
+                        isValid: _hasRollLagDampingRatio,
+                        updateOnValidate: true
                     }
                 }
             },

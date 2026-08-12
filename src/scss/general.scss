@@ -633,10 +633,14 @@ textarea {
 /* Styling of sliders */
 
 input[type=range] {
-    -webkit-appearance: none; 
+    /* browsers apply a fixed, non-scaling default font-size to native form controls (unlike e.g. button, which overrides it - see
+       common.$button-font-size below), which would otherwise make all the em-based sizes here stay visually constant regardless of
+       window size, unlike the rest of the (vmin-based) UI */
+    font-size: inherit;
+    -webkit-appearance: none;
     width: 100%; /* Specific width is required for Firefox. */
     background: transparent; /* Otherwise white in Chrome */
-    height: 2.5em;
+    height: 1.8em;
 
     margin: 0.25em 0 0 0;
     padding: 0;
@@ -653,15 +657,16 @@ input[type=range] {
     &::-webkit-slider-thumb {
         -webkit-appearance: none;
 
-        height: 2.4em;
-        width: 1.1em;
+        height: 1.6em;
+        width: 0.8em;
+        border-radius: 0.15em;
         /*cursor: pointer;*/
-        margin-top: -0.9em; /* needed for Chrome, but in Firefox and IE it is automatic 
+        margin-top: -0.6em; /* needed for Chrome, but in Firefox and IE it is automatic 
                               * depends on height */
 
         /* gray appearance similar to buttons - for consistent look */
         background-color: color-scheme.$panel-front-color;
-        border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
+        border: 0.1em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
         @include common.shadowed;
         /* glowing green appearance for better contrast */
         /*    background-color: #00cc00;
@@ -671,7 +676,7 @@ input[type=range] {
         &:hover {
             /* gray appearance similar to buttons - for consistent look */
             background-color: color-scheme.relLighten(color-scheme.$panel-color,1.5);
-            border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
+            border: 0.1em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
             /* glowing green appearance for better contrast */
             /*    background-color: #44ff44;
                 border: 2px solid #00aa00;
@@ -680,34 +685,34 @@ input[type=range] {
     }
 
     &::-moz-range-thumb {
-        height: 2.0em;
-        width: 0.7em;
+        height: 1.35em;
+        width: 0.6em;
 
-        border-radius: 0;
+        border-radius: 0.15em;
 
         background-color: color-scheme.$panel-front-color;
-        border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
+        border: 0.1em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
         @include common.shadowed;
 
         &:hover {
             background-color: color-scheme.relLighten(color-scheme.$panel-color,1.5);
-            border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
+            border: 0.1em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
         }
     }
 
     &::-ms-thumb {
-        height: 2.4em;
-        width: 1.1em;
+        height: 1.6em;
+        width: 0.8em;
 
-        border-radius: 0;
+        border-radius: 0.15em;
 
         background-color: color-scheme.$panel-front-color;
-        border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
+        border: 0.1em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
         @include common.shadowed;
 
         &:hover {
             background-color: color-scheme.relLighten(color-scheme.$panel-color,1.5);
-            border: 0.15em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
+            border: 0.1em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
         }
     }
 
@@ -718,7 +723,7 @@ input[type=range] {
        Slider keeps up to date on the element whenever its value changes.  */
     &::-webkit-slider-runnable-track {
         width: 100%;
-        height: 1.0em;
+        height: 0.7em;
         @include common.inset-bordered-panel;
         background-image: linear-gradient(to right,
                 color-scheme.relDarken(color-scheme.$highlight-color, 0.067) var(--value-percent, 0%),
@@ -729,7 +734,7 @@ input[type=range] {
        but it doesn't produce good looking result, so we use the same trick */
     &::-moz-range-track {
         width: 100%;
-        height: 0.6em;
+        height: 0.45em;
         @include common.inset-bordered-panel;
         background-image: linear-gradient(to right,
                 color-scheme.relDarken(color-scheme.$highlight-color, 0.067) var(--value-percent, 0%),
@@ -742,7 +747,7 @@ input[type=range] {
 
     &::-ms-track {
         width: 100%;
-        height: 1.0em;
+        height: 0.7em;
         @include common.inset-bordered-panel;
     }
 

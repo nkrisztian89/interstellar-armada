@@ -878,6 +878,7 @@
         "showFpsCounter": "FPS számláló mutatása:",
         "preferredFighterView": "Alapértelmezett vadászgép nézet:",
         "preferredShipView": "Alapértelmezett hadihajó nézet:",
+        "cameraElasticity": "Kamera rugalmassága:",
         "demoViewSwitching": "Automatikus nézetváltogatás demo módban:",
         "defaultSalvoMode": "Alapértelmezett sortűz mód rakétákhoz:",
         "showGenericRadioMessages": "Gépi pilóták dinamikus rádióüzeneteinek kiírása:",

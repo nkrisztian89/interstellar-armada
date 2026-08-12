@@ -241,7 +241,15 @@ module.exports = function (grunt) {
                 ['superimposed', "is"],
                 ["resizeable", "is"],
                 ["canvasElement", "get", "canvas"],
-                ["layout", "get", "clipSpaceLayout"]
+                ["layout", "get", "clipSpaceLayout"],
+                ["lagDampingRatio"],
+                ["lagAngularFrequency"],
+                ["lagScale"],
+                ["maxLagDistance"],
+                ["rollLagDampingRatio"],
+                ["rollLagAngularFrequency"],
+                ["positionConfiguration"],
+                ["orientationConfiguration"]
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [

@@ -830,6 +830,7 @@
         "showFpsCounter": "Show FPS counter:",
         "preferredFighterView": "Preferred fighter view:",
         "preferredShipView": "Preferred ship view:",
+        "cameraElasticity": "Camera elasticity:",
         "demoViewSwitching": "Automatic view switching in demo mode:",
         "defaultSalvoMode": "Missile salvo mode by default:",
         "showGenericRadioMessages": "Show the text of dynamic radio messages by AI pilots:",

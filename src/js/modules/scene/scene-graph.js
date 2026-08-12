@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file A general purpose WebGL scene engine building on the functionality of ManagedGL.
  * Create a Scene, add background and main scene objects and light sources, then add it to a ManagedGLContext (or several ones), and it can
  * be rendered on them.
@@ -1063,6 +1063,7 @@ define([
      * @property {Number} [span]
      * @property {Number} [transitionDuration]
      * @property {String} [transitionStyle] (enum Camera.TransitionStyle)
+     * @property {Number} [elasticity] (see Camera)
      */
     /**
      * @class An object to hold a hierarchic scene graph and webGL configuration for rendering.
@@ -1241,7 +1242,8 @@ define([
                         (cameraSettings.fovRange && cameraSettings.fovRange[1]) || cameraSettings.fov,
                         cameraSettings.span),
                 cameraSettings.transitionDuration,
-                cameraSettings.transitionStyle);
+                cameraSettings.transitionStyle,
+                cameraSettings.elasticity);
         /**
          * The context that stores the LOD settings for rendering models in this scene with multiple LOD meshes.
          * @type LODContext

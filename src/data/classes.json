@@ -8635,6 +8635,11 @@
         {
           "name": "near",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 10,
+          "lagScale": 0.15,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 20,
           "position": [
             0,
             -28,
@@ -8645,6 +8650,11 @@
           "name": "far",
           "aimingView": true,
           "fov": 55,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 5,
+          "lagScale": 0.1,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 25,
           "position": [
             0,
             -50,
@@ -8657,6 +8667,12 @@
           "fov": 45,
           "fps": true,
           "turnable": true,
+          "lagDampingRatio": 1.0,
+          "lagAngularFrequency": 40,
+          "lagScale": 0.015,
+          "maxLagDistance": 0.2,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 50,
           "alphaRange": [
             -120,
             120
@@ -9694,6 +9710,11 @@
         {
           "name": "near",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 10,
+          "lagScale": 0.15,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 20,
           "position": [
             0,
             -39,
@@ -9704,6 +9725,11 @@
           "name": "far",
           "aimingView": true,
           "fov": 55,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 5,
+          "lagScale": 0.1,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 25,
           "position": [
             0,
             -68,
@@ -9716,6 +9742,12 @@
           "fov": 45,
           "fps": true,
           "turnable": true,
+          "lagDampingRatio": 1.0,
+          "lagAngularFrequency": 40,
+          "lagScale": 0.015,
+          "maxLagDistance": 0.2,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 50,
           "alphaRange": [
             -120,
             120
@@ -10669,6 +10701,11 @@
         {
           "name": "near",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 10,
+          "lagScale": 0.15,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 20,
           "position": [
             0,
             -38,
@@ -10679,6 +10716,11 @@
           "name": "far",
           "aimingView": true,
           "fov": 55,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 5,
+          "lagScale": 0.1,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 25,
           "position": [
             0,
             -50,
@@ -10691,6 +10733,12 @@
           "fov": 45,
           "fps": true,
           "turnable": true,
+          "lagDampingRatio": 1.0,
+          "lagAngularFrequency": 40,
+          "lagScale": 0.015,
+          "maxLagDistance": 0.2,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 50,
           "alphaRange": [
             -120,
             120
@@ -12116,6 +12164,11 @@
         {
           "name": "near",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 10,
+          "lagScale": 0.15,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 20,
           "position": [
             0,
             -32,
@@ -12867,6 +12920,11 @@
         {
           "name": "near",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 10,
+          "lagScale": 0.15,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 20,
           "position": [
             0,
             -40,
@@ -12877,6 +12935,11 @@
           "name": "far",
           "aimingView": true,
           "fov": 55,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 5,
+          "lagScale": 0.1,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 25,
           "position": [
             0,
             -165,
@@ -13903,6 +13966,11 @@
         {
           "name": "near",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 10,
+          "lagScale": 0.15,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 20,
           "position": [
             0,
             8,
@@ -13914,6 +13982,11 @@
           "aimingView": true,
           "fps": true,
           "turnable": true,
+          "lagDampingRatio": 1.0,
+          "lagAngularFrequency": 20,
+          "lagScale": 0.015,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 30,
           "alphaRange": [
             -45,
             45
@@ -13933,6 +14006,11 @@
           "name": "far",
           "aimingView": true,
           "fov": 55,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 5,
+          "lagScale": 0.1,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 25,
           "position": [
             0,
             -255,
@@ -15392,6 +15470,11 @@
           "name": "near",
           "aimingView": true,
           "fps": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 10,
+          "lagScale": 0.15,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 20,
           "position": [
             0,
             -145,
@@ -15405,6 +15488,11 @@
           "fov": 55,
           "turnable": true,
           "rotationCenterIsObject": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 5,
+          "lagScale": 0.1,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 25,
           "position": [
             0,
             -1150,
@@ -15980,6 +16068,11 @@
         {
           "name": "near",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 10,
+          "lagScale": 0.15,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 20,
           "position": [
             0,
             -30,
@@ -15990,6 +16083,11 @@
           "name": "far",
           "aimingView": true,
           "fov": 55,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 5,
+          "lagScale": 0.1,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 25,
           "position": [
             0,
             -50,
@@ -16002,6 +16100,12 @@
           "fov": 45,
           "fps": true,
           "turnable": true,
+          "lagDampingRatio": 1.0,
+          "lagAngularFrequency": 40,
+          "lagScale": 0.015,
+          "maxLagDistance": 0.2,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 50,
           "alphaRange": [
             -120,
             120
@@ -16761,6 +16865,11 @@
         {
           "name": "near",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 10,
+          "lagScale": 0.15,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 20,
           "position": [
             0,
             -28,
@@ -16770,6 +16879,11 @@
         {
           "name": "far",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 5,
+          "lagScale": 0.1,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 25,
           "position": [
             0,
             -55,
@@ -16781,6 +16895,12 @@
           "aimingView": true,
           "fov": 45,
           "turnable": true,
+          "lagDampingRatio": 1.0,
+          "lagAngularFrequency": 40,
+          "lagScale": 0.015,
+          "maxLagDistance": 0.2,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 50,
           "position": [
             0,
             1.4,
@@ -17475,6 +17595,11 @@
         {
           "name": "near",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 10,
+          "lagScale": 0.15,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 20,
           "position": [
             0,
             -36,
@@ -17484,6 +17609,11 @@
         {
           "name": "far",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 5,
+          "lagScale": 0.1,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 25,
           "position": [
             0,
             -65,
@@ -17496,6 +17626,12 @@
           "fov": 45,
           "fps": true,
           "turnable": true,
+          "lagDampingRatio": 1.0,
+          "lagAngularFrequency": 40,
+          "lagScale": 0.015,
+          "maxLagDistance": 0.2,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 50,
           "alphaRange": [
             -120,
             120
@@ -18432,6 +18568,11 @@
         {
           "name": "near",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 10,
+          "lagScale": 0.15,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 20,
           "position": [
             0,
             -38,
@@ -18441,6 +18582,11 @@
         {
           "name": "far",
           "aimingView": true,
+          "lagDampingRatio": 0.5,
+          "lagAngularFrequency": 5,
+          "lagScale": 0.1,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 25,
           "position": [
             0,
             -65,
@@ -18453,6 +18599,12 @@
           "fov": 45,
           "fps": true,
           "turnable": true,
+          "lagDampingRatio": 1.0,
+          "lagAngularFrequency": 40,
+          "lagScale": 0.015,
+          "maxLagDistance": 0.2,
+          "rollLagDampingRatio": 1.0,
+          "rollLagAngularFrequency": 50,
           "alphaRange": [
             -120,
             120

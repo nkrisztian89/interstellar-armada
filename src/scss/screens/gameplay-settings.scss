@@ -25,3 +25,11 @@ h2.settings {
     margin-top: 0.2em;
     margin-bottom: 0.2em;
 }
+
+/* Matches height reduction to Selector .narrow */
+h2.settings.narrow {
+    @media screen and (min-width: 1920px) {
+        margin-top: 0.1em;
+        margin-bottom: 0.05em;
+    }
+}

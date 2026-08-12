@@ -197,6 +197,7 @@
             "defaultFighterViewNameOptions": ["near", "far", "cockpit"],
             "defaultShipViewName": "near",
             "defaultShipViewNameOptions": ["near", "far", "target"],
+            "cameraElasticity": 1,
             "targetViewName": "target",
             "targetChangeTransitionDuration": 300,
             "targetChangeTransitionStyle": "smooth",

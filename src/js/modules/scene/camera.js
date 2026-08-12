@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides a capable camera class to use with scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -68,7 +68,14 @@ define([
              * Default distance of the convergence point from the camera position for stereoscopic cameras, in meters.
              * @type Number
              */
-            DEFAULT_STEREOSCOPIC_CONVERGENCE_DISTANCE = 20;
+            DEFAULT_STEREOSCOPIC_CONVERGENCE_DISTANCE = 20,
+            /**
+             * When a camera position configuration's damping ratio is within this range of 1, it is treated as exactly critically damped
+             * (using the critically damped closed-form formula) to avoid the numerical instability of the underdamped / overdamped formulas
+             * close to their singularity at a damping ratio of 1.
+             * @type Number
+             */
+            CRITICAL_DAMPING_EPSILON = 0.0001;
     // #########################################################################
     /**
      * @class This class can update and compute the world position of a camera based on the related configuration settings, which it stores.
@@ -89,14 +96,28 @@ define([
      * @param {Number[3][2]} [confines] If given, the movement of the camera will be limited to the specified ranges on the 3 axes, 
      * respectively. It is possible to specify confinement on select axes only, in which case null should be passed as range for the other
      * axes.
-     * @param {Boolean} resetsWhenLeavingConfines Whether a reset to defaults should automatically be called whenever the camera position 
+     * @param {Boolean} resetsWhenLeavingConfines Whether a reset to defaults should automatically be called whenever the camera position
      * leaves the area determined by its confines (distance, X, Y or Z)
-     * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for 
-     * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (confine checks, object 
+     * @param {Number} [lagDampingRatio] If given (along with lagAngularFrequency), the camera position will not instantly follow this
+     * configuration's calculated target position, but elastically lag behind it, as if connected to it via a damped spring. 1 means
+     * critically damped (fastest approach with no overshoot), less than 1 means underdamped (elastic, overshoots the target before
+     * settling), more than 1 means overdamped (slower than critical damping, no overshoot). If not given (or 0), the camera position
+     * instantly follows the target with no lag.
+     * @param {Number} [lagAngularFrequency] If given (along with lagDampingRatio), determines how fast the position lag spring settles, in
+     * rad/s - higher is faster (less lag).
+     * @param {Number} [lagScale=1] A flat scalar multiplier applied to the position lag spring's offset from the target (i.e. the
+     * "lag vector") before it is added to the camera's target position, letting the visible amplitude of the lag be tuned independently
+     * of its timing (dampingRatio / angularFrequency). Also scaled by the camera's global elasticity setting.
+     * @param {Number} [maxLagDistance] If given, hard-caps the length of the position lag offset vector (after applying lagScale and elasticity)
+     * to this distance (in meters) before it is added to the camera's target position, without altering the internal spring state,
+     * so the spring calculation itself is unaffected, but the rendered camera position can never end up farther than this
+     * from the target.
+     * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for
+     * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (confine checks, object
      * cleanup). Such a copy can be made from a configuration and then use it to transition to the regular configuration which gets properly
      * updated to provide a smooth transition between the non-updated and updated state
      */
-    function CameraPositionConfiguration(fixed, turnsAroundObjects, movesRelativeToObject, followedObjects, startsWithRelativePosition, positionMatrix, distanceRange, confines, resetsWhenLeavingConfines, isTransitionConfiguration) {
+    function CameraPositionConfiguration(fixed, turnsAroundObjects, movesRelativeToObject, followedObjects, startsWithRelativePosition, positionMatrix, distanceRange, confines, resetsWhenLeavingConfines, lagDampingRatio, lagAngularFrequency, lagScale, maxLagDistance, isTransitionConfiguration) {
         /**
          * If true, the camera position can't be controlled by the player, but is automatically
          * calculated. The absolute position might still change e.g. if it is relative to objects
@@ -221,8 +242,28 @@ define([
          */
         this._resetsWhenLeavingConfines = resetsWhenLeavingConfines;
         /**
-         * If true, the configuration serves as a suitable starting point for transitions, as it will not perform major updates (resets, 
-         * changes) and the checks necessary for them (confine checks, object cleanup). 
+         * See the same parameter of the constructor.
+         * @type Number
+         */
+        this._lagDampingRatio = lagDampingRatio || 0;
+        /**
+         * See the same parameter of the constructor.
+         * @type Number
+         */
+        this._lagAngularFrequency = lagAngularFrequency || 0;
+        /**
+         * See the same parameter of the constructor.
+         * @type Number
+         */
+        this._lagScale = (lagScale !== undefined) ? lagScale : 1;
+        /**
+         * See the same parameter of the constructor.
+         * @type Number
+         */
+        this._maxLagDistance = maxLagDistance || 0;
+        /**
+         * If true, the configuration serves as a suitable starting point for transitions, as it will not perform major updates (resets,
+         * changes) and the checks necessary for them (confine checks, object cleanup).
          */
         this._isTransitionConfiguration = isTransitionConfiguration;
         /**
@@ -255,14 +296,18 @@ define([
      * @param {Number[3][2]} [confines] If given, the movement of the camera will be limited to the specified ranges on the 3 axes, 
      * respectively. It is possible to specify confinement on select axes only, in which case null should be passed as range for the other
      * axes.
-     * @param {Boolean} resetsWhenLeavingConfines Whether a reset to defaults should automatically be called whenever the camera position 
+     * @param {Boolean} resetsWhenLeavingConfines Whether a reset to defaults should automatically be called whenever the camera position
      * leaves the area determined by its confines (distance, X, Y or Z)
-     * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for 
-     * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (confine checks, object 
+     * @param {Number} [lagDampingRatio] See the same parameter of the constructor.
+     * @param {Number} [lagAngularFrequency] See the same parameter of the constructor.
+     * @param {Number} [lagScale=1] See the same parameter of the constructor.
+     * @param {Number} [maxLagDistance] See the same parameter of the constructor.
+     * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for
+     * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (confine checks, object
      * cleanup). Such a copy can be made from a configuration and then use it to transition to the regular configuration which gets properly
      * updated to provide a smooth transition between the non-updated and updated state
      */
-    CameraPositionConfiguration.prototype.init = function (fixed, turnsAroundObjects, movesRelativeToObject, followedObjects, startsWithRelativePosition, positionMatrix, distanceRange, confines, resetsWhenLeavingConfines, isTransitionConfiguration) {
+    CameraPositionConfiguration.prototype.init = function (fixed, turnsAroundObjects, movesRelativeToObject, followedObjects, startsWithRelativePosition, positionMatrix, distanceRange, confines, resetsWhenLeavingConfines, lagDampingRatio, lagAngularFrequency, lagScale, maxLagDistance, isTransitionConfiguration) {
         this._fixed = fixed;
         this._turnsAroundObjects = turnsAroundObjects;
         this._movesRelativeToObject = movesRelativeToObject;
@@ -285,6 +330,10 @@ define([
         this._minimumZ = (confines && confines[2]) ? confines[2][0] : 0;
         this._maximumZ = (confines && confines[2]) ? confines[2][1] : 0;
         this._resetsWhenLeavingConfines = resetsWhenLeavingConfines;
+        this._lagDampingRatio = lagDampingRatio || 0;
+        this._lagAngularFrequency = lagAngularFrequency || 0;
+        this._lagScale = (lagScale !== undefined) ? lagScale : 1;
+        this._maxLagDistance = maxLagDistance || 0;
         this._isTransitionConfiguration = isTransitionConfiguration;
         this._isStarting = true;
         this._camera = null;
@@ -311,6 +360,10 @@ define([
                     this._zIsConfined ? [this._minimumZ, this._maximumZ] : null
                 ],
                 this._resetsWhenLeavingConfines,
+                this._lagDampingRatio,
+                this._lagAngularFrequency,
+                this._lagScale,
+                this._maxLagDistance,
                 transitionCopy);
         result._relativePositionMatrix = mat.copy(this._relativePositionMatrix);
         result._worldPositionMatrix = mat.copy(this._worldPositionMatrix);
@@ -373,6 +426,37 @@ define([
         return objects ?
                 utils.arraysEqual(this._followedObjects.sort(), objects.sort()) :
                 ((this._followedObjects.length > 0) && !this._startsWithRelativePosition);
+    };
+    /**
+     * Returns the damping ratio to use for the elastic position follow lag spring, or 0 if the camera position should instantly follow
+     * this configuration's target position (no lag).
+     * @returns {Number}
+     */
+    CameraPositionConfiguration.prototype.getLagDampingRatio = function () {
+        return this._lagDampingRatio;
+    };
+    /**
+     * Returns the angular frequency (in rad/s) to use for the elastic position follow lag spring.
+     * @returns {Number}
+     */
+    CameraPositionConfiguration.prototype.getLagAngularFrequency = function () {
+        return this._lagAngularFrequency;
+    };
+    /**
+     * Returns the flat scalar multiplier applied to the position lag spring's offset from the target, before it is added to the target
+     * position to get the camera's actual position.
+     * @returns {Number}
+     */
+    CameraPositionConfiguration.prototype.getLagScale = function () {
+        return this._lagScale;
+    };
+    /**
+     * Returns the maximum length (in meters) the (already scaled) position lag offset vector is allowed to reach before being added to
+     * the target position, or 0 if it is not capped.
+     * @returns {Number}
+     */
+    CameraPositionConfiguration.prototype.getMaxLagDistance = function () {
+        return this._maxLagDistance;
     };
     /**
      * Returns the 3D vector describing the current location in space that is tracked by this camera configuration.
@@ -654,14 +738,21 @@ define([
      * @param {Number[2]} [betaRange=[DEFAULT_MIN_BETA, DEFAULT_MAX_BETA]] In FPS-mode, the lowest and highest possible values for the beta angle.
      * @param {String} [baseOrientation] (enum CameraOrientationConfiguration.BaseOrientation) What coordinate system should be 
      * taken as base when calculating the orientation in FPS-mode.
-     * @param {String} [pointToFallback] (enum CameraOrientationConfiguration.PointToFallback) In point-to mode, what orientation 
+     * @param {String} [pointToFallback] (enum CameraOrientationConfiguration.PointToFallback) In point-to mode, what orientation
      * calculation to use if no objects are specified to point towards to
-     * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for 
-     * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (object cleanup and fallback). 
-     * Such a copy can be made from a configuration and then use it to transition to the regular configuration which gets properly updated 
+     * @param {Number} [lagDampingRatio] If given (along with lagAngularFrequency), the camera's roll (rotation around the aim direction) will
+     * not instantly follow this configuration's calculated target roll, but elastically lag behind it, as if turning against a damped
+     * rotational spring. 1 means critically damped (fastest approach with no overshoot), less than 1 means underdamped (elastic,
+     * overshoots the target before settling), more than 1 means overdamped (slower than critical damping, no overshoot). If not given (or
+     * 0), the roll instantly follows the target with no lag. The aim direction itself is never lagged,  only the roll.
+     * @param {Number} [lagAngularFrequency] If given (along with lagDampingRatio), determines how fast the roll lag spring settles, in rad/s -
+     * higher is faster (less lag).
+     * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for
+     * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (object cleanup and fallback).
+     * Such a copy can be made from a configuration and then use it to transition to the regular configuration which gets properly updated
      * to provide a smooth transition between the non-updated and updated state
      */
-    function CameraOrientationConfiguration(fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, alphaRange, betaRange, baseOrientation, pointToFallback, isTransitionConfiguration) {
+    function CameraOrientationConfiguration(fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, alphaRange, betaRange, baseOrientation, pointToFallback, lagDampingRatio, lagAngularFrequency, isTransitionConfiguration) {
         /**
          * If true, the camera orientation can't be controlled by the player, but is automatically
          * calculated. The absolute orientation might still change e.g. if it is relative to objects
@@ -772,8 +863,18 @@ define([
          */
         this._pointToFallback = pointToFallback;
         /**
-         * If true, the configuration serves as a suitable starting point for transitions, as it will not perform major updates (resets, 
-         * changes) and the checks necessary for them (object cleanup, fallback). 
+         * See the same parameter of the constructor.
+         * @type Number
+         */
+        this._lagDampingRatio = lagDampingRatio || 0;
+        /**
+         * See the same parameter of the constructor.
+         * @type Number
+         */
+        this._lagAngularFrequency = lagAngularFrequency || 0;
+        /**
+         * If true, the configuration serves as a suitable starting point for transitions, as it will not perform major updates (resets,
+         * changes) and the checks necessary for them (object cleanup, fallback).
          */
         this._isTransitionConfiguration = isTransitionConfiguration;
         /**
@@ -838,14 +939,16 @@ define([
      * @param {Number[2]} [betaRange=[DEFAULT_MIN_BETA, DEFAULT_MAX_BETA]] In FPS-mode, the lowest and highest possible values for the beta angle.
      * @param {String} [baseOrientation] (enum CameraOrientationConfiguration.BaseOrientation) What coordinate system should be 
      * taken as base when calculating the orientation in FPS-mode.
-     * @param {String} [pointToFallback] (enum CameraOrientationConfiguration.PointToFallback) In point-to mode, what orientation 
+     * @param {String} [pointToFallback] (enum CameraOrientationConfiguration.PointToFallback) In point-to mode, what orientation
      * calculation to use if no objects are specified to point towards to
-     * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for 
-     * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (object cleanup and fallback). 
-     * Such a copy can be made from a configuration and then use it to transition to the regular configuration which gets properly updated 
+     * @param {Number} [lagDampingRatio] See the same parameter of the constructor.
+     * @param {Number} [lagAngularFrequency] See the same parameter of the constructor.
+     * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for
+     * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (object cleanup and fallback).
+     * Such a copy can be made from a configuration and then use it to transition to the regular configuration which gets properly updated
      * to provide a smooth transition between the non-updated and updated state
      */
-    CameraOrientationConfiguration.prototype.init = function (fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, alphaRange, betaRange, baseOrientation, pointToFallback, isTransitionConfiguration) {
+    CameraOrientationConfiguration.prototype.init = function (fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, alphaRange, betaRange, baseOrientation, pointToFallback, lagDampingRatio, lagAngularFrequency, isTransitionConfiguration) {
         this._fixed = fixed;
         this._pointsTowardsObjects = pointsTowardsObjects;
         this._fps = fps;
@@ -864,6 +967,8 @@ define([
         this._maxBeta = (betaRange && (betaRange[1] !== undefined)) ? betaRange[1] : DEFAULT_MAX_BETA;
         this._baseOrientation = baseOrientation;
         this._pointToFallback = pointToFallback;
+        this._lagDampingRatio = lagDampingRatio || 0;
+        this._lagAngularFrequency = lagAngularFrequency || 0;
         this._isTransitionConfiguration = isTransitionConfiguration;
         this._camera = null;
     };
@@ -887,6 +992,8 @@ define([
                 [this._minBeta, this._maxBeta],
                 this._baseOrientation,
                 this._pointToFallback,
+                this._lagDampingRatio,
+                this._lagAngularFrequency,
                 transitionCopy);
         result._relativeOrientationMatrix = mat.copy(this._relativeOrientationMatrix);
         result._worldOrientationMatrix = mat.copy(this._worldOrientationMatrix);
@@ -929,6 +1036,29 @@ define([
      */
     CameraOrientationConfiguration.prototype.isFPS = function () {
         return this._fps;
+    };
+    /**
+     * Returns whether this configuration calculates its orientation so that it always faces the followed objects or a point
+     * offset from them (as opposed to mirroring their orientation, or being independent of them).
+     * @returns {Boolean}
+     */
+    CameraOrientationConfiguration.prototype.pointsTowardsObjects = function () {
+        return this._pointsTowardsObjects;
+    };
+    /**
+     * Returns the damping ratio to use for the elastic (roll-only) orientation follow lag spring, or 0 if the camera orientation should
+     * instantly follow this configuration's target orientation (no lag).
+     * @returns {Number}
+     */
+    CameraOrientationConfiguration.prototype.getLagDampingRatio = function () {
+        return this._lagDampingRatio;
+    };
+    /**
+     * Returns the angular frequency (in rad/s) to use for the elastic (roll-only) orientation follow lag spring.
+     * @returns {Number}
+     */
+    CameraOrientationConfiguration.prototype.getLagAngularFrequency = function () {
+        return this._lagAngularFrequency;
     };
     /**
      * If no parameter is given, returns whether the configuration is set to follow any objects. If a list of objects is given, returns 
@@ -978,11 +1108,10 @@ define([
             for (i = 0; i < this._followedObjects.length; i++) {
                 this._followedObjects[i].addPositionToVector(positionVector);
             }
-            positionVector = [
-                positionVector[0] / this._followedObjects.length,
-                positionVector[1] / this._followedObjects.length,
-                positionVector[2] / this._followedObjects.length
-            ];
+            i = 1 / this._followedObjects.length;
+            positionVector[0] *= i;
+            positionVector[1] *= i;
+            positionVector[2] *= i;
         }
         return positionVector;
     };
@@ -1042,7 +1171,7 @@ define([
      * in point-to mode, as a fallback base orientation
      */
     CameraOrientationConfiguration.prototype._calculateWorldOrientationMatrix = function (worldPositionMatrix, positionFollowedObjectOrientationMatrix) {
-        var baseOrientationMatrix, dirTowardsObject, axis,
+        var dirTowardsObject, axis, axisRef,
                 calculateRelative = function (followedOrientationMatrix) {
                     // look in direction y instead of z:
                     mat.setProd3x3SubOf4(this._worldOrientationMatrix,
@@ -1066,63 +1195,40 @@ define([
                     application.crash();
                 } else {
                     dirTowardsObject = vec.normalize3(vec.diffVec3Mat4Aux(this.getFollowedObjectsPositionVector(), worldPositionMatrix));
+                    // choose the reference "up" vector to build the rest of the basis from, depending on the mode - this reference
+                    // does not need to be (and in general will not be) orthogonal to dirTowardsObject, it only needs to not be
+                    // parallel to it
                     if (!this._fps) {
-                        this._worldOrientationMatrix[8] = dirTowardsObject[0];
-                        this._worldOrientationMatrix[9] = dirTowardsObject[1];
-                        this._worldOrientationMatrix[10] = dirTowardsObject[2];
-                        this._worldOrientationMatrix[11] = 0;
-                        axis = vec.cross3Aux(vec.UNIT3_X, dirTowardsObject);
-                        this._worldOrientationMatrix[4] = axis[0];
-                        this._worldOrientationMatrix[5] = axis[1];
-                        this._worldOrientationMatrix[6] = axis[2];
-                        this._worldOrientationMatrix[7] = 0;
-                        axis = vec.cross3Aux(dirTowardsObject, axis);
-                        this._worldOrientationMatrix[0] = axis[0];
-                        this._worldOrientationMatrix[1] = axis[1];
-                        this._worldOrientationMatrix[2] = axis[2];
-                        this._worldOrientationMatrix[3] = 0;
-                        this._worldOrientationMatrix[12] = 0;
-                        this._worldOrientationMatrix[13] = 0;
-                        this._worldOrientationMatrix[14] = 0;
-                        this._worldOrientationMatrix[15] = 1;
-                        mat.correctOrthogonal4(this._worldOrientationMatrix);
+                        axisRef = vec.cross3Aux(vec.UNIT3_X, dirTowardsObject); // use the world coordinate system as basis
                     } else {
                         switch (this._baseOrientation) {
                             case CameraOrientationConfiguration.BaseOrientation.WORLD:
-                                baseOrientationMatrix = null;
+                                axisRef = vec.UNIT3_Z;
                                 break;
                             case CameraOrientationConfiguration.BaseOrientation.POSITION_FOLLOWED_OBJECTS:
-                                baseOrientationMatrix = positionFollowedObjectOrientationMatrix || null;
+                                axisRef = positionFollowedObjectOrientationMatrix ? vec.getRowC43Aux(positionFollowedObjectOrientationMatrix) : vec.UNIT3_Z;
                                 break;
                             case CameraOrientationConfiguration.BaseOrientation.ORIENTATION_FOLLOWED_OBJECT:
-                                baseOrientationMatrix = this.followsObjects() ? this.getFollowedOrientationMatrix() : null;
+                                axisRef = this.followsObjects() ? vec.getRowC43Aux(this.getFollowedOrientationMatrix()) : vec.UNIT3_Z;
                                 break;
                             default:
                                 application.crash();
+                                axisRef = vec.UNIT3_Z;
                         }
-                        if (baseOrientationMatrix) {
-                            dirTowardsObject = vec.prodMat4Vec3Aux(baseOrientationMatrix, dirTowardsObject);
-                        } else {
-                            baseOrientationMatrix = mat.IDENTITY4;
-                        }
-                        this._alpha = ((dirTowardsObject[0] !== 0) || (dirTowardsObject[1] !== 0)) ?
-                                vec.angle2yCapped(dirTowardsObject[0], dirTowardsObject[1]) :
-                                0;
-                        if (dirTowardsObject[0] < 0) {
-                            this._alpha = -this._alpha;
-                        }
-                        mat.setProd3x3SubOf4(this._worldOrientationMatrix, mat.ROTATION_X_270, mat.rotationZ4Aux(this._alpha));
-                        this._beta = vec.angle3uCapped(vec.getRowC43ScaledAux(this._worldOrientationMatrix, -1), dirTowardsObject);
-                        if (dirTowardsObject[2] > 0) {
-                            this._beta = -this._beta;
-                        }
-                        mat.setProd3x3SubOf4(this._worldOrientationMatrix,
-                                mat.prod3x3SubOf4Aux(
-                                        mat.ROTATION_X_270,
-                                        mat.rotationX4Aux(this._beta)),
-                                mat.rotationZ4Aux(this._alpha));
-                        mat.mulRotationRotation4(this._worldOrientationMatrix, baseOrientationMatrix);
                     }
+                    // row C (indices 8-10) is the camera's local Z axis, which points towards the viewer (out of the screen), so it is
+                    // the negative of the direction the camera is aiming
+                    this._worldOrientationMatrix[8] = -dirTowardsObject[0];
+                    this._worldOrientationMatrix[9] = -dirTowardsObject[1];
+                    this._worldOrientationMatrix[10] = -dirTowardsObject[2];
+                    axis = vec.normalize3(vec.cross3Aux(dirTowardsObject, axisRef));
+                    this._worldOrientationMatrix[0] = axis[0];
+                    this._worldOrientationMatrix[1] = axis[1];
+                    this._worldOrientationMatrix[2] = axis[2];
+                    axis = vec.cross3Aux(axis, dirTowardsObject);
+                    this._worldOrientationMatrix[4] = axis[0];
+                    this._worldOrientationMatrix[5] = axis[1];
+                    this._worldOrientationMatrix[6] = axis[2];
                 }
             }
         } else {
@@ -1163,6 +1269,18 @@ define([
         if (!this._worldOrientationMatrixValid) {
             this._calculateWorldOrientationMatrix(worldPositionMatrix, positionFollowedObjectOrientationMatrix);
         }
+        return this._worldOrientationMatrix;
+    };
+    /**
+     * Forces a recalculation of the world orientation matrix using the given world position matrix, bypassing the cache - used when the
+     * actual (e.g. position-lag-spring-adjusted) camera position differs from the position this configuration itself calculated, so that
+     * "points towards" configurations aim precisely from where the camera will actually be rendered this frame.
+     * @param {Float32Array} worldPositionMatrix
+     * @param {Float32Array} positionFollowedObjectOrientationMatrix
+     * @returns {Float32Array}
+     */
+    CameraOrientationConfiguration.prototype.recalculateWorldOrientationMatrix = function (worldPositionMatrix, positionFollowedObjectOrientationMatrix) {
+        this._calculateWorldOrientationMatrix(worldPositionMatrix, positionFollowedObjectOrientationMatrix);
         return this._worldOrientationMatrix;
     };
     /**
@@ -1505,11 +1623,95 @@ define([
         return result;
     };
     /**
+     * Returns whether this configuration calculates its orientation so that it always faces the followed objects. See
+     * CameraOrientationConfiguration.prototype.pointsTowardsObjects.
+     * @returns {Boolean}
+     */
+    CameraConfiguration.prototype.orientationPointsTowardsObjects = function () {
+        return this._orientationConfiguration.pointsTowardsObjects();
+    };
+    /**
+     * Forces a recalculation of the orientation matrix using the given world position matrix instead of this configuration's own
+     * calculated position - see CameraOrientationConfiguration.prototype.recalculateWorldOrientationMatrix.
+     * @param {Float32Array} worldPositionMatrix
+     */
+    CameraConfiguration.prototype.recalculateOrientationForPosition = function (worldPositionMatrix) {
+        this.setOrientationMatrix(this._orientationConfiguration.recalculateWorldOrientationMatrix(
+            worldPositionMatrix,
+            this._positionConfiguration.followsObjects() ?
+                this._positionConfiguration.getFollowedObjectOrientationMatrix() :
+                null));
+    };
+    /**
      * Returns whether the camera position is set to follow any objects in this configuration.
      * @returns {Boolean}
      */
     CameraConfiguration.prototype.positionFollowsObjects = function () {
         return this._positionConfiguration.followsObjects();
+    };
+    /**
+     * Returns the position configuration used by this camera configuration.
+     * Used by Camera.update() to reach the position configuration's own pure lag getters directly, bypassing the passthrough
+     * getters below, so those hot-path calls can also be inlined in release builds.
+     * @returns {CameraPositionConfiguration}
+     */
+    CameraConfiguration.prototype.getPositionConfiguration = function () {
+        return this._positionConfiguration;
+    };
+    /**
+     * Returns the orientation configuration used by this camera configuration. See also getPositionConfiguration.
+     * @returns {CameraOrientationConfiguration}
+     */
+    CameraConfiguration.prototype.getOrientationConfiguration = function () {
+        return this._orientationConfiguration;
+    };
+    /**
+     * Returns the damping ratio to use for the elastic position follow lag spring, or 0 if the camera position should instantly follow
+     * this configuration's target position (no lag). See CameraPositionConfiguration.prototype.getLagDampingRatio.
+     * @returns {Number}
+     */
+    CameraConfiguration.prototype.getPositionLagDampingRatio = function () {
+        return this._positionConfiguration.getLagDampingRatio();
+    };
+    /**
+     * Returns the angular frequency (in rad/s) to use for the elastic position follow lag spring. See
+     * CameraPositionConfiguration.prototype.getLagAngularFrequency.
+     * @returns {Number}
+     */
+    CameraConfiguration.prototype.getPositionLagAngularFrequency = function () {
+        return this._positionConfiguration.getLagAngularFrequency();
+    };
+    /**
+     * Returns the flat scalar multiplier applied to the position lag spring's offset from the target. See
+     * CameraPositionConfiguration.prototype.getLagScale.
+     * @returns {Number}
+     */
+    CameraConfiguration.prototype.getPositionLagScale = function () {
+        return this._positionConfiguration.getLagScale();
+    };
+    /**
+     * Returns the maximum length (in meters) the position lag offset vector is allowed to reach, or 0 if it is not capped. See
+     * CameraPositionConfiguration.prototype.getMaxLagDistance.
+     * @returns {Number}
+     */
+    CameraConfiguration.prototype.getMaxPositionLagDistance = function () {
+        return this._positionConfiguration.getMaxLagDistance();
+    };
+    /**
+     * Returns the damping ratio to use for the elastic roll follow lag spring, or 0 if the camera roll should instantly follow this
+     * configuration's target roll (no lag). See CameraOrientationConfiguration.prototype.getLagDampingRatio.
+     * @returns {Number}
+     */
+    CameraConfiguration.prototype.getOrientationLagDampingRatio = function () {
+        return this._orientationConfiguration.getLagDampingRatio();
+    };
+    /**
+     * Returns the angular frequency (in rad/s) to use for the elastic roll follow lag spring. See
+     * CameraOrientationConfiguration.prototype.getLagAngularFrequency.
+     * @returns {Number}
+     */
+    CameraConfiguration.prototype.getOrientationLagAngularFrequency = function () {
+        return this._orientationConfiguration.getLagAngularFrequency();
     };
     /**
      * Returns whether the camera orientation is set to follow any objects in this configuration.
@@ -1591,6 +1793,103 @@ define([
                 fov, [minFOV, maxFOV],
                 span);
     }
+    // -------------------------------------------------------------------------
+    // Functions that implement a damped spring for lagging the camera position and orientation.
+    // Source: the closed-form damped harmonic oscillator solution, as derived by Ryan Juckett, "Damped Springs"
+    // (https://www.ryanjuckett.com/damped-springs/), specialized to the critically / under- / over-damped cases.
+    /**
+     * @typedef {Object} DampSpringCoefficients
+     * @property {Number} angularFrequency The angular frequency (rad/s) used to calculate these coefficients.
+     * @property {Number} dampingRatio The damping ratio used to calculate these coefficients.
+     * @property {Number} mode 0 = critically damped, -1 = underdamped, 1 = overdamped
+     * @property {Number} [alpha] For underdamped springs: alpha = omega * sqrt(1 - zeta^2)
+     * @property {Number} [beta] For overdamped springs: beta = omega * sqrt(zeta^2 - 1)
+     * @property {Number} [r1] For overdamped springs: r1 = -zeta*omega + beta
+     * @property {Number} [r2] For overdamped springs: r2 = -zeta*omega - beta
+     */
+    /**
+     * Precomputes the coefficients needed to repeatedly evaluate a damped spring (see evaluateDampSpring) for a fixed angularFrequency
+     * and dampingRatio, so the setup work that does not depend on dt (square roots, choosing which of the 3 closed-form branches
+     * applies) only has to happen once when the configuration is set, instead of on every evaluation.
+     * @param {DampSpringCoefficients} coefficients Object to write the calculated coefficients into.
+     * @param {Number} angularFrequency (rad/s) Determines how fast the spring oscillates / settles - higher is faster.
+     * @param {Number} dampingRatio 1 = critically damped (fastest approach with no overshoot), less than 1 = underdamped (oscillates,
+     * overshooting the target before settling), more than 1 = overdamped (approaches without overshoot, slower than critical damping).
+     */
+    function prepareDampSpring(coefficients, angularFrequency, dampingRatio) {
+        coefficients.angularFrequency = angularFrequency;
+        coefficients.dampingRatio = dampingRatio;
+        if (Math.abs(dampingRatio - 1) < CRITICAL_DAMPING_EPSILON) {
+            coefficients.mode = 0; // critically damped (repeated real root)
+        } else if (dampingRatio < 1) {
+            coefficients.mode = -1; // underdamped (complex roots)
+            coefficients.alpha = angularFrequency * Math.sqrt(1 - dampingRatio * dampingRatio);
+        } else {
+            coefficients.mode = 1; // overdamped (distinct real roots r1, r2)
+            coefficients.beta = angularFrequency * Math.sqrt(dampingRatio * dampingRatio - 1);
+            coefficients.r1 = -dampingRatio * angularFrequency + coefficients.beta;
+            coefficients.r2 = -dampingRatio * angularFrequency - coefficients.beta;
+        }
+    }
+    /**
+     * Advances a damped spring towards a target value, for a single scalar, writing the result into the passed result array instead of
+     * allocating a new one. Framerate independent. See prepareDampSpring for the source of the underlying formulas.
+     * @param {DampSpringCoefficients} coefficients As calculated by prepareDampSpring(), for the desired angularFrequency and dampingRatio.
+     * @param {Number} y0 The current (smoothed) value.
+     * @param {Number} v0 The current rate of change of the smoothed value.
+     * @param {Number} target The value that is being followed.
+     * @param {Number} dt Elapsed time, in seconds.
+     * @param {Number[2]} result The [value, velocity] pair at t = dt is written into this array.
+     */
+    function evaluateDampSpring(coefficients, y0, v0, target, dt, result) {
+        var y = y0 - target, angularFrequency = coefficients.angularFrequency, dampingRatio = coefficients.dampingRatio,
+                c, exp, exp2, cosAt, sinAt, a, b;
+        switch (coefficients.mode) {
+            case 0:
+                // critically damped: y(t) = (y0 + (v0 + omega * y0) * t) * exp(-omega * t)
+                exp = Math.exp(-angularFrequency * dt);
+                c = v0 + angularFrequency * y;
+                result[0] = target + (y + c * dt) * exp;
+                result[1] = (c * (1 - angularFrequency * dt) - angularFrequency * y) * exp;
+                break;
+            case -1:
+                // underdamped: y(t) = exp(-zeta*omega*t) * (y0 * cos(alpha*t) + ((v0 + zeta*omega*y0) / alpha) * sin(alpha*t))
+                exp = Math.exp(-dampingRatio * angularFrequency * dt);
+                cosAt = Math.cos(coefficients.alpha * dt);
+                sinAt = Math.sin(coefficients.alpha * dt);
+                b = (v0 + dampingRatio * angularFrequency * y) / coefficients.alpha;
+                result[0] = target + exp * (y * cosAt + b * sinAt);
+                result[1] = exp * (v0 * cosAt - (y * coefficients.alpha + b * dampingRatio * angularFrequency) * sinAt);
+                break;
+            default:
+                // overdamped: y(t) = a * exp(r1*t) + b * exp(r2*t)
+                a = (v0 - coefficients.r2 * y) / (2 * coefficients.beta);
+                b = y - a;
+                exp = Math.exp(coefficients.r1 * dt);
+                exp2 = Math.exp(coefficients.r2 * dt);
+                result[0] = target + a * exp + b * exp2;
+                result[1] = a * coefficients.r1 * exp + b * coefficients.r2 * exp2;
+        }
+    }
+    /**
+     * Advances a damped spring towards a target value, for a 3D vector, in place, by applying evaluateDampSpring independently to each
+     * axis, reusing the same temp result array for all three (so no new array is allocated). See evaluateDampSpring for details
+     * (framerate independence, stability, coefficient caching).
+     * @param {Number[3]} position The current (smoothed) value, will be updated in place to its value at t = dt.
+     * @param {Number[3]} velocity The current rate of change of the smoothed value, will be updated in place.
+     * @param {Number[3]} target The value that is being followed.
+     * @param {Object} coefficients As returned by prepareDampSpring().
+     * @param {Number} dt Elapsed time, in seconds.
+     * @param {Number[2]} temp A reusable 2-element array (its contents do not need to be preserved between calls).
+     */
+    function dampSpringVector3(position, velocity, target, coefficients, dt, temp) {
+        var i;
+        for (i = 0; i < 3; i++) {
+            evaluateDampSpring(coefficients, position[i], velocity[i], target[i], dt, temp);
+            position[i] = temp[0];
+            velocity[i] = temp[1];
+        }
+    }
     // #########################################################################
     /**
      * @class A virtual camera that can be used to render a scene from a specific viewpoint. The position, orientation and field of view
@@ -1602,11 +1901,12 @@ define([
      * @param {Boolean} usesVerticalValues Whether to consider the set FOV and span values as vertical (true) or horizontal (false)
      * @param {Number} viewDistance Objects are visible up to this distance when rendered using this camera. (in meters)
      * @param {CameraConfiguration} configuration The starting configuration of the camera. There is no default, should not be null!
-     * @param {Number} [transitionDuration=0] The time the camera should take to transition from one configuration to another by default, in 
+     * @param {Number} [transitionDuration=0] The time the camera should take to transition from one configuration to another by default, in
      * milliseconds.
      * @param {String} [transitionStyle=NONE] (enum Camera.TransitionStyle) The style to use for transitions by default.
+     * @param {Number} [elasticity=1] Scales the position and roll follow lag. At 0, disables the lag completely.
      */
-    function Camera(scene, aspect, usesVerticalValues, viewDistance, configuration, transitionDuration, transitionStyle) {
+    function Camera(scene, aspect, usesVerticalValues, viewDistance, configuration, transitionDuration, transitionStyle, elasticity) {
         /**
          * An internal 3D object representing the position and orientation of the camera.
          * @type Object3D
@@ -1690,13 +1990,123 @@ define([
          */
         this._angularVelocityVector = [0, 0, 0];
         /**
-         * A stored value of the previous world position of the followed object(s), so that the camera velocity can be calculated if the 
+         * A stored value of the previous world position of the followed object(s), so that the camera velocity can be calculated if the
          * camera is following objects.
          * @type Number[3]
          */
         this._previousFollowedPositionVector = null;
         /**
-         * The stored value of the 4x4 perspective matrix calculated from the properties of the camera. 
+         * See the same parameter of the constructor.
+         * @type Number
+         */
+        this._elasticity = (elasticity !== undefined) ? elasticity : 1;
+        /**
+         * The current position of the camera position follow lag spring. Null whenever the spring needs to be reseeded (e.g.
+         * right after a configuration switch), in which case it gets initialized to the current configuration's target position on the
+         * next update.
+         * @type Number[3]
+         */
+        this._springPositionVector = null;
+        /**
+         * The current velocity of the camera position follow lag spring.
+         * @type Number[3]
+         */
+        this._springVelocityVector = [0, 0, 0];
+        /**
+         * The current "up" vector of the camera orientation follow lag spring - always kept perpendicular to the
+         * configuration's current target aim direction. Null whenever the spring needs to be reseeded (e.g. right after a configuration
+         * switch), in which case it gets initialized to the current configuration's target "up" on the next update. Only the roll
+         * (rotation around the aim direction) is spring-lagged; the aim direction itself always instantly follows the target.
+         * @type Number[3]
+         */
+        this._springUpVector = null;
+        /**
+         * The current angular speed at which the camera orientation follow lag spring's remaining roll gap is closing.
+         * @type Number
+         */
+        this._springRollVelocity = 0;
+        /**
+         * Reusable vector, filled with the current configuration's target position each frame, to avoid allocating a new array
+         * for it every frame (see update()).
+         * @type Number[3]
+         */
+        this._targetPositionVector = [0, 0, 0];
+        /**
+         * Reusable vector that holds the (elasticity- and lagScale-scaled, maxLagDistance-capped) position lag offset,
+         * and then the final rendered camera position (target + offset), each frame (see update()).
+         * @type Number[3]
+         */
+        this._renderedPositionVector = [0, 0, 0];
+        /**
+         * Caches the coefficients (as returned by prepareDampSpring()) for the position lag spring, so they only need to be recalculated
+         * when the configuration's dampingRatio or angularFrequency actually changes, instead of every frame.
+         * @type DampSpringCoefficients
+         */
+        this._positionSpringCoefficients = {
+            angularFrequency: 0,
+            dampingRatio: 0,
+            mode: 0,
+            alpha: 0,
+            beta: 0,
+            r1: 0,
+            r2: 0
+        };
+        /**
+         * Reusable vector, filled with the target aim (forward) direction each frame, to avoid allocating a new array for it
+         * every frame - either the current configuration's target (for the roll lag spring) or the interpolated transition orientation's
+         * (for fading out the transition's leftover roll deviation), the two uses being mutually exclusive within a single update() call.
+         * @type Number[3]
+         */
+        this._rollTargetForward = [0, 0, 0];
+        /**
+         * Reusable vector, filled with the target "up" direction each frame, to avoid allocating a new array for it every frame.
+         * See _rollTargetForward for its two (mutually exclusive) uses.
+         * @type Number[3]
+         */
+        this._rollTargetUp = [0, 0, 0];
+        /**
+         * Reusable vector for the roll lag calculations, sequentially reused within a single update() call for more than one
+         * purpose (first the reprojected spring "up" vector, then the final rendered "up" vector), to avoid allocating new arrays.
+         * @type Number[3]
+         */
+        this._rollUp = [0, 0, 0];
+        /**
+         * Caches the coefficients (as returned by prepareDampSpring()) for the roll lag spring, so they only need to be recalculated
+         * when the configuration's rollDampingRatio or rollAngularFrequency actually changes, instead of every frame.
+         * @type DampSpringCoefficients
+         */
+        this._rollSpringCoefficients = {
+            angularFrequency: 0,
+            dampingRatio: 0,
+            mode: 0,
+            alpha: 0,
+            beta: 0,
+            r1: 0,
+            r2: 0
+        };
+        /**
+         * Reusable 2-element scratch array used to receive the [value, velocity] result of evaluateDampSpring() / dampSpringVector3()
+         * calls, so no new array needs to be allocated for it every frame (see update()).
+         * @type Number[2]
+         */
+        this._dampSpringResult = [0, 0];
+        /**
+         * Captured at the start of a configuration transition (see startTransitionToConfiguration): the difference between the camera's
+         * actual (spring-lagged) rendered position and the outgoing configuration's raw target position at that moment. During the
+         * transition, this offset is faded to zero (scaled by (1 - transition progress)) and added on top of the interpolated position,
+         * so the transition starts exactly from the current visual state instead of abruptly snapping to the raw target.
+         * @type Number[3]
+         */
+        this._transitionPositionLagOffset = [0, 0, 0];
+        /**
+         * Captured at the start of a configuration transition, analogously to _transitionPositionOffset: the angle (in radians) by which
+         * the camera's actual rendered "up" direction deviates (around the aim direction) from the outgoing configuration's raw target
+         * "up" at that moment, due to roll lag. Faded to zero the same way during the transition.
+         * @type Number
+         */
+        this._transitionRollLagDeviationAngle = 0;
+        /**
+         * The stored value of the 4x4 perspective matrix calculated from the properties of the camera.
          * @type Float32Array
          */
         this._projectionMatrix = mat.identity4();
@@ -1872,11 +2282,12 @@ define([
      * @param {Boolean} usesVerticalValues Whether to consider the set FOV and span values as vertical (true) or horizontal (false)
      * @param {Number} viewDistance Objects are visible up to this distance when rendered using this camera. (in meters)
      * @param {CameraConfiguration} configuration The starting configuration of the camera. There is no default, should not be null!
-     * @param {Number} [transitionDuration=0] The time the camera should take to transition from one configuration to another by default, in 
+     * @param {Number} [transitionDuration=0] The time the camera should take to transition from one configuration to another by default, in
      * milliseconds.
      * @param {String} [transitionStyle=NONE] (enum Camera.TransitionStyle) The style to use for transitions by default.
+     * @param {Number} [elasticity=1] See the same parameter of the constructor.
      */
-    Camera.prototype.init = function (scene, aspect, usesVerticalValues, viewDistance, configuration, transitionDuration, transitionStyle) {
+    Camera.prototype.init = function (scene, aspect, usesVerticalValues, viewDistance, configuration, transitionDuration, transitionStyle, elasticity) {
         this._object3D.init(mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4);
         this._scene = scene;
         this._aspect = aspect;
@@ -1894,6 +2305,37 @@ define([
         this._controlledVelocityVector = [0, 0, 0];
         this._angularVelocityVector = [0, 0, 0];
         this._previousFollowedPositionVector = null;
+        this._elasticity = (elasticity !== undefined) ? elasticity : 1;
+        this._springPositionVector = null;
+        this._springVelocityVector = [0, 0, 0];
+        this._springUpVector = null;
+        this._springRollVelocity = 0;
+        this._targetPositionVector = [0, 0, 0];
+        this._renderedPositionVector = [0, 0, 0];
+        this._positionSpringCoefficients = {
+            angularFrequency: 0,
+            dampingRatio: 0,
+            mode: 0,
+            alpha: 0,
+            beta: 0,
+            r1: 0,
+            r2: 0
+        };
+        this._rollTargetForward = [0, 0, 0];
+        this._rollTargetUp = [0, 0, 0];
+        this._rollUp = [0, 0, 0];
+        this._rollSpringCoefficients = {
+            angularFrequency: 0,
+            dampingRatio: 0,
+            mode: 0,
+            alpha: 0,
+            beta: 0,
+            r1: 0,
+            r2: 0
+        };
+        this._dampSpringResult = [0, 0];
+        this._transitionPositionLagOffset = [0, 0, 0];
+        this._transitionRollLagDeviationAngle = 0;
         mat.setIdentity4(this._projectionMatrix);
         this._projectionMatrixValid = false;
         this._followedNode = null;
@@ -1927,6 +2369,20 @@ define([
     Camera.prototype.setViewDistance = function (value) {
         this._viewDistance = value;
         this._updateProjectionMatrix(this._fov, this._span);
+    };
+    /**
+     * Returns the current elasticity factor of the camera. See the elasticity parameter of the constructor.
+     * @returns {Number}
+     */
+    Camera.prototype.getElasticity = function () {
+        return this._elasticity;
+    };
+    /**
+     * Sets a new elasticity factor for the camera. See the elasticity parameter of the constructor.
+     * @param {Number} value
+     */
+    Camera.prototype.setElasticity = function (value) {
+        this._elasticity = value;
     };
     /**
      * Returns the distance of the near cutting plane of the camera's view frustum from its focal point
@@ -2243,6 +2699,20 @@ define([
                 this.getSpan());
     };
     /**
+     * Returns the angle (in radians) by which the camera's current rendered "up" direction deviates (rotated around the aim direction)
+     * from the "up" direction described by the given orientation matrix. Used to capture the roll lag spring's current contribution when
+     * starting a configuration transition (see startTransitionToConfiguration), so it can be smoothly faded out instead of dropped
+     * abruptly.
+     * @param {Float32Array} orientationMatrix
+     * @returns {Number}
+     */
+    Camera.prototype._getRollDeviationAngle = function (orientationMatrix) {
+        var forward = vec.getRowC43Aux(orientationMatrix),
+                up = vec.getRowB43Aux(orientationMatrix),
+                currentUp = vec.getRowB43Aux(this.getCameraOrientationMatrix());
+        return Math.atan2(vec.dot3(vec.cross3Aux(up, currentUp), forward), vec.dot3(up, currentUp));
+    };
+    /**
      * Directly sets a new configuration to use for this camera. The new configuration is applied instantly, without transition.
      * @param {CameraConfiguration} configuration 
      * @param {Boolean} [doNotResetConfiguration=false] If true, the automatic configuration reset will be suppressed 
@@ -2253,6 +2723,8 @@ define([
         }
         this._currentConfiguration = configuration;
         this._previousConfiguration = null;
+        this._springPositionVector = null;
+        this._springUpVector = null;
         this._updateFOV();
         this._updateSpan();
         this._updateProjectionMatrix(this._fov, this._span);
@@ -2275,8 +2747,19 @@ define([
             this.setConfiguration(configuration);
         } else {
             if (this._previousConfiguration && this._currentConfiguration) {
+                // interrupting a transition already in progress: the new starting point is an exact snapshot of the current (already
+                // blended) rendered state, so there is no separate spring offset left over to preserve
                 this._previousConfiguration = this._getFreeCameraConfiguration(false);
+                this._transitionPositionLagOffset[0] = 0;
+                this._transitionPositionLagOffset[1] = 0;
+                this._transitionPositionLagOffset[2] = 0;
+                this._transitionRollLagDeviationAngle = 0;
             } else {
+                // capture how far the camera's actual (spring-lagged) rendered position and roll currently are from the outgoing
+                // configuration's raw target, so the transition can start exactly from the current visual state instead of abruptly
+                // snapping to the raw target - update() fades this captured offset to zero over the course of the transition
+                vec.setDiff3(this._transitionPositionLagOffset, this.getCameraPositionVector(), this._currentConfiguration.getPositionVector());
+                this._transitionRollLagDeviationAngle = this._getRollDeviationAngle(this._currentConfiguration.getOrientationMatrix());
                 this._previousConfiguration = this._currentConfiguration;
             }
             if (this._currentConfiguration) {
@@ -2284,6 +2767,9 @@ define([
             }
             this._currentConfiguration = configuration;
             this._currentConfiguration.setCamera(this);
+            // reset the springs - their coefficients need to be recalculated for the new configuration
+            this._springPositionVector = null;
+            this._springUpVector = null;
             this._transitionDuration = duration === undefined ? this._defaultTransitionDuration : duration;
             this._transitionElapsedTime = 0;
             this._transitionStyle = style === undefined ? this._defaultTransitionStyle : style;
@@ -2381,6 +2867,9 @@ define([
             }
             if (this._previousConfiguration && !this._previousConfiguration.positionFollowsObjects()) {
                 this._previousConfiguration.moveByVector(result, true);
+            }
+            if (this._springPositionVector) {
+                vec.add3(this._springPositionVector, result);
             }
         }
         return result;
@@ -2606,8 +3095,10 @@ define([
      */
     Camera.prototype.update = function (dt) {
         var startPositionVector, endPositionVector, previousPositionVector,
-                relativeTransitionRotationMatrix, rotations,
-                transitionProgress, m;
+                relativeTransitionRotationMatrix, rotations, targetOrientationMatrix,
+                transitionProgress, m, positionConfiguration, orientationConfiguration,
+                dampingRatio, angularFrequency, positionLagScale, maxLagDistance, offsetLengthSquared,
+                rollDampingRatio, rollAngularFrequency, rollGap, deviationAngle, dot, right;
         this._extendedCameraValid = false;
         this._combinedExtendedCameraValid = false;
         if (this._previousConfiguration) {
@@ -2629,11 +3120,14 @@ define([
                 return;
             }
             // calculate position
-            // we can simply interpolate the position on a straight linear path
+            // we can simply interpolate the position on a straight linear path, plus a fading contribution from the leftover
+            // (spring-lagged) offset captured when the transition started (see startTransitionToConfiguration)
             startPositionVector = this._previousConfiguration.getPositionVector();
             endPositionVector = this._currentConfiguration.getPositionVector();
             previousPositionVector = this.getCameraPositionVector();
-            this._setPositionv(vec.sum3Aux(vec.scaled3Aux(startPositionVector, 1 - transitionProgress), vec.scaled3Aux(endPositionVector, transitionProgress)));
+            this._setPositionv(vec.sum3Aux(
+                    vec.sum3Aux(vec.scaled3Aux(startPositionVector, 1 - transitionProgress), vec.scaled3Aux(endPositionVector, transitionProgress)),
+                    vec.scaled3Aux(this._transitionPositionLagOffset, 1 - transitionProgress)));
             // calculate the velocity vector
             if (dt > 0) {
                 vec.setProdMat4Vec3(this._velocityVector, this.getCameraOrientationMatrix(), vec.diff3Aux(this.getCameraPositionVector(), previousPositionVector));
@@ -2654,6 +3148,20 @@ define([
             this._rotate(rotations.alphaAxis, rotations.alpha * transitionProgress);
             m = mat.prod3x3SubOf4Aux(this._previousConfiguration.getOrientationMatrix(), this.getCameraOrientationMatrix());
             mat.correctOrthogonal4(m);
+            // fade out the leftover roll deviation captured when the transition started, the same way as the position offset above
+            if (this._transitionRollLagDeviationAngle) {
+                vec.setVector3(this._rollTargetForward, vec.getRowC43Aux(m));
+                vec.setVector3(this._rollTargetUp, vec.getRowB43Aux(m));
+                vec.rotate3(this._rollTargetUp, this._rollTargetForward, this._transitionRollLagDeviationAngle * (1 - transitionProgress));
+                right = vec.cross3Aux(this._rollTargetUp, this._rollTargetForward);
+                m[0] = right[0];
+                m[1] = right[1];
+                m[2] = right[2];
+                m[4] = this._rollTargetUp[0];
+                m[5] = this._rollTargetUp[1];
+                m[6] = this._rollTargetUp[2];
+                mat.correctOrthogonal4(m);
+            }
             this._setOrientationM4(m);
             // calculate FOV
             this._updateFOV(transitionProgress);
@@ -2675,8 +3183,100 @@ define([
             }
             // update the position and orientation
             previousPositionVector = this.getCameraPositionVector();
-            this._setPositionM4(this._currentConfiguration.getPositionMatrix());
-            this._setOrientationM4(this._currentConfiguration.getOrientationMatrix());
+            positionConfiguration = this._currentConfiguration.getPositionConfiguration();
+            dampingRatio = positionConfiguration.getLagDampingRatio();
+            angularFrequency = positionConfiguration.getLagAngularFrequency();
+            positionLagScale = positionConfiguration.getLagScale();
+            if (dampingRatio && angularFrequency && (this._elasticity !== 0)) {
+                this._currentConfiguration.copyPositionToVector(this._targetPositionVector);
+                if (!this._springPositionVector) {
+                    this._springPositionVector = this._targetPositionVector.slice();
+                    this._springVelocityVector[0] = 0;
+                    this._springVelocityVector[1] = 0;
+                    this._springVelocityVector[2] = 0;
+                }
+                if ((this._positionSpringCoefficients.dampingRatio !== dampingRatio) || (this._positionSpringCoefficients.angularFrequency !== angularFrequency)) {
+                    prepareDampSpring(this._positionSpringCoefficients, angularFrequency, dampingRatio);
+                }
+                // the spring itself always runs at full (unscaled) amplitude, so its timing / settling behavior depends only on
+                // dampingRatio and angularFrequency - only the rendered offset is scaled (by positionLagScale and elasticity), so the
+                // visible amplitude of the lag can be tuned independently of how fast the spring itself responds
+                dampSpringVector3(this._springPositionVector, this._springVelocityVector, this._targetPositionVector, this._positionSpringCoefficients, dt * 0.001, this._dampSpringResult);
+                vec.setDiff3(this._renderedPositionVector, this._springPositionVector, this._targetPositionVector);
+                vec.scale3(this._renderedPositionVector, positionLagScale * this._elasticity);
+                // the cap only ever shortens the rendered offset, never the internal spring state above, so the spring calculation
+                // itself stays intact even while capped (e.g. this keeps the view from clipping through the seat of a cockpit even
+                // if the followed ship is moving very fast)
+                maxLagDistance = positionConfiguration.getMaxLagDistance();
+                if (maxLagDistance) {
+                    offsetLengthSquared = vec.length3Squared(this._renderedPositionVector);
+                    if (offsetLengthSquared > maxLagDistance * maxLagDistance) {
+                        vec.scale3(this._renderedPositionVector, maxLagDistance / Math.sqrt(offsetLengthSquared));
+                    }
+                }
+                vec.add3(this._renderedPositionVector, this._targetPositionVector);
+                this._setPositionv(this._renderedPositionVector);
+            } else {
+                this._springPositionVector = null;
+                this._setPositionM4(this._currentConfiguration.getPositionMatrix());
+            }
+            // configurations that aim towards followed objects calculate their orientation based on the camera's position - if that
+            // position is itself lagging behind (spring-adjusted), the aim needs to be recalculated based on where the camera will
+            // actually be rendered this frame, or it will aim slightly off from the intended point
+            if (this._springPositionVector && this._currentConfiguration.orientationPointsTowardsObjects()) {
+                this._currentConfiguration.recalculateOrientationForPosition(this._object3D.getPositionMatrix());
+            }
+            targetOrientationMatrix = this._currentConfiguration.getOrientationMatrix();
+            orientationConfiguration = this._currentConfiguration.getOrientationConfiguration();
+            rollDampingRatio = orientationConfiguration.getLagDampingRatio();
+            rollAngularFrequency = orientationConfiguration.getLagAngularFrequency();
+            if (rollDampingRatio && rollAngularFrequency && (this._elasticity !== 0)) {
+                // only the roll (rotation around the aim direction) is elastically lagged - the aim direction itself always instantly
+                // matches the target
+                vec.setVector3(this._rollTargetForward, vec.getRowC43Aux(targetOrientationMatrix));
+                vec.setVector3(this._rollTargetUp, vec.getRowB43Aux(targetOrientationMatrix));
+                if (!this._springUpVector) {
+                    this._springUpVector = this._rollTargetUp.slice();
+                    this._springRollVelocity = 0;
+                }
+                if ((this._rollSpringCoefficients.dampingRatio !== rollDampingRatio) || (this._rollSpringCoefficients.angularFrequency !== rollAngularFrequency)) {
+                    prepareDampSpring(this._rollSpringCoefficients, rollAngularFrequency, rollDampingRatio);
+                }
+                // advance the (unscaled) internal roll spring: reproject it to stay perpendicular to this frame's aim direction, then
+                // let it close part of the remaining gap to the target up, at the rate set by rollDampingRatio/rollAngularFrequency
+                dot = vec.dot3(this._springUpVector, this._rollTargetForward);
+                vec.setDiff3(this._rollUp, this._springUpVector, vec.scaled3Aux(this._rollTargetForward, dot));
+                if (vec.length3(this._rollUp) > 0.001) {
+                    vec.normalize3(this._rollUp);
+                } else {
+                    vec.setVector3(this._rollUp, this._rollTargetUp);
+                }
+                rollGap = Math.atan2(vec.dot3(vec.cross3Aux(this._rollUp, this._rollTargetUp), this._rollTargetForward), vec.dot3(this._rollUp, this._rollTargetUp));
+                evaluateDampSpring(this._rollSpringCoefficients, rollGap, this._springRollVelocity, 0, dt * 0.001, this._dampSpringResult);
+                this._springRollVelocity = this._dampSpringResult[1];
+                vec.rotate3(this._rollUp, this._rollTargetForward, rollGap - this._dampSpringResult[0]);
+                vec.setVector3(this._springUpVector, this._rollUp);
+                // only render a scaled (by elasticity) fraction of the (unscaled) internal spring's current deviation from the target up
+                deviationAngle = Math.atan2(vec.dot3(vec.cross3Aux(this._rollTargetUp, this._springUpVector), this._rollTargetForward), vec.dot3(this._rollTargetUp, this._springUpVector));
+                vec.setVector3(this._rollUp, this._rollTargetUp);
+                vec.rotate3(this._rollUp, this._rollTargetForward, deviationAngle * this._elasticity);
+                right = vec.cross3Aux(this._rollUp, this._rollTargetForward);
+                m = mat.identity4Aux();
+                m[0] = right[0];
+                m[1] = right[1];
+                m[2] = right[2];
+                m[4] = this._rollUp[0];
+                m[5] = this._rollUp[1];
+                m[6] = this._rollUp[2];
+                m[8] = this._rollTargetForward[0];
+                m[9] = this._rollTargetForward[1];
+                m[10] = this._rollTargetForward[2];
+                mat.correctOrthogonal4(m);
+                this._setOrientationM4(m);
+            } else {
+                this._springUpVector = null;
+                this._setOrientationM4(targetOrientationMatrix);
+            }
             // update the relative velocity vector
             if (this._currentConfiguration.positionFollowsObjects()) {
                 if (this._previousFollowedPositionVector && (dt > 0)) {

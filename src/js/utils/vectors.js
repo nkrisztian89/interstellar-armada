@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides functions that work on arrays of numbers as mathematical vectors.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -818,6 +818,23 @@ define(function () {
                 x = v[0];
         v[0] = v[0] * cosAngle + v[1] * -sinAngle;
         v[1] = x * sinAngle + v[1] * cosAngle;
+    };
+    /**
+     * Rotates the given 3D vector around the given axis by the given angle (right-hand rule), modifying it in-place. Only valid (gives a
+     * correct, unit-length result) when v is already perpendicular to axis and both are unit vectors, as this uses the simplified
+     * (2-term) form of Rodrigues' rotation formula, valid specifically for that case: v' = v * cos(angle) + (axis x v) * sin(angle).
+     * @param {Number[3]} v A 3D unit vector
+     * @param {Number[3]} axis The axis of rotation, a 3D unit vector, perpendicular to v
+     * @param {Number} angle The angle of rotation, in radians
+     */
+    vec.rotate3 = function (v, axis, angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle),
+                x = v[0], y = v[1], z = v[2];
+        v[0] = x * cosAngle + (axis[1] * z - axis[2] * y) * sinAngle;
+        v[1] = y * cosAngle + (axis[2] * x - axis[0] * z) * sinAngle;
+        v[2] = z * cosAngle + (axis[0] * y - axis[1] * x) * sinAngle;
     };
     /**
      * Sets the passed 3D vector to the translation component of the passed 4x4 matrix.

@@ -725,7 +725,7 @@ define([
                         }
                         view = new classes.ObjectView({
                             name: VIEW_NAME,
-                            isAimingView: false,
+                            aimingView: false,
                             fps: false,
                             fov: FOV,
                             fovRange: [FOV, FOV],

@@ -64,6 +64,7 @@ define([
             SHOW_FPS_COUNTER_SELECTOR_ID = "showFpsCounterSelector",
             PREFERRED_FIGHTER_VIEW_SELECTOR_ID = "preferredFighterViewSelector",
             PREFERRED_SHIP_VIEW_SELECTOR_ID = "preferredShipViewSelector",
+            CAMERA_ELASTICITY_SLIDER_ID = "cameraElasticitySlider",
             DEMO_VIEW_SWITCHING_SELECTOR_ID = "demoViewSwitchSelector",
             DEFAULT_SALVO_MODE_SELECTOR_ID = "defaultSalvoModeSelector",
             SHOW_GENERIC_RADIO_MESSAGES_SELECTOR_ID = "showGenericRadioMessagesSelector",
@@ -74,6 +75,11 @@ define([
             CONTROLS_OPTION_PARENT_ID = "controlsSettingsDiv",
             RADIO_OPTION_PARENT_ID = "radioSettingsDiv",
             OTHER_OPTION_PARENT_ID = "otherSettingsDiv",
+            /* On screens at least as wide as full HD, there is enough room to shrink the settings rows a bit, so that all the rows fit
+             * without scrolling. Smaller screens (where scrolling is needed regardless) keep the more easily tappable full-sized
+             * buttons / slider. Use the narrow class for this implemented by MultiBarSelector and Slider. */
+            NARROW_MULTI_BAR_SELECTOR_CLASS_NAME = "multiBarSelector narrow",
+            NARROW_SLIDER_CLASS_NAME = "slider narrow",
             SETTING_ON_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
             SETTING_OFF_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF)),
             SETTING_ALL_INDEX = _getPlayRadioMessagesSettingValues().indexOf(strings.get(strings.SETTING.ALL)),
@@ -111,6 +117,8 @@ define([
         this._preferredFighterViewSelector = null;
         /** @type MultiBarSelector */
         this._preferredShipViewSelector = null;
+        /** @type Slider */
+        this._cameraElasticitySlider = null;
         /** @type MultiBarSelector */
         this._demoViewSwitchingSelector = null;
         /** @type MultiBarSelector */
@@ -138,6 +146,19 @@ define([
             this._preferredShipViewSelector = this._registerMultiBarSelector(PREFERRED_SHIP_VIEW_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.PREFERRED_SHIP_VIEW.name,
                     CAMERA_OPTION_PARENT_ID, _getShipViewSettingValues(), false, true);
+            this._cameraElasticitySlider = this.registerExternalComponent(
+                    new components.Slider(
+                            CAMERA_ELASTICITY_SLIDER_ID,
+                            armadaScreens.SLIDER_SOURCE,
+                            {cssFilename: armadaScreens.SLIDER_CSS, sliderClassName: NARROW_SLIDER_CLASS_NAME},
+                            {id: strings.GAMEPLAY_SETTINGS.CAMERA_ELASTICITY.name},
+                            {
+                                min: 0,
+                                max: 1,
+                                step: 0.05,
+                                "default": 1
+                            }),
+                    CAMERA_OPTION_PARENT_ID);
             this._demoViewSwitchingSelector = this._registerMultiBarSelector(DEMO_VIEW_SWITCHING_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.DEMO_VIEW_SWITCHING.name,
                     CAMERA_OPTION_PARENT_ID, undefined, true);
@@ -171,7 +192,7 @@ define([
                 new components.MultiBarSelector(
                         name,
                         armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
-                        {cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS},
+                        {cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS, selectorClassName: NARROW_MULTI_BAR_SELECTOR_CLASS_NAME},
                         {id: propertyLabelID},
                         valueList || strings.getOnOffSettingValues(),
                         startFromZero,
@@ -189,6 +210,7 @@ define([
         config.setHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_FPS_COUNTER, (this._showFpsCounterSelector.getSelectedIndex() === SETTING_ON_INDEX));
         config.setBattleSetting(config.BATTLE_SETTINGS.DEFAULT_FIGHTER_VIEW_NAME, _fighterViewOptions[this._preferredFighterViewSelector.getSelectedIndex()]);
         config.setBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME, _shipViewOptions[this._preferredShipViewSelector.getSelectedIndex()]);
+        config.setBattleSetting(config.BATTLE_SETTINGS.CAMERA_ELASTICITY, this._cameraElasticitySlider.getNumericValue());
         config.setBattleSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCHING, (this._demoViewSwitchingSelector.getSelectedIndex() === SETTING_ON_INDEX));
         config.setBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE, (this._defaultSalvoModeSelector.getSelectedIndex() === SETTING_ON_INDEX));
         config.setBattleSetting(config.BATTLE_SETTINGS.SHOW_GENERIC_RADIO_MESSAGES, (this._showGenericRadioMessagesSelector.getSelectedIndex() === SETTING_ON_INDEX));
@@ -250,6 +272,7 @@ define([
             this._showFpsCounterSelector.selectValueWithIndex((config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_FPS_COUNTER) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._preferredFighterViewSelector.selectValueWithIndex(_fighterViewOptions.indexOf(config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_FIGHTER_VIEW_NAME)));
             this._preferredShipViewSelector.selectValueWithIndex(_shipViewOptions.indexOf(config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME)));
+            this._cameraElasticitySlider.setNumericValue(config.getBattleSetting(config.BATTLE_SETTINGS.CAMERA_ELASTICITY));
             this._demoViewSwitchingSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCHING) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._defaultSalvoModeSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._showGenericRadioMessagesSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.SHOW_GENERIC_RADIO_MESSAGES) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);

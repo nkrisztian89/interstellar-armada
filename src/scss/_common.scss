@@ -120,7 +120,7 @@ $ui-effects-appear-scale: 0.9;
 }
 
 @mixin inset-bordered-panel {
-    border: 0.15em solid color-scheme.$panel-front-color;
+    border: 0.1em solid color-scheme.$panel-front-color;
     background-color: color-scheme.$panel-color;
     box-shadow: 0 2px 5px color-scheme.$inset-shadow-color inset;
 }

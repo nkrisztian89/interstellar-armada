@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Stores the current game configuration and settings and provides functions to load and access them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1034,6 +1034,15 @@ define([
         DEFAULT_SHIP_VIEW_NAME_OPTIONS: {
             name: "defaultShipViewNameOptions",
             type: _customTypes.STRING_ARRAY
+        },
+        /**
+         * Scales the camera's lag behind its target position / roll angle resulting from the damped spring
+         * calculation. The player can modify it in the gameplay settings.
+         */
+        CAMERA_ELASTICITY: {
+            name: "cameraElasticity",
+            type: "number",
+            defaultValue: 1
         },
         /**
          * Views (camera configurations) with this name will be treated as target views (and set to face the current target of the 
