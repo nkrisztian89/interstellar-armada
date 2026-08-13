@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides a basic physics engine with Newtonian mechanics
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -66,6 +66,11 @@ define([
              * @type Number
              */
             COLLISION_TORQUE_FACTOR = 0.005,
+            /**
+             * Torques are only applied to objects with a lever length longer than this, in meters.
+             * @type Number
+             */
+            MINIMUM_TORQUE_LEVER_LENGTH = 0.001,
             // ----------------------------------------------------------------------
             // module variables
             /**
@@ -858,7 +863,8 @@ define([
      * of attack, potentially affecting both the linear and angular momentum of the object.
      * Directly applies the force and the torque, immediately applying the caused change
      * in velocity and angular velocity, unlike applyForce() and applyTorque(), where
-     * the velocity is only changed during the next simulate() call.
+     * the velocity is only changed during the next simulate() call. Simulates the passed
+     * force being applied for 1 ms (essentially an instantaneous impulse).
      * @param {Number[3]} position Point of attack relative to this object (meters)
      * @param {Number[3]} direction Unit vector of the direction of the force to apply
      * #temporary, #read-only
@@ -866,37 +872,38 @@ define([
      * @param {Number} torqueStrengthFactor If other than 1, the strength of the torque will be multiplied
      * by this factor as well as limited to produce maximum the same acceleration at the point of impact
      * (resulting from angular acceleration) as the acceleration produced by the force
-     * @param {Number} duration The force and torque will be exterted for this duration (milliseconds)
      */
-    PhysicalObject.prototype.applyForceAndTorque = function (position, direction, strength, torqueStrengthFactor, duration) {
+    PhysicalObject.prototype.applyForceAndTorque = function (position, direction, strength, torqueStrengthFactor) {
         var
                 lever = vec.length3(position),
-                leverDir = vec.scaled3Aux(position, 1 / lever),
-                parallelForce = vec.scaled3Aux(leverDir, vec.dot3(direction, leverDir)),
-                perpendicularForce = vec.diff3Aux(direction, parallelForce),
-                t = duration * 0.001, // t is in seconds
-                factor = strength * this._inverseMass * 0.5 * t * t,
-                torqueStrength, axis;
+                factor = strength * this._inverseMass * 0.5 * 0.001 * 0.001, // ds = F/m * 0.5 * t^2, where t = 1 ms
+                leverDir, parallelForce, perpendicularForce, torqueStrength, axis;
         this._offset[0] += direction[0] * factor;
         this._offset[1] += direction[1] * factor;
         this._offset[2] += direction[2] * factor;
-        factor = strength * this._inverseMass * t;
+        factor = strength * this._inverseMass * 0.001; // dv = F/m * t, where t = 1 ms
         this._velocityMatrix[12] += direction[0] * factor;
         this._velocityMatrix[13] += direction[1] * factor;
         this._velocityMatrix[14] += direction[2] * factor;
-        torqueStrength = (torqueStrengthFactor !== 1) ?
-                ((strength > 0) ?
-                        Math.min(torqueStrengthFactor * strength * vec.length3(perpendicularForce) * lever, strength / lever) :
-                        Math.max(torqueStrengthFactor * strength * vec.length3(perpendicularForce) * lever, strength / lever)) :
-                strength * vec.length3(perpendicularForce) * lever;
-        axis = vec.normalize3(vec.cross3Aux(perpendicularForce, leverDir));
-        factor = torqueStrength * this._inverseMass * t;
-        mat.mul3(
-                this._orientationOffset,
-                mat.rotation3Aux(axis, factor * 0.5 * t));
-        mat.mulRotation43(this._velocityMatrix, mat.rotation3Aux(axis, factor * ANGULAR_VELOCITY_MATRIX_DURATION * 0.001));
-        // correct matrix inaccuracies and close to zero values resulting from floating point operations
-        mat.straightenRotation4(this._velocityMatrix, ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
+        // a point of attack near the object's own center has no meaningful lever arm to derive a rotation axis from
+        if (lever > MINIMUM_TORQUE_LEVER_LENGTH) {
+            leverDir = vec.scaled3Aux(position, 1 / lever);
+            parallelForce = vec.scaled3Aux(leverDir, vec.dot3(direction, leverDir));
+            perpendicularForce = vec.diff3Aux(direction, parallelForce);
+            torqueStrength = (torqueStrengthFactor !== 1) ?
+                    ((strength > 0) ?
+                            Math.min(torqueStrengthFactor * strength * vec.length3(perpendicularForce) * lever, strength / lever) :
+                            Math.max(torqueStrengthFactor * strength * vec.length3(perpendicularForce) * lever, strength / lever)) :
+                    strength * vec.length3(perpendicularForce) * lever;
+            axis = vec.normalize3(vec.cross3Aux(perpendicularForce, leverDir));
+            factor = torqueStrength * this._inverseMass * 0.001; // F/m * t, where t = 1 ms
+            mat.mul3(
+                    this._orientationOffset,
+                    mat.rotation3Aux(axis, factor * 0.5 * 0.001)); // F/m * 0.5 * t^2, where t = 1 ms
+            mat.mulRotation43(this._velocityMatrix, mat.rotation3Aux(axis, factor * ANGULAR_VELOCITY_MATRIX_DURATION * 0.001));
+            // correct matrix inaccuracies and close to zero values resulting from floating point operations
+            mat.straightenRotation4(this._velocityMatrix, ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
+        }
     };
     /**
      * Calculates the size of the structure of this physical object and stores 
@@ -1077,8 +1084,8 @@ define([
             }
             // applying the appropriate forces and torques to the two objects
             vec.setProdVec4Mat4(_auxVector, this._collision.position, this.getModelMatrix()); // position of the collision in world space
-            this.applyForceAndTorque(vec.diffVec3Mat4Aux(_auxVector, this._positionMatrix), _auxVector2, relativeVelocity, COLLISION_TORQUE_FACTOR, 1);
-            otherObject.applyForceAndTorque(vec.diffVec3Mat4Aux(_auxVector, otherObject._positionMatrix), _auxVector2, -relativeVelocity, COLLISION_TORQUE_FACTOR, 1);
+            this.applyForceAndTorque(vec.diffVec3Mat4Aux(_auxVector, this._positionMatrix), _auxVector2, relativeVelocity, COLLISION_TORQUE_FACTOR);
+            otherObject.applyForceAndTorque(vec.diffVec3Mat4Aux(_auxVector, otherObject._positionMatrix), _auxVector2, -relativeVelocity, COLLISION_TORQUE_FACTOR);
             return this._collision;
         } else {
             return null;

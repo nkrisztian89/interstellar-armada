@@ -692,7 +692,7 @@ define([
     Projectile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset) {
         var exp, power;
         power = Math.min(this._timeLeft / this._class.getDissipationDuration(), 1);
-        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, power * relativeVelocity * this._class.getMass() * 1000, 1, 1);
+        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, power * relativeVelocity * this._class.getMass() * 1000, 1);
         exp = explosion.getExplosion();
         exp.init(((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3Aux(relativeVelocityDirectionInWorldSpace, -1), true, true, physicalHitObject.getVelocityMatrix());
         exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), hitObject.getSoundSource(), true);
@@ -1574,7 +1574,7 @@ define([
     Missile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset) {
         if (this._timeLeftForIgnition <= 0) {
             // if the missile is already ignited, it explodes, dealing damage
-            physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._class.getKineticFactor() * this._physicalModel.getMass() * 1000, 1, 1);
+            physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._class.getKineticFactor() * this._physicalModel.getMass() * 1000, 1);
             this._destruct(
                     ((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()),
                     mat.translation4vAux(hitPositionVectorInWorldSpace),
@@ -1586,7 +1586,7 @@ define([
             this._timeLeft = 0;
         } else {
             // if the missile is not ignited yet, it simply collides with the object
-            physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * MISSILE_COLLISION_FORCE_FACTOR, 1, 1);
+            physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * MISSILE_COLLISION_FORCE_FACTOR, 1);
             this._physicalModel.applyForce(relativeVelocity * this._physicalModel.getMass() * MISSILE_COLLISION_FORCE_FACTOR,
                     -relativeVelocityDirectionInWorldSpace[0],
                     -relativeVelocityDirectionInWorldSpace[1],
@@ -2241,7 +2241,6 @@ define([
                                 this._spacecraft.getPhysicalPositionMatrix()),
                         vec.getRowB43ScaledAux(projectileOriMatrix, -1),
                         this._class.getFireForce(),
-                        1,
                         1
                         );
                 result++;
@@ -2840,7 +2839,6 @@ define([
                     tubePosVector,
                     vec.getRowB43ScaledAux(missileOriMatrix, -1),
                     this._class.getLaunchForce(),
-                    1,
                     1
                     );
             if (!shipSoundSource) {
