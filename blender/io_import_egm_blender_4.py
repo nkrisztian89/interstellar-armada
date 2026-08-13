@@ -12,7 +12,7 @@ from bpy.types import (
 bl_info = {
     "name": "EgomModel import",
     "author": "Krisztián Nagy",
-    "version": (1, 0, 1),
+    "version": (1, 0, 2),
     "blender": (4, 2, 1),
     "location": "File > Import-Export",
     "description": "Adds support to import models in the EgomModel (.egm) file format, version 3.6",
@@ -232,7 +232,7 @@ class ImportEGM(Operator, ImportHelper):
             lum_group = ob.vertex_groups.new(name="luminosity")
             prevPoints = 3
             # A second pass on the polygons to fill face data
-            for t in data['polygons']:
+            for poly_index, t in enumerate(data['polygons']):
                 if i >= len(mesh.polygons):
                     break
                 face = mesh.polygons[i]
@@ -252,6 +252,14 @@ class ImportEGM(Operator, ImportHelper):
                     start = offs + points + has_mat
                     for ix in range(points):
                         prevUv.append((t[0][start+ix*2], 1-t[0][start+ix*2+1]))
+                elif 'prevUv' not in locals():
+                    # The very first polygon in this LOD omits UV data, so
+                    # there is no previous value to carry forward - this
+                    # file is corrupted
+                    raise ValueError(
+                        "Corrupted .egm file: polygon " + str(poly_index)
+                        + " has no UV coordinates and none were specified "
+                        + "by any preceding polygon in this LOD")
                 if has_mat:
                     prevmat = t[0][offs+points]
                 if len(t) > 1 and len(t[1]) % 3 == 2:

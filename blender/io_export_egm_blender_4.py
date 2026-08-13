@@ -25,7 +25,7 @@ from mathutils import (
 bl_info = {
     "name": "EgomModel export",
     "author": "Krisztián Nagy",
-    "version": (1, 2, 1),
+    "version": (1, 2, 2),
     "blender": (4, 2, 1),
     "location": "File > Import-Export",
     "description": "Adds support to export models in the EgomModel (.egm) file format, version 3.6",
@@ -96,6 +96,18 @@ def get_lod_from_object(ob: Object, minLOD: int, maxLOD: int):
     else:
         obMaxLOD = maxLOD
     return (obMinLOD, obMaxLOD)
+
+
+# Find objects whose own 'minLOD'/'maxLOD' custom properties (on the object
+# or its mesh data), once clamped to the overall export range, end up with
+# minLOD > maxLOD
+def find_invalid_lod_objects(obs: list[Object], minLOD: int, maxLOD: int) -> list[str]:
+    invalid = []
+    for ob in obs:
+        (obMinLOD, obMaxLOD) = get_lod_from_object(ob, minLOD, maxLOD)
+        if obMinLOD > obMaxLOD:
+            invalid.append(ob.name)
+    return invalid
 
 
 def get_lod_string(ob: Object, minLOD: int, maxLOD: int):
@@ -524,6 +536,12 @@ class ExportEGM(Operator, ExportHelper):
             return {'CANCELLED'}
         if self.properties.min_lod > self.properties.max_lod:
             self.report({'ERROR'}, "Min LOD cannot be greater than Max LOD")
+            return {'CANCELLED'}
+        invalid_lod_obs = find_invalid_lod_objects(
+            obs, self.properties.min_lod, self.properties.max_lod)
+        if invalid_lod_obs:
+            self.report({'ERROR'}, "Invalid minLOD/maxLOD on object(s): "
+                        + ", ".join(invalid_lod_obs))
             return {'CANCELLED'}
         write_egm(self.filepath, obs, self.properties)
         self.report({'INFO'}, "File saved successfully!")
