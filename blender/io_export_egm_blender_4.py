@@ -25,7 +25,7 @@ from mathutils import (
 bl_info = {
     "name": "EgomModel export",
     "author": "Krisztián Nagy",
-    "version": (1, 2, 0),
+    "version": (1, 2, 1),
     "blender": (4, 2, 1),
     "location": "File > Import-Export",
     "description": "Adds support to export models in the EgomModel (.egm) file format, version 3.6",
@@ -503,7 +503,12 @@ class ExportEGM(Operator, ExportHelper):
         default=4, min=0, max=4, subtype="UNSIGNED")
         
     def invoke(self, context, event):
-        obs = context.selected_objects
+        # .egm is a mesh-only format; ignore lights, cameras, empties, etc.
+        # accidentally included in the selection
+        obs = [ob for ob in context.selected_objects if ob.type == 'MESH']
+        if not obs:
+            self.report({'ERROR'}, "No mesh objects selected")
+            return {'CANCELLED'}
         self.properties.model_name = bpy.path.clean_name(obs[0].name)
         (minLOD, maxLOD) = determine_lod_range(obs)
         self.properties.min_lod = minLOD
@@ -513,7 +518,13 @@ class ExportEGM(Operator, ExportHelper):
         return {'RUNNING_MODAL'}
 
     def execute(self, context):
-        obs = context.selected_objects
+        obs = [ob for ob in context.selected_objects if ob.type == 'MESH']
+        if not obs:
+            self.report({'ERROR'}, "No mesh objects selected")
+            return {'CANCELLED'}
+        if self.properties.min_lod > self.properties.max_lod:
+            self.report({'ERROR'}, "Min LOD cannot be greater than Max LOD")
+            return {'CANCELLED'}
         write_egm(self.filepath, obs, self.properties)
         self.report({'INFO'}, "File saved successfully!")
         return {'FINISHED'}
