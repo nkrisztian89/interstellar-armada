@@ -97,7 +97,6 @@
     },
     "logic": {
         "general": {
-            "useRequestAnimFrame": true,
             "defaultRandomSeed": 4718,
             "luminosityFactorsArrayName": "luminosityFactors",
             "useVerticalCameraValues": true,
@@ -159,12 +158,9 @@
             "rotationStartAngle": 180,
             "rotationViewAngle": 60,
             "rotationDuration": 4000,
-            "rotationMouseSensitivity": 1,
-            "databaseRenderFPS": 60
+            "rotationMouseSensitivity": 1
         },
         "battle": {
-            "battleRenderFPS": 60,
-            "simulationStepsPerSecond": 60,
             "showGenericRadioMessages": true,
             "playGenericRadioMessages": true,
             "playMissionRadioMessages": true,

@@ -565,8 +565,6 @@ module.exports = function (grunt) {
                 ["musicVolumeInMenus", "battle"],
                 ["sfxVolumeInMenus", "battle"],
                 ["voiceVolumeInMenus", "battle"],
-                ["simulationStepsPerSecond", "battle"],
-                ["battleRenderFPS", "battle", "RENDER_FPS"],
                 ["quitDelayAfterJumpOut", "battle"],
                 ["gameStateDisplayDelay", "battle"],
                 ["multiMatchQuitDelay", "battle"],
@@ -584,7 +582,6 @@ module.exports = function (grunt) {
                 ["minVoiceMessageDelayForDifferentType", "battle"],
                 ["minVoiceMessageDelayForSameSourceSameType", "battle"],
                 ["minVoiceMessageDelayForSameSourceDifferentType", "battle"],
-                ["useRequestAnimFrame", "general"],
                 ["defaultRandomSeed", "general"],
                 ["luminosityFactorsArrayName", "general", "UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME"],
                 ["useVerticalCameraValues", "general"],
@@ -706,8 +703,7 @@ module.exports = function (grunt) {
                 ["revealFPS", "REVEAL_FPS"],
                 ["revealDuration"],
                 ["revealSolidDelayDuration"],
-                ["revealTransitionLengthFactor"],
-                ["databaseRenderFPS", "RENDER_FPS"]
+                ["revealTransitionLengthFactor"]
             ],
             databaseSettingConfigReplacements = databaseSettingsToReplace.map(
                     function (replacement) {

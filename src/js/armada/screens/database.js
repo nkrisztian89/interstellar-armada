@@ -497,7 +497,6 @@ define([
                 true,
                 graphics.getFiltering(),
                 graphics.getResolution(),
-                config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME),
                 undefined,
                 {
                     "escape": _closeScreen,
@@ -814,7 +813,7 @@ define([
                 utils.executeAsync(function () {
                     // if no loops are running, a single render is enough since the scene will be static
                     if (_getSetting(SETTINGS.MODEL_AUTO_ROTATION) || _getSetting(SETTINGS.MODEL_MOUSE_ROTATION) || _shouldReveal()) {
-                        this.startRenderLoop(1000 / _getSetting(SETTINGS.RENDER_FPS));
+                        this.startRenderLoop();
                     }
                     // starting rotation and reveal loops, as needed
                     if (_getSetting(SETTINGS.MODEL_AUTO_ROTATION)) {

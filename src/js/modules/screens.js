@@ -47,8 +47,6 @@ define([
             SCREEN_CONTAINER_ID = "screenContainer",
             DEFAULT_SCREEN_CONTAINER_CLASS_NAME = "screenContainer",
             RESIZEABLE_CLASS_NAME = "resizeable",
-            LOOP_CANCELED = -1,
-            LOOP_REQUESTANIMFRAME = -2,
             MENU_COMPONENT_NAME = "menu",
             ANTIALIASING_CHANGE_ERROR_STRING = {
                 name: "error.antialiasingChange",
@@ -2004,15 +2002,13 @@ define([
      * @param {String} filtering (enum managedGL.TextureFiltering) What texture filtering mode to use when rendering to a canvases of this screen
      * @param {String} resolution (enum CanvasResolution) Whether the canvases of this screen should render at their CSS size or their
      * full device pixel size
-     * @param {Boolean} [useRequestAnimFrame=false] Whether to use the requestAnimationFrame API for the render loop
-     * (as opposed to setInterval)
      * @param {Object.<String, Function>} [eventHandlers] Event handler functions to be executed when something happens to this page, by the
      * names of the events as keys
      * @param {Object.<String, Function>} [keyCommands] Event handler functions to be executed
      * while this screen is active, by the names of the keys (as in utils.getKeyCodeOf())
      * @param {Object.<String, Object.<String, Function>>} [elementEventHandlers] See HTMLScreen
      */
-    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, alpha, filtering, resolution, useRequestAnimFrame, eventHandlers, keyCommands, elementEventHandlers) {
+    function HTMLScreenWithCanvases(name, htmlFilename, style, antialiasing, alpha, filtering, resolution, eventHandlers, keyCommands, elementEventHandlers) {
         HTMLScreen.call(this, name, htmlFilename, style, eventHandlers, keyCommands, elementEventHandlers);
         /**
          * Whether antialiasing should be turned on for the GL contexts of the canvases of this screen
@@ -2054,10 +2050,10 @@ define([
          */
         this._sceneCanvasBindings = [];
         /**
-         * An ID for the render loop so that it can be cleared (when using setInterval)
-         * @type Number
+         * Whether the requestAnimationFrame-driven render loop is currently running for this screen
+         * @type Boolean
          */
-        this._renderLoop = LOOP_CANCELED;
+        this._renderLoopRunning = false;
         /**
          * Stores the timestamps of the last renders so that the FPS can be calculated.
          * @type DOMHighResTimeStamp[]
@@ -2088,10 +2084,36 @@ define([
          */
         this._resizeEventListener = null;
         /**
-         * Whether to use the requestAnimationFrame API for the render loop (as opposed to setInterval)
-         * @type Boolean
+         * Calls the core render method and manages the timestamps for FPS calculation, and if needed, maintains
+         * the render loop using the RequestAnimationFrame API.
+         * @this {HTMLScreenWithCanvases}
+         * @param {DOMHighResTimeStamp} timestamp
          */
-        this._useRequestAnimFrame = useRequestAnimFrame;
+        this._renderFrame = function (timestamp) {
+            var dt, shifted, fps;
+            if (this._renderLoopRunning) {
+                dt = (this._renderTimes && (this._renderTimes.length > 0)) ? (timestamp - this._renderTimes[this._renderTimes.length - 1]) : 0;
+                this._render(dt);
+                this._renderTimes.push(timestamp);
+                shifted = false;
+                while ((this._renderTimes.length > 1) && ((timestamp - this._renderTimes[0]) > 1000)) {
+                    this._renderTimes.shift();
+                    shifted = true;
+                }
+                if (shifted) {
+                    fps = this._renderTimes.length;
+                    if ((this._minFPS === 0) || (this._minFPS > fps)) {
+                        this._minFPS = fps;
+                    }
+                    if ((this._maxFPS === 0) || (this._maxFPS < fps)) {
+                        this._maxFPS = fps;
+                    }
+                    this._fpsSum += fps;
+                    this._fpsFrameCount++;
+                }
+                window.requestAnimationFrame(this._renderFrame);
+            }
+        }.bind(this);
     }
     HTMLScreenWithCanvases.prototype = new HTMLScreen();
     HTMLScreenWithCanvases.prototype.constructor = HTMLScreenWithCanvases;
@@ -2101,7 +2123,7 @@ define([
      */
     HTMLScreenWithCanvases.prototype.handleResize = function () {
         this.resizeCanvases();
-        if (this._renderLoop === LOOP_CANCELED) {
+        if (!this._renderLoopRunning) {
             this.render();
         }
     };
@@ -2196,7 +2218,7 @@ define([
             });
         }
         scene.addToContext(canvas.getManagedContext());
-        if (this._renderLoop !== LOOP_CANCELED) {
+        if (this._renderLoopRunning) {
             canvas.getManagedContext().setup();
         }
     };
@@ -2267,15 +2289,15 @@ define([
         }
     };
     /**
-     * Calls the core render method and manages the timestamps for FPS calculation as a simple 
-     * standalone method that can be used with setInterval or on its own for a single render.
+     * Calls the core render method and manages the timestamps for FPS calculation, for a single,
+     * standalone render outside of the requestAnimationFrame-driven render loop (e.g. on resize).
      */
     HTMLScreenWithCanvases.prototype.render = function () {
         var d, dt, shifted, fps;
         d = performance.now();
         dt = (this._renderTimes && (this._renderTimes.length > 0)) ? (d - this._renderTimes[this._renderTimes.length - 1]) : 0;
         this._render(dt);
-        if (this._renderLoop !== LOOP_CANCELED) {
+        if (this._renderLoopRunning) {
             this._renderTimes.push(d);
             shifted = false;
             while ((this._renderTimes.length > 1) && ((d - this._renderTimes[0]) > 1000)) {
@@ -2296,44 +2318,12 @@ define([
         }
     };
     /**
-     * Calls the core render method and manages the timestamps for FPS calculation, and if needed, maintains
-     * the render loop using the RequestAnimationFrame API.
-     * @param {DOMHighResTimeStamp} timestamp
+     * Starts the render loop, by beginning to execute the render function using the
+     * requestAnimationFrame API.
      */
-    HTMLScreenWithCanvases.prototype._renderRequestAnimFrame = function (timestamp) {
-        var dt, shifted, fps;
-        if (this._renderLoop !== LOOP_CANCELED) {
-            dt = (this._renderTimes && (this._renderTimes.length > 0)) ? (timestamp - this._renderTimes[this._renderTimes.length - 1]) : 0;
-            this._render(dt);
-            this._renderTimes.push(timestamp);
-            shifted = false;
-            while ((this._renderTimes.length > 1) && ((timestamp - this._renderTimes[0]) > 1000)) {
-                this._renderTimes.shift();
-                shifted = true;
-            }
-            if (shifted) {
-                fps = this._renderTimes.length;
-                if ((this._minFPS === 0) || (this._minFPS > fps)) {
-                    this._minFPS = fps;
-                }
-                if ((this._maxFPS === 0) || (this._maxFPS < fps)) {
-                    this._maxFPS = fps;
-                }
-                this._fpsSum += fps;
-                this._fpsFrameCount++;
-            }
-            window.requestAnimationFrame(this._renderRequestAnimFrame.bind(this));
-        }
-    };
-    /**
-     * Starts the render loop, by beginning to execute the render function every interval milliseconds or
-     * using the requestAnimationFrame API.
-     * @param {Number} interval This will only be considered if setInterval, and not the RequestAnimationFrame
-     * API is used
-     */
-    HTMLScreenWithCanvases.prototype.startRenderLoop = function (interval) {
+    HTMLScreenWithCanvases.prototype.startRenderLoop = function () {
         var i;
-        if (this._renderLoop === LOOP_CANCELED) {
+        if (!this._renderLoopRunning) {
             for (i = 0; i < this._sceneCanvasBindings.length; i++) {
                 this._sceneCanvasBindings[i].canvas.getManagedContext().setup();
             }
@@ -2342,25 +2332,16 @@ define([
             this._maxFPS = 0;
             this._fpsSum = 0;
             this._fpsFrameCount = 0;
-            if (this._useRequestAnimFrame) {
-                this._renderLoop = LOOP_REQUESTANIMFRAME;
-                window.requestAnimationFrame(this._renderRequestAnimFrame.bind(this));
-            } else {
-                this._renderLoop = setInterval(function () {
-                    this.render();
-                }.bind(this), interval);
-            }
+            this._renderLoopRunning = true;
+            window.requestAnimationFrame(this._renderFrame);
         }
     };
     /**
      * Stops the render loop.
      */
     HTMLScreenWithCanvases.prototype.stopRenderLoop = function () {
-        if (this._renderLoop !== LOOP_CANCELED) {
-            if (!this._useRequestAnimFrame) {
-                clearInterval(this._renderLoop);
-            }
-            this._renderLoop = LOOP_CANCELED;
+        if (this._renderLoopRunning) {
+            this._renderLoopRunning = false;
             this._renderTimes = [];
         }
     };

@@ -375,14 +375,6 @@ define([
     };
     GENERAL_SETTINGS = {
         /**
-         * Whether the RequestAnimationFrame API should be used for the render loops (as opposed to setInterval)
-         */
-        USE_REQUEST_ANIM_FRAME: {
-            name: "useRequestAnimFrame",
-            type: "boolean",
-            defaultValue: true
-        },
-        /**
          * Default seed to use for generating random numbers to allow consistent and comparable testing.
          */
         DEFAULT_RANDOM_SEED: {
@@ -758,33 +750,9 @@ define([
             name: "revealTransitionLengthFactor",
             type: "number",
             defaultValue: 0.15
-        },
-        /**
-         * The rendering of the item view scene will happen at this many frames per second
-         */
-        RENDER_FPS: {
-            name: "databaseRenderFPS",
-            type: "number",
-            defaultValue: 60
         }
     };
     BATTLE_SETTINGS = {
-        /**
-         * The rendering of the battle scene will happen at this many frames per second
-         */
-        RENDER_FPS: {
-            name: "battleRenderFPS",
-            type: "number",
-            defaultValue: 60
-        },
-        /**
-         * The simulation loop will be executed this many times per second during the battle
-         */
-        SIMULATION_STEPS_PER_SECOND: {
-            name: "simulationStepsPerSecond",
-            type: "number",
-            defaultValue: 60
-        },
         /**
          * Whether to show the text of generic radio messages transmitted by AI pilots in the messages
          * panel.

@@ -114,9 +114,14 @@ define([
             INFO_BOX_ID = "infoBox",
             BATTLE_CANVAS_ID = "battleCanvas",
             /** @type Number */
-            LOOP_CANCELED = -1,
-            LOOP_REQUESTANIMFRAME = -2,
             HOST_UPDATE_INTERVAL = 50,
+            /**
+             * The simulation step passed to _simulationLoopFunction() is capped to this many milliseconds, so a lag
+             * spike (GC pause, tab switch, breakpoint) cannot hand the physics/AI/mission tick a huge dt that would
+             * destabilize calculations.
+             * @type Number
+             */
+            MAX_SIMULATION_DT = 100,
             LOADING_BUILDING_SCENE_PROGRESS = 10,
             LOADING_RESOURCES_START_PROGRESS = 20,
             LOADING_RESOURCE_PROGRESS = 60,
@@ -203,10 +208,10 @@ define([
              */
             _battleScene,
             /**
-             * The ID of the loop function that is set to run the game simulation
-             * @type Number
+             * Whether the game simulation loop is currently running
+             * @type Boolean
              */
-            _simulationLoop = LOOP_CANCELED,
+            _simulationRunning = false,
             /**
              * For the host: the time elapsed since the last multiplayer game
              * update message has been sent to the guests
@@ -232,11 +237,6 @@ define([
              * @type String
              */
             _battleCursor,
-            /**
-             * Stores the timestamp of the last simulation step
-             * @type DOMHighResTimeStamp
-             */
-            _prevDate,
             /**
              * Whether the time is stopped in the simulated battle currently
              * @type Boolean
@@ -1343,14 +1343,11 @@ define([
     }
     /**
      * Executes one simulation (and control) step for the battle.
-     * @param {Number} dt The time elapsed since the last simulation step, in milliseconds. Pass it to sync the simulation
-     * update with the rendering update. If not passed, the time elapsed since the last simulation step is calculated automatically.
+     * @param {Number} dt The time to execute the simulation for, in milliseconds
      */
     function _simulationLoopFunction(dt) {
-        var followedCraft, curDate, i, players;
-        if (_simulationLoop !== LOOP_CANCELED) {
-            curDate = performance.now();
-            dt = (dt !== undefined) ? dt : (curDate - _prevDate);
+        var followedCraft, i, players;
+        if (_simulationRunning) {
             _timeSinceHostUpdate += dt;
             control.control(dt);
             if (_multi && !networking.isHost()) {
@@ -1451,7 +1448,6 @@ define([
                     }
                 }
             }
-            _prevDate = curDate;
         }
     }
     /**
@@ -2743,7 +2739,6 @@ define([
                 true,
                 graphics.getFiltering(),
                 graphics.getResolution(),
-                config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME),
                 {
                     activate: function () {
                         _aimAssistCrosshairs = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_CROSSHAIRS);
@@ -2936,10 +2931,7 @@ define([
         _battleCursor = document.body.style.cursor;
         document.body.style.cursor = game.getDefaultCursor();
         if (!_multi || quit) {
-            if (_simulationLoop !== LOOP_REQUESTANIMFRAME) {
-                clearInterval(_simulationLoop);
-            }
-            _simulationLoop = LOOP_CANCELED;
+            _simulationRunning = false;
             if (_battleScene) {
                 _battleScene.setShouldAnimate(false);
             }
@@ -2974,23 +2966,18 @@ define([
         if (_multi && !start) {
             control.startListening();
         } else {
-            if (_simulationLoop === LOOP_CANCELED) {
-                _prevDate = performance.now();
+            if (!_simulationRunning) {
                 if (_battleScene) {
                     if (!_isTimeStopped) {
                         _battleScene.setShouldAnimate(true);
                     }
                 }
-                if (config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME)) {
-                    _simulationLoop = LOOP_REQUESTANIMFRAME;
-                } else {
-                    _simulationLoop = setInterval(_simulationLoopFunction, 1000 / (config.getSetting(config.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
-                }
+                _simulationRunning = true;
                 control.startListening();
                 if (escapePressed) {
                     control.getInputInterpreter(control.KEYBOARD_NAME).setEscapeToPressed();
                 }
-                this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
+                this.startRenderLoop();
             } else {
                 application.showError(
                         "Trying to resume simulation while it is already going on!",
@@ -4903,16 +4890,17 @@ define([
                 /**@type Number */ time,
                 /**@type Object */ analyticsParams,
                 /**@type ModelDebugStats*/ mainStats, shadowStats;
-        // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
-        // is performed right before each render and not in a separate loop for best performance
-        if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
+        // the simulation is performed right before each render
+        if (_simulationRunning) {
+            // clamp here to keep render and simulation dt in sync
+            dt = Math.min(dt, MAX_SIMULATION_DT);
             // pass in dt instead of letting the simulation step measure its own to sync camera and
             // simulation updates to render updates (avoid camera jitter)
             _simulationLoopFunction(dt);
         }
         if (_battleScene) {
             // manually updating the camera so the HUD update has up-to-date information
-            _battleScene.getCamera().update((_simulationLoop !== LOOP_CANCELED) ? dt : 0);
+            _battleScene.getCamera().update(_simulationRunning ? dt : 0);
             this._updateHUD(dt);
         }
         screens.HTMLScreenWithCanvases.prototype._render.call(this, dt);
@@ -4937,7 +4925,7 @@ define([
             }
         }
         // displaying the victory or defeat message
-        if ((_simulationLoop !== LOOP_CANCELED)) {
+        if (_simulationRunning) {
             if (!_demoMode) {
                 craft = _mission.getPilotedSpacecraft();
                 if (craft && craft.isAlive() && craft.isAway()) {
@@ -5416,7 +5404,7 @@ define([
                     networking.markLoaded();
                 }
                 showHUD();
-                this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
+                this.startRenderLoop();
                 _elapsedTime = 0;
                 _timeSinceLastFire = 0;
                 _missileLocked = false;
