@@ -122,6 +122,10 @@ define([
              * @type Number
              */
             COLLISION_DAMAGE_FACTOR = 0.00025,
+            /**
+             * @type String
+             */
+            GROUP_TRANSFORMS_ARRAY_NAME = logicConstants.GROUP_TRANSFORMS_ARRAY_NAME,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -129,11 +133,6 @@ define([
              * @type Boolean
              */
             _showHitboxesForHitchecks,
-            /**
-             * Cached value of the configuration setting of the name of the uniform array storing the group transforms for models.
-             * @type String
-             */
-            _groupTransformsArrayName = null,
             /**
              * A pool containing dynamic particles (such as particles for muzzle flashes and explosions) for reuse, so that creation of
              * new particle objects can be decreased for optimization.
@@ -1738,7 +1737,7 @@ define([
                     grid.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
                         return gridColor;
                     });
-                    grid.setUniformValueFunction(_groupTransformsArrayName, function () {
+                    grid.setUniformValueFunction(GROUP_TRANSFORMS_ARRAY_NAME, function () {
                         return graphics.getGroupTransformIdentityArray();
                     });
                     this._grids.push(battleScene.addObject(grid, false));
@@ -2930,7 +2929,6 @@ define([
     // caching configuration settings
     config.executeWhenReady(function () {
         _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);
-        _groupTransformsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module

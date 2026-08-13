@@ -2282,7 +2282,7 @@ define([
                     },
                     FOV: {
                         name: "fov",
-                        description: "The initial (vertical - see settings.logic.general.useVerticalCameraValues) field of view of the camera, in degrees.",
+                        description: "The initial (vertical) field of view of the camera, in degrees.",
                         type: POSITIVE_DEGREES_180,
                         getDerivedDefault: config.getDefaultCameraFOV
                     },
@@ -2295,7 +2295,7 @@ define([
                     },
                     SPAN: {
                         name: "span",
-                        description: "The height (see settings.logic.general.useVerticalCameraValues) of the viewing frustum at zero depth, in meters, used to derive the near clipping plane. Rarely needs to be set explicitly.",
+                        description: "The vertical height of the viewing frustum at zero depth, in meters, used to derive the near clipping plane. Rarely needs to be set explicitly.",
                         type: POSITIVE_LENGTH,
                         getDerivedDefault: config.getDefaultCameraSpan
                     },
@@ -4684,7 +4684,7 @@ define([
                     },
                     FOV: {
                         name: "fov",
-                        description: "The initial (vertical - see settings.logic.general.useVerticalCameraValues) field of view of the camera, in degrees.",
+                        description: "The initial (vertical) field of view of the camera, in degrees.",
                         type: POSITIVE_DEGREES_180,
                         getDerivedDefault: config.getDefaultCameraFOV
                     },
@@ -4697,7 +4697,7 @@ define([
                     },
                     SPAN: {
                         name: "span",
-                        description: "The height (see settings.logic.general.useVerticalCameraValues) of the viewing frustum at zero depth, in meters, used to derive the near clipping plane. Rarely needs to be set explicitly.",
+                        description: "The vertical height of the viewing frustum at zero depth, in meters, used to derive the near clipping plane. Rarely needs to be set explicitly.",
                         type: POSITIVE_LENGTH,
                         getDerivedDefault: config.getDefaultCameraSpan
                     },

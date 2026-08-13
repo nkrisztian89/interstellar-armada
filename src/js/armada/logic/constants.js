@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides some constants to be used in other game logic modules
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -79,7 +79,17 @@ define(function () {
              * Length of the Float32Array section that contains a game control message for a spacecraft by a multiplayer guest
              * @type Number
              */
-            MULTI_GUEST_DATA_LENGTH = 8;
+            MULTI_GUEST_DATA_LENGTH = 8,
+            /**
+             * The name of the uniform array storing the luminosity factors for models - has to match the corresponding shader source
+             * @type String
+             */
+            LUMINOSITY_FACTORS_ARRAY_NAME = "luminosityFactors",
+            /**
+             * The name of the uniform array storing the group transforms for models - has to match the corresponding shader source.
+             * @type String
+             */
+            GROUP_TRANSFORMS_ARRAY_NAME = "groupTransforms";
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -96,6 +106,8 @@ define(function () {
         TRAIL_SEGMENT_POOL_NAME: TRAIL_SEGMENT_POOL_NAME,
         EXPLOSION_POOL_NAME: EXPLOSION_POOL_NAME,
         MULTI_HOST_DATA_LENGTH: MULTI_HOST_DATA_LENGTH,
-        MULTI_GUEST_DATA_LENGTH: MULTI_GUEST_DATA_LENGTH
+        MULTI_GUEST_DATA_LENGTH: MULTI_GUEST_DATA_LENGTH,
+        LUMINOSITY_FACTORS_ARRAY_NAME: LUMINOSITY_FACTORS_ARRAY_NAME,
+        GROUP_TRANSFORMS_ARRAY_NAME: GROUP_TRANSFORMS_ARRAY_NAME
     };
 });

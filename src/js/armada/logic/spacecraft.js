@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Implementation of the Spacecraft game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -131,18 +131,16 @@ define([
              * @type Number
              */
             MINIMUM_COLLISION_SOUND_INTERVAL = 250,
+            /**
+             * @type String
+             */
+            LUMINOSITY_FACTORS_ARRAY_NAME = constants.LUMINOSITY_FACTORS_ARRAY_NAME,
+            /**
+             * @type String
+             */
+            GROUP_TRANSFORMS_ARRAY_NAME = constants.GROUP_TRANSFORMS_ARRAY_NAME,
             // ------------------------------------------------------------------------------
             // private variables
-            /**
-             * Cached value of the configuration setting of the name of the uniform array storing the luminosity factors for models.
-             * @type String
-             */
-            _luminosityFactorsArrayName = null,
-            /**
-             * Cached value of the configuration setting of the name of the uniform array storing the group transforms for models.
-             * @type String
-             */
-            _groupTransformsArrayName = null,
             /**
              * Stores the uniform parameter array definitions (what arrays are there and what are their types in
              * name: type format) to use when creating visual models for spacecraft
@@ -181,9 +179,9 @@ define([
     function handleGraphicsSettingsChanged() {
         _parameterArrays = {};
         // setting up parameter array declarations (name: type)
-        _parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;
+        _parameterArrays[GROUP_TRANSFORMS_ARRAY_NAME] = managedGL.ShaderVariableType.MAT4;
         if (graphics.areLuminosityTexturesAvailable()) {
-            _parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
+            _parameterArrays[LUMINOSITY_FACTORS_ARRAY_NAME] = managedGL.ShaderVariableType.FLOAT;
         }
         _dynamicLights = graphics.areDynamicLightsAvailable() && (graphics.getMaxPointLights() > 0);
     }
@@ -1850,7 +1848,7 @@ define([
         hitZoneMesh.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
             return _hitZoneColor;
         });
-        hitZoneMesh.setUniformValueFunction(_groupTransformsArrayName, function () {
+        hitZoneMesh.setUniformValueFunction(GROUP_TRANSFORMS_ARRAY_NAME, function () {
             return graphics.getGroupTransformIdentityArray();
         });
         this._hitbox.addSubnode(new sceneGraph.RenderableNode(hitZoneMesh, false));
@@ -1969,12 +1967,10 @@ define([
             if (!this._visualModel || params.replaceVisualModel) {
                 // setting the starting values of the parameter arrays
                 // setting an identity transformation for all transform groups
-                if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
-                    visualModel.setParameterArray(_groupTransformsArrayName, graphics.getGroupTransformIdentityArray());
-                }
+                visualModel.setParameterArray(GROUP_TRANSFORMS_ARRAY_NAME, graphics.getGroupTransformIdentityArray());
                 // setting the default luminosity for all luminosity groups
-                if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
-                    visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
+                if (graphics.areLuminosityTexturesAvailable()) {
+                    visualModel.setParameterArray(LUMINOSITY_FACTORS_ARRAY_NAME, this._class.getDefaultGroupLuminosityFactors());
                 }
                 this._visualModel = visualModel;
             }
@@ -3399,8 +3395,6 @@ define([
     };
     // caching configuration settings
     config.executeWhenReady(function () {
-        _luminosityFactorsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME);
-        _groupTransformsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME);
         _hitZoneColor = config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR);
         _weaponFireSoundStackMinimumDistance = config.getSetting(config.BATTLE_SETTINGS.WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE);
         _scoreFactorForKill = config.getSetting(config.BATTLE_SETTINGS.SCORE_FRACTION_FOR_KILL);

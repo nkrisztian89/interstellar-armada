@@ -219,6 +219,14 @@ define([
              * The weapon is currently aimed at the direction towards the target, and the target is within its range (ready to fire).
              */
             AIM_STATUS_AIMED_IN_RANGE = 5,
+            /**
+             * @type String
+             */
+            LUMINOSITY_FACTORS_ARRAY_NAME = constants.LUMINOSITY_FACTORS_ARRAY_NAME,
+            /**
+             * @type String
+             */
+            GROUP_TRANSFORMS_ARRAY_NAME = constants.GROUP_TRANSFORMS_ARRAY_NAME,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -266,16 +274,6 @@ define([
              * @type Boolean
              */
             _showHitboxesForHitchecks,
-            /**
-             * Cached value of the configuration setting of the name of the uniform array storing the luminosity factors for models.
-             * @type String
-             */
-            _luminosityFactorsArrayName = null,
-            /**
-             * Cached value of the configuration setting of the name of the uniform array storing the group transforms for models.
-             * @type String
-             */
-            _groupTransformsArrayName = null,
             /**
              * Stores the uniform parameter array definitions (what arrays are there and what are their types in
              * name: type format) to use when creating visual models for equipment
@@ -388,9 +386,9 @@ define([
     function handleGraphicsSettingsChanged() {
         _parameterArrays = {};
         // setting up parameter array declarations (name: type)
-        _parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;
+        _parameterArrays[GROUP_TRANSFORMS_ARRAY_NAME] = managedGL.ShaderVariableType.MAT4;
         if (graphics.areLuminosityTexturesAvailable()) {
-            _parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
+            _parameterArrays[LUMINOSITY_FACTORS_ARRAY_NAME] = managedGL.ShaderVariableType.FLOAT;
         }
         _dynamicLights = graphics.areDynamicLightsAvailable() && (graphics.getMaxPointLights() > 0);
     }
@@ -1186,12 +1184,10 @@ define([
                 _parameterArrays);
         // setting the starting values of the parameter arrays
         // setting an identity transformation for all transform groups
-        if (this._visualModel.hasParameterArray(_groupTransformsArrayName)) {
-            this._visualModel.setParameterArray(_groupTransformsArrayName, graphics.getGroupTransformIdentityArray());
-        }
+        this._visualModel.setParameterArray(GROUP_TRANSFORMS_ARRAY_NAME, graphics.getGroupTransformIdentityArray());
         // setting the default luminosity for all luminosity groups
-        if (graphics.areLuminosityTexturesAvailable() && this._visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
-            this._visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
+        if (graphics.areLuminosityTexturesAvailable()) {
+            this._visualModel.setParameterArray(LUMINOSITY_FACTORS_ARRAY_NAME, this._class.getDefaultGroupLuminosityFactors());
         }
         if (trail) {
             this._trailEmitter = new TrailEmitter(this._class.getTrailDescriptor());
@@ -2060,12 +2056,10 @@ define([
         if (!this._visualModel) {
             // setting the starting values of the parameter arrays
             // setting an identity transformation for all transform groups
-            if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
-                visualModel.setParameterArray(_groupTransformsArrayName, graphics.getGroupTransformIdentityArray());
-            }
+            visualModel.setParameterArray(GROUP_TRANSFORMS_ARRAY_NAME, graphics.getGroupTransformIdentityArray());
             // setting the default luminosity for all luminosity groups
-            if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
-                visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
+            if (graphics.areLuminosityTexturesAvailable()) {
+                visualModel.setParameterArray(LUMINOSITY_FACTORS_ARRAY_NAME, this._class.getDefaultGroupLuminosityFactors());
             }
             this._visualModel = visualModel;
         }
@@ -2159,7 +2153,7 @@ define([
                         vec.prodVec3Mat4Aux(rotators[i].axis, this._transformMatrix),
                         this._rotationAngles[i]);
                 this._visualModel.setMat4Parameter(
-                        _groupTransformsArrayName,
+                        GROUP_TRANSFORMS_ARRAY_NAME,
                         rotators[i].transformGroupIndex,
                         this._transformMatrix);
             }
@@ -2752,12 +2746,10 @@ define([
                 parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel));
                 // setting the starting values of the parameter arrays
                 // setting an identity transformation for all transform groups
-                if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
-                    visualModel.setParameterArray(_groupTransformsArrayName, graphics.getGroupTransformIdentityArray());
-                }
+                visualModel.setParameterArray(GROUP_TRANSFORMS_ARRAY_NAME, graphics.getGroupTransformIdentityArray());
                 // setting the default luminosity for all luminosity groups
-                if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
-                    visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
+                if (graphics.areLuminosityTexturesAvailable()) {
+                    visualModel.setParameterArray(LUMINOSITY_FACTORS_ARRAY_NAME, this._class.getDefaultGroupLuminosityFactors());
                 }
                 if (newVisualModel) {
                     this._visualModels.push(visualModel);
@@ -3603,7 +3595,7 @@ define([
         // set the strength of which the luminosity texture is lighted
         if (graphics.areLuminosityTexturesAvailable()) {
             this._shipModel.setFloatParameter(
-                    _luminosityFactorsArrayName,
+                    LUMINOSITY_FACTORS_ARRAY_NAME,
                     this._slot.group,
                     Math.min(1.0, this._burnLevel / this._maxMoveBurnLevel));
         }
@@ -5311,8 +5303,6 @@ define([
         _maxCruiseForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_CRUISE_FORWARD_SPEED_FACTOR);
         _maxCruiseReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_CRUISE_REVERSE_SPEED_FACTOR);
         _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);
-        _luminosityFactorsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME);
-        _groupTransformsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME);
         _fireSoundStackingTimeThreshold = config.getSetting(config.BATTLE_SETTINGS.FIRE_SOUND_STACKING_TIME_THRESHOLD);
         _fireSoundStackingVolumeFactor = config.getSetting(config.BATTLE_SETTINGS.FIRE_SOUND_STACKING_VOLUME_FACTOR);
         graphics.executeWhenReady(handleGraphicsSettingsChanged);

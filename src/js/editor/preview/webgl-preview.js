@@ -679,7 +679,7 @@ define([
                     graphics.getMaxPointLights(),
                     graphics.getMaxSpotLights(),
                     {
-                        useVerticalValues: config.getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                        useVerticalValues: true,
                         viewDistance: config.getSetting(config.BATTLE_SETTINGS.VIEW_DISTANCE),
                         fov: INITIAL_CAMERA_FOV,
                         span: INITIAL_CAMERA_SPAN,

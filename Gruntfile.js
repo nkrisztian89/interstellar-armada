@@ -583,8 +583,6 @@ module.exports = function (grunt) {
                 ["minVoiceMessageDelayForSameSourceSameType", "battle"],
                 ["minVoiceMessageDelayForSameSourceDifferentType", "battle"],
                 ["defaultRandomSeed", "general"],
-                ["luminosityFactorsArrayName", "general", "UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME"],
-                ["useVerticalCameraValues", "general"],
                 ["menuMusic", "general"],
                 ["briefingMusic", "general"],
                 ["musicFadeInDuration", "general"],

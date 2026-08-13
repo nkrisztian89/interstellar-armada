@@ -5110,7 +5110,7 @@ define([
                 graphics.getMaxPointLights(),
                 graphics.getMaxSpotLights(),
                 {
-                    useVerticalValues: config.getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                    useVerticalValues: true,
                     viewDistance: config.getSetting(config.BATTLE_SETTINGS.VIEW_DISTANCE),
                     fov: INITIAL_CAMERA_FOV,
                     span: INITIAL_CAMERA_SPAN,
@@ -5132,7 +5132,7 @@ define([
                 0,
                 0,
                 {
-                    useVerticalValues: config.getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                    useVerticalValues: true,
                     viewDistance: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_VIEW_DISTANCE),
                     fov: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_FOV),
                     span: config.getSetting(config.CAMERA_SETTINGS.DEFAULT_SPAN),

@@ -659,7 +659,7 @@ define([
                 graphics.getMaxPointLights(),
                 graphics.getMaxSpotLights(),
                 {
-                    useVerticalValues: config.getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                    useVerticalValues: true,
                     viewDistance: _getSetting(SETTINGS.ITEM_VIEW_DISTANCE),
                     fov: _getSetting(SETTINGS.ITEM_VIEW_FOV),
                     span: _getSetting(SETTINGS.ITEM_VIEW_SPAN)

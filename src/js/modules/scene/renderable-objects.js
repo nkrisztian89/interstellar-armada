@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides various basic renderable object classes that can be added to scenes inside renderable nodes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1252,13 +1252,6 @@ define([
         };
     };
     /**
-     * Returns whether the mesh has a parameter array available with the passed name
-     * @param {String} name
-     */
-    ParameterizedMesh.prototype.hasParameterArray = function (name) {
-        return !!this._parameterArrays[name] && (this._parameterArrays[name].length > 0);
-    };
-    /**
      * Sets the value of the float element at the passed index of the parameter array identified by the passed name.
      * @param {String} name
      * @param {Number} index
@@ -1277,12 +1270,15 @@ define([
         this._parameterArrays[name].set(value, 16 * index);
     };
     /**
-     * Copies the values in the passed array to the parameter array identified by the passed name.
+     * If the mesh has a parameter array available with the passed name, copies the values in the passed array to it.
+     * Does nothing otherwise.
      * @param {String} name
      * @param {Float32Array} value
      */
     ParameterizedMesh.prototype.setParameterArray = function (name, value) {
-        this._parameterArrays[name].set(value, 0);
+        if (this._parameterArrays[name] && (this._parameterArrays[name].length > 0)) {
+            this._parameterArrays[name].set(value, 0);
+        }
     };
     // #########################################################################
     /**

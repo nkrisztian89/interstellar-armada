@@ -383,32 +383,6 @@ define([
             defaultValue: 4718
         },
         /**
-         * The uniform with the corresponding (pre- and suffixed) name will be used in the spacecraft shader to pass the luminosity
-         * factor values of the various triangle groups.
-         */
-        UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME: {
-            name: "luminosityFactorsArrayName",
-            type: "string",
-            defaultValue: "luminosityFactors"
-        },
-        /**
-         * The uniform with the corresponding (pre- and suffixed) name will be used in the spacecraft shader to pass the group transform
-         * values of the various triangle groups.
-         */
-        UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME: {
-            name: "groupTransformsArrayName",
-            type: "string",
-            defaultValue: "groupTransforms"
-        },
-        /**
-         * Whether to interpret given field of view, span and other camera property values as vertical or horizontal.
-         */
-        USE_VERTICAL_CAMERA_VALUES: {
-            name: "useVerticalCameraValues",
-            type: "boolean",
-            defaultValue: true
-        },
-        /**
          * The ID (resource name) of the song (MusicResource) that should play when the menus are shown.
          */
         MENU_MUSIC: {

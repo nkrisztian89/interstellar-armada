@@ -98,8 +98,6 @@
     "logic": {
         "general": {
             "defaultRandomSeed": 4718,
-            "luminosityFactorsArrayName": "luminosityFactors",
-            "useVerticalCameraValues": true,
             "menuMusic": "menu",
             "briefingMusic": "briefing",
             "musicFadeInDuration": 0.1,
