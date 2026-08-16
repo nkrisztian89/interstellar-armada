@@ -2064,6 +2064,11 @@ define([
          */
         this._renderLoopRunning = false;
         /**
+         * Whether the WebGL context of one of this screen's canvases has been lost
+         * @type Boolean
+         */
+        this._contextLost = false;
+        /**
          * Stores the timestamps of the last renders so that the FPS can be calculated.
          * @type DOMHighResTimeStamp[]
          */
@@ -2191,10 +2196,25 @@ define([
                     this._getAlphaForCanvas(this._getOriginalElementID(canvasElements[i])),
                     this._filtering,
                     this._resolution);
+            canvasElements[i].addEventListener("webglcontextlost", this._handleContextLost.bind(this), false);
         }
         // save a specific reference so we can remove it later
         this._resizeEventListener = this.handleResize.bind(this);
         window.addEventListener("resize", this._resizeEventListener);
+    };
+    /**
+     * Handles the loss of the WebGL context of one of this screen's canvases. (currently simply showing
+     * an error message and stopping the render loop)
+     */
+    HTMLScreenWithCanvases.prototype._handleContextLost = function () {
+        if (!this._contextLost) {
+            this._contextLost = true;
+            this.stopRenderLoop();
+            application.showError(
+                    "The 3D graphics (WebGL) context has been lost.",
+                    application.ErrorSeverity.SEVERE,
+                    "This can happen e.g. after a graphics driver reset or if the system has run out of graphics memory. Please reload the page to continue playing.");
+        }
     };
     /**
      * Returns the stored canvas component that corresponds to the HTML5 canvas element with the passed
