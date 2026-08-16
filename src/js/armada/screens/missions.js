@@ -698,7 +698,7 @@ define([
         }.bind(this);
         keyCommands.escape = function () {
             if (this._submitMissionPopupBackground.isVisible() && !this._manageSubmissionsPopupBackground.isVisible()) {
-                this._submitMissionPopupBackground.hide();
+                this._submitMissionPopupBackground.hide(true);
             } else {
                 game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
             }
@@ -946,7 +946,7 @@ define([
                 list.appendChild(row);
             }
             this._loadingBox.hide();
-            this._manageSubmissionsPopupBackground.show();
+            this._manageSubmissionsPopupBackground.show(true);
         }.bind(this), this._handleMissionHubError.bind(this, false));
     };
     /**
@@ -1066,7 +1066,7 @@ define([
         }.bind(this);
         this._submitButton.getElement().onclick = function () {
             this._updateSubmitMissionButton();
-            this._submitMissionPopupBackground.show();
+            this._submitMissionPopupBackground.show(true);
             if (!this._submitHelpShown) {
                 this._submitMissionHelpButton.getElement().click();
                 this._submitHelpShown = true;
@@ -1108,7 +1108,7 @@ define([
             return false;
         }.bind(this);
         this._submitMissionCancelButton.getElement().onclick = function () {
-            this._submitMissionPopupBackground.hide();
+            this._submitMissionPopupBackground.hide(true);
         }.bind(this);
         this._submitMissionSubmitButton.getElement().onclick = function () {
             this._loadingBox.show();
@@ -1119,7 +1119,7 @@ define([
                 mission: this._missionToSubmit
             }, function () {
                 this._loadingBox.hide();
-                this._submitMissionPopupBackground.hide();
+                this._submitMissionPopupBackground.hide(true);
                 this._showMessage(strings.get(strings.MISSIONS.SUBMIT_MISSION_SUCCESS));
                 this._manageSubmissionsButton.show();
             }.bind(this), function (data) {
@@ -1138,7 +1138,7 @@ define([
         }.bind(this);
         this._manageSubmissionsButton.getElement().onclick = this._showSubmissions.bind(this);
         this._manageSubmissionsCloseButton.getElement().onclick = function () {
-            this._manageSubmissionsPopupBackground.hide();
+            this._manageSubmissionsPopupBackground.hide(true);
         }.bind(this);
         this._fileInput.hide();
         this._submitMissionPopupBackground.hide();

@@ -269,3 +269,6 @@ table.submissions {
         font-size: 100%;
     }
 }
+
+@include common.ui-effects-box-appear("submitMissionPopupBackground", "submitMissionPopup");
+@include common.ui-effects-box-appear("manageSubmissionsPopupBackground", "manageSubmissionsPopup");
