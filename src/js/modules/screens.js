@@ -169,6 +169,13 @@ define([
          */
         this._container = null;
         /**
+         * The child element (if any) within _container marked with components.UI_EFFECTS_BOX_CLASS_NAME,
+         * that gets animated hide/show handled together with _container.
+         * See components.playAppearTransition() / playDisappearTransition()
+         * @type Element
+         */
+        this._uiEffectsBoxElement = null;
+        /**
          * Whether the screen is currently superimposed on another one
          * @type Boolean
          */
@@ -400,6 +407,7 @@ define([
             for (i = 0; i < elements.length; i++) {
                 elements[i].setAttribute("for", this._getElementID(elements[i].getAttribute("for")));
             }
+            this._uiEffectsBoxElement = this._container.querySelector("." + components.UI_EFFECTS_BOX_CLASS_NAME);
             if (this._background) {
                 parentNode.appendChild(this._background);
             }
@@ -429,7 +437,7 @@ define([
     HTMLScreen.prototype.show = function () {
         if (!this._visible) {
             if (this._container) {
-                components.playAppearTransition(this._container, this._containerHideTimeout);
+                components.playAppearTransition(this._container, this._containerHideTimeout, this._uiEffectsBoxElement);
                 this._containerHideTimeout = null;
                 this._visible = true;
                 if (this._onShow) {
@@ -478,14 +486,15 @@ define([
         if (this._visible) {
             if (this._container) {
                 if (immediate) {
-                    components.hideImmediately(this._container);
+                    components.hideImmediately(this._container, this._uiEffectsBoxElement);
                     if (this._background) {
                         components.hideImmediately(this._background);
                     }
                 } else {
-                    // the container has no disappear transition of its own (only its content does, see e.g. the ingame menu's outer box),
-                    // so it is kept visible for exactly as long as the background's transition, if any
-                    this._containerHideTimeout = components.playDisappearTransition(this._container, this._background || this._container);
+                    // the container itself has no disappear transition of its own (only its background and
+                    // uiEffectsBoxElement, if any, do), so it is kept visible for exactly as long as the
+                    // background's transition (which shares the same duration as the box's), if any
+                    this._containerHideTimeout = components.playDisappearTransition(this._container, this._background || this._container, this._uiEffectsBoxElement);
                     if (this._background) {
                         this._backgroundHideTimeout = components.playDisappearTransition(this._background);
                     }

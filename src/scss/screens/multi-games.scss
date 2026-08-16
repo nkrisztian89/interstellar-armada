@@ -4,14 +4,13 @@
 $horizontal-margin: 1em;
 
 .multiGames.pageContent {
-    width: calc(100% - #{$horizontal-margin});
+    width: 100%;
     height: calc(100% - #{2*common.$separator-height+3*common.$page-padding});
     margin-top: common.$page-padding;
 }
 
-div.onlinePlayersContainer, 
-div.noAvailableGamesLabel, 
-div.connectingLabel {
+div.onlinePlayersContainer,
+div.noAvailableGamesLabel {
     margin-left: auto;
     margin-right: auto;
     &:not([hidden]) {
@@ -60,6 +59,9 @@ table.multiGames {
     white-space: normal;
     padding: 0.6em;
 }
+
+@include common.ui-effects-box-appear("createGamePopupBackground", "createGamePopup");
+@include common.ui-effects-box-appear("playerPopupBackground", "playerPopup");
 
 .createGamePopupContent, .playerPopupContent {
     position: relative;

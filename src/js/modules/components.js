@@ -92,6 +92,12 @@ define([
              * @type String
              */
             UI_EFFECTS_SHOWN_CLASS_NAME = "uiEffectsShown",
+            /**
+             * Used to mark a child element that needs to be animated together with its parent element
+             * (e.g. a popup over a background overlay) when the parent is shown/hidden.
+             * @type String
+             */
+            UI_EFFECTS_BOX_CLASS_NAME = "uiEffectsBox",
             // event names for passing event handlers when components are crated
             SHOW_EVENT_NAME = "show",
             HIDE_EVENT_NAME = "hide",
@@ -196,7 +202,7 @@ define([
     function _getLabelText(labelDescriptor) {
         var caption = labelDescriptor.getCaption ?
                 labelDescriptor.getCaption() :
-                labelDescriptor.caption || strings.get({name: labelDescriptor.id});
+                (labelDescriptor.caption !== undefined) ? labelDescriptor.caption : strings.get({name: labelDescriptor.id});
         return labelDescriptor.replacements ? utils.formatString(caption, labelDescriptor.replacements) : caption;
     }
     // ------------------------------------------------------------------------------
@@ -276,24 +282,33 @@ define([
         return result;
     }
     /**
-     * Makes the passed element visible (clearing its "hidden" attribute) and, if it
-     * has a CSS transition set for the UI_EFFECTS_SHOWN_CLASS_NAME class, plays it
-     * by adding that class only after a forced reflow, so the browser registers the
+     * Makes the passed element visible (clearing its "hidden" attribute) and, if it (or the passed
+     * box element) has a CSS transition set for the UI_EFFECTS_SHOWN_CLASS_NAME class, plays it by
+     * adding that class to both only after a forced reflow, so the browser registers the
      * pre-transition state first instead of skipping straight to the end state.
      * @param {Element} element
      * @param {Number} [pendingHideTimeout] The handle previously returned by
      * playDisappearTransition() for this same element, if a disappear transition might
      * still be in progress on it, so that it can be cancelled (interrupting a disappear
      * with an appear should not result in the element being hidden later on)
+     * @param {Element} [boxElement] A child element (e.g. a popup over a background, found via
+     * UI_EFFECTS_BOX_CLASS_NAME) that animates together with element and should have the same
+     * UI_EFFECTS_SHOWN_CLASS_NAME toggled onto it directly, at the same time.
      */
-    function playAppearTransition(element, pendingHideTimeout) {
+    function playAppearTransition(element, pendingHideTimeout, boxElement) {
         if (pendingHideTimeout) {
             clearTimeout(pendingHideTimeout);
         }
         element.classList.remove(UI_EFFECTS_SHOWN_CLASS_NAME);
         element.hidden = false;
+        if (boxElement) {
+            boxElement.classList.remove(UI_EFFECTS_SHOWN_CLASS_NAME);
+        }
         element.offsetWidth; //eslint-disable-line no-unused-expressions
         element.classList.add(UI_EFFECTS_SHOWN_CLASS_NAME);
+        if (boxElement) {
+            boxElement.classList.add(UI_EFFECTS_SHOWN_CLASS_NAME);
+        }
     }
     /**
      * Starts hiding the passed element by removing the UI_EFFECTS_SHOWN_CLASS_NAME
@@ -306,11 +321,17 @@ define([
      * being hidden - for an element with no transition of its own that needs to stay
      * visible for exactly as long as another, already transitioning element it forms one
      * visual unit with.
+     * @param {Element} [boxElement] A child element (e.g. a popup over a background, found via
+     * UI_EFFECTS_BOX_CLASS_NAME) that animates together with element and should have the same
+     * UI_EFFECTS_SHOWN_CLASS_NAME toggled off of it directly, at the same time.
      * @returns {Number|null} The handle of the timeout set to hide the element, or null if it was hidden right away
      */
-    function playDisappearTransition(element, durationElement) {
+    function playDisappearTransition(element, durationElement, boxElement) {
         var duration = getTransitionDuration(durationElement || element);
         element.classList.remove(UI_EFFECTS_SHOWN_CLASS_NAME);
+        if (boxElement) {
+            boxElement.classList.remove(UI_EFFECTS_SHOWN_CLASS_NAME);
+        }
         if (duration > 0) {
             return setTimeout(function () {
                 element.hidden = true;
@@ -320,15 +341,34 @@ define([
         return null;
     }
     /**
+     * Shows the passed element right away, skipping its CSS appear transition even if it has
+     * one (see playAppearTransition() for that case, which should play the transition).
+     * @param {Element} element
+     * @param {Element} [boxElement] See playAppearTransition() - has UI_EFFECTS_SHOWN_CLASS_NAME
+     * added to it directly as well, at the same time as element
+     */
+    function showImmediately(element, boxElement) {
+        element.hidden = false;
+        element.classList.add(UI_EFFECTS_SHOWN_CLASS_NAME);
+        if (boxElement) {
+            boxElement.classList.add(UI_EFFECTS_SHOWN_CLASS_NAME);
+        }
+    }
+    /**
      * Hides the passed element right away, skipping its CSS disappear transition even if it
      * has one - for hiding as part of navigating away entirely (e.g. to a whole new screen),
      * as opposed to closing a popup / superimposed screen back to what was under it (see
      * playDisappearTransition() for that case, which should play the transition).
      * @param {Element} element
+     * @param {Element} [boxElement] See playAppearTransition() - has UI_EFFECTS_SHOWN_CLASS_NAME
+     * removed from it directly as well, at the same time as element
      */
-    function hideImmediately(element) {
+    function hideImmediately(element, boxElement) {
         element.classList.remove(UI_EFFECTS_SHOWN_CLASS_NAME);
         element.hidden = true;
+        if (boxElement) {
+            boxElement.classList.remove(UI_EFFECTS_SHOWN_CLASS_NAME);
+        }
     }
     // #########################################################################
     /**
@@ -357,6 +397,22 @@ define([
          * @type HTMLElement
          */
         this._element = null;
+        /**
+         * Already updated at the start of show/hide animation to keep track of the set visibility.
+         * @type Boolean
+         */
+        this._visible = true;
+        /**
+         * The handle of the timeout to hide the wrapped element set by a disappear transition currently in progress.
+         * @type Number
+         */
+        this._hideTimeout = null;
+        /**
+         * The child element (if any) within the wrapped element marked with UI_EFFECTS_BOX_CLASS_NAME,
+         * that animates together with the wrapped element.
+         * @type Element
+         */
+        this._uiEffectsBoxElement = null;
         /**
          * A function that runs whenever the component becomes visible.
          * @type Function
@@ -473,32 +529,51 @@ define([
                     "Cannot initialize component: '" + this._name + "'!",
                     application.ErrorSeverity.SEVERE,
                     "No element can be found on the page with a corresponding ID: '" + this._elementID + "'!");
+            return;
         }
+        this._visible = !this._element.hidden;
+        this._uiEffectsBoxElement = this._element.querySelector("." + UI_EFFECTS_BOX_CLASS_NAME);
     };
     /**
      * Returns whether the component is currently visible.
      * @returns {Boolean}
      */
     SimpleComponent.prototype.isVisible = function () {
-        return !this._element.hidden;
+        return this._visible;
     };
     /**
-     * Hides the wrapped HTML element by setting its hidden attribute
+     * Hides the wrapped HTML element by setting its hidden attribute.
+     * @param {Boolean} [animate=false] If true, play the CSS disappear animation before hiding (if any).
      */
-    SimpleComponent.prototype.hide = function () {
-        if (this.isVisible()) {
-            this._element.hidden = true;
+    SimpleComponent.prototype.hide = function (animate) {
+        if (this._visible) {
+            this._visible = false;
+            if (animate) {
+                this._hideTimeout = playDisappearTransition(this._element, undefined, this._uiEffectsBoxElement);
+            } else {
+                hideImmediately(this._element, this._uiEffectsBoxElement);
+            }
             if (this._onHide) {
                 this._onHide();
             }
         }
     };
     /**
-     * Shows (reveals) the wrapped HTML element by setting its hidden attribute
+     * Shows (reveals) the wrapped HTML element by clearing its hidden attribute.
+     * @param {Boolean} [animate=false] If true, play the CSS appear animation (if any).
      */
-    SimpleComponent.prototype.show = function () {
-        if (!this.isVisible()) {
-            this._element.hidden = false;
+    SimpleComponent.prototype.show = function (animate) {
+        if (!this._visible) {
+            this._visible = true;
+            if (animate) {
+                playAppearTransition(this._element, this._hideTimeout, this._uiEffectsBoxElement);
+            } else {
+                if (this._hideTimeout) {
+                    clearTimeout(this._hideTimeout);
+                }
+                showImmediately(this._element, this._uiEffectsBoxElement);
+            }
+            this._hideTimeout = null;
             if (this._onShow) {
                 this._onShow();
             }
@@ -507,12 +582,13 @@ define([
     /**
      * Shows / hides the component, if needed to achieve the passed visibility (also calling the appropriate event handlers)
      * @param {Boolean} visible The desired visibility of the component
+     * @param {Boolean} [animate=false] Whether to play the CSS appear/disappear animation, or show/hide instantly.
      */
-    SimpleComponent.prototype.setVisible = function (visible) {
+    SimpleComponent.prototype.setVisible = function (visible, animate) {
         if (visible) {
-            this.show();
+            this.show(animate);
         } else {
-            this.hide();
+            this.hide(animate);
         }
     };
     /**
@@ -627,6 +703,12 @@ define([
          */
         this._rootElement = null;
         /**
+         * The child element (if any) within _rootElement marked with UI_EFFECTS_BOX_CLASS_NAME, that
+         * gets animated together with _rootElement when it is shown/hidden.
+         * @type HTMLElement
+         */
+        this._uiEffectsBoxElement = null;
+        /**
          * A flag that marks whether loading the correspoding CSS stylesheet has finished.
          * @type Boolean
          */
@@ -725,6 +807,7 @@ define([
         for (i = 0; i < namedElements.length; i++) {
             namedElements[i].setAttribute("id", this._getElementID(namedElements[i].getAttribute("id")));
         }
+        this._uiEffectsBoxElement = this._rootElement.querySelector("." + UI_EFFECTS_BOX_CLASS_NAME);
         this._initializeComponents();
     };
     /**
@@ -812,7 +895,7 @@ define([
         if (this._rootElement) {
             if (!this._visible) {
                 this._visible = true;
-                playAppearTransition(this._rootElement, this._hideTimeout);
+                playAppearTransition(this._rootElement, this._hideTimeout, this._uiEffectsBoxElement);
                 this._hideTimeout = null;
                 return true;
             }
@@ -831,7 +914,7 @@ define([
         if (this._rootElement) {
             if (this._visible) {
                 this._visible = false;
-                this._hideTimeout = playDisappearTransition(this._rootElement);
+                this._hideTimeout = playDisappearTransition(this._rootElement, undefined, this._uiEffectsBoxElement);
                 return true;
             }
         } else {
@@ -2087,6 +2170,27 @@ define([
     Selector.prototype.refreshValue = function () {
         this.selectValueWithIndex(this._valueIndex);
     };
+    /**
+     * Returns whether the value button of this selector is currently in enabled state.
+     * @returns {Boolean}
+     */
+    Selector.prototype.isEnabled = function () {
+        return this._valueSelector.isEnabled();
+    };
+    /**
+     * Puts the value button of this selector in disabled state, so it no longer reacts to clicks.
+     */
+    Selector.prototype.disable = function () {
+        this._valueSelector.disable();
+    };
+    /**
+     * Puts the value button of this selector in enabled state if there are at least two available values.
+     */
+    Selector.prototype.enable = function () {
+        if (this._valueList.length >= 2) {
+            this._valueSelector.enable();
+        }
+    };
     // #########################################################################
     /**
      * @typedef {Selector~Style} MultiBarSelector~Style
@@ -2438,6 +2542,7 @@ define([
         EYE_CROSSED_CLASS_NAME: EYE_CROSSED_CLASS_NAME,
         FOCUSING_CLASS_NAME: FOCUSING_CLASS_NAME,
         UI_EFFECTS_SHOWN_CLASS_NAME: UI_EFFECTS_SHOWN_CLASS_NAME,
+        UI_EFFECTS_BOX_CLASS_NAME: UI_EFFECTS_BOX_CLASS_NAME,
         // event names
         SHOW_EVENT_NAME: SHOW_EVENT_NAME,
         HIDE_EVENT_NAME: HIDE_EVENT_NAME,
@@ -2453,6 +2558,7 @@ define([
         getTransitionDuration: getTransitionDuration,
         playAppearTransition: playAppearTransition,
         playDisappearTransition: playDisappearTransition,
+        showImmediately: showImmediately,
         hideImmediately: hideImmediately,
         // classes
         SimpleComponent: SimpleComponent,

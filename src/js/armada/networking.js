@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2025 Krisztián Nagy
+ * Copyright 2021-2026 Krisztián Nagy
  * @file Provides the networking functionality using WebSockets and WebRTC for multiplayer games.
  * Relies on a WebSocket server to discover, host and join games and connect with
  * the other players of the same game. If possible, establishes a direct WebRTC
@@ -1209,6 +1209,13 @@ define([
         return _game ? _game.settings : null;
     }
     /**
+     * Returns the maximum number of players allowed to join the current (hosted or joined) game
+     * @returns {Number}
+     */
+    function getMaxPlayers() {
+        return _game ? _game.maxPlayers : 0;
+    }
+    /**
      * Returns the name of the hosting player of the current (hosted or joined)
      * game
      * @returns {String}
@@ -1428,11 +1435,12 @@ define([
     }
     /**
      * @typedef {Object} JoinGameParams
-     * @property {String} gameName 
+     * @property {String} gameName
+     * @property {Number} maxPlayers
      */
     /**
      * Asks the server to add the local player to the game identified by the
-     * params. Calls the callback function if and when the player has 
+     * params. Calls the callback function if and when the player has
      * successfully joined the game. If there is an error on the server side
      * during joining, the callback set by onError() will be called instead
      * @param {JoinGameParams} params
@@ -1449,6 +1457,7 @@ define([
                 name: data.gameName,
                 mode: data.gameMode,
                 players: data.players,
+                maxPlayers: params.maxPlayers,
                 settings: data.settings,
                 started: false
             };
@@ -1931,6 +1940,7 @@ define([
         getGameName: getGameName,
         getGameMode: getGameMode,
         getGameSettings: getGameSettings,
+        getMaxPlayers: getMaxPlayers,
         getHostName: getHostName,
         listGames: listGames,
         createGame: createGame,

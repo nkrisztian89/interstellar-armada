@@ -11,6 +11,7 @@ $vertical-padding: 0;
 
 div.multiBarSelector {
     display: table;
+    border-spacing: 0;
     table-layout: fixed;
     width: common.$input-width;
     padding: $vertical-padding $horizontal-padding;
@@ -41,6 +42,11 @@ div.multiBarSelectorPropertyContainer {
     padding: 0;
     padding-right: 1em;
     box-sizing: border-box;
+
+    // hide the property label when empty, so the selector becomes just the button part
+    &:empty {
+        display: none;
+    }
 }
 
 div.multiBarSelectorValueWrapper {
@@ -93,6 +99,23 @@ div.multiBarSelectorValueWrapper {
             box-shadow: 0 0 0.4em hsl(var(--bar-hue), 100%, 43%);
         }
     }
+
+    /* muted, glow-less bars while the selector itself is disabled */
+    button.separate.disabled ~ div.multiBarSelectorBars {
+        div.multiBarSelectorBar.selected {
+            background-image: linear-gradient(to bottom,
+                    color-scheme.relDarken(color-scheme.$highlight-color, 0.4),
+                    color-scheme.relDarken(color-scheme.$highlight-color, 0.6));
+            box-shadow: none;
+        }
+
+        &.colorTransition div.multiBarSelectorBar.selected {
+            background-image: linear-gradient(to bottom,
+                    hsl(var(--bar-hue), 40%, 35%),
+                    hsl(var(--bar-hue), 40%, 25%));
+            box-shadow: none;
+        }
+    }
 }
 
 div.multiBarSelector div.multiBarSelectorValueWrapper {
@@ -105,10 +128,10 @@ div.multiBarSelector div.multiBarSelectorValueWrapper {
     }
 }
 
-/* Matches Selector's .smallSelector: a chromeless variant with no panel background/border/margin.
-   Used for missions.js's difficulty selector. */
+/* Matches Selector's .smallSelector: a chromeless variant with no panel background/border/margin. */
 div.smallMultiBarSelector {
     display: table;
+    border-spacing: 0;
     &[hidden] {
         display: none;
     }
@@ -127,7 +150,7 @@ div.smallMultiBarSelector {
 }
 
 /* Matches height to Selector .narrow */
-div.multiBarSelector.narrow {
+div.multiBarSelector.narrow, div.smallMultiBarSelector.narrow {
     @media screen and (min-width: 1920px) {
         margin-top: 0.2em;
         margin-bottom: 0.2em;

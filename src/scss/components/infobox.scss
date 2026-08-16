@@ -12,6 +12,7 @@
 
 .infoBoxBackground {
     background-color: color-scheme.$overlay-background-color;
+    z-index: common.$overlay-z-index;
 }
 
 @include common.ui-effects-box-appear("infoBoxBackground", "infoBox");

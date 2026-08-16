@@ -77,7 +77,6 @@ define([
         NO_SELECTED_NAME: {name: "missions.noSelectedName"},
         NO_SELECTED_DESCRIPTION: {name: "missions.noSelectedDescription"},
         CUSTOM_DESCRIPTION: {name: "missions.customDescription"},
-        MISSION_HUB_CONNECTING_DESCRIPTION: {name: "missions.missionHubConnectingDescription"},
         MISSION_HUB_DESCRIPTION: {name: "missions.missionHubDescription"},
         LOCATION: {name: "missions.location"},
         CREATED_BY: {name: "missions.createdBy"},
@@ -143,11 +142,11 @@ define([
         NO_WELCOME_ERROR: {name: "multiGames.noWelcomeError"}
     };
     strings.MULTI_LOBBY = {
-        GAME_TITLE: {name: "multiLobby.gameTitle"},
         CONNECTION_SERVER: {name: "multiLobby.connection.server"},
         CONNECTION_DIRECT: {name: "multiLobby.connection.direct"},
         READY_YES: {name: "multiLobby.ready.yes"},
         READY_NO: {name: "multiLobby.ready.no"},
+        OPEN_SLOT: {name: "multiLobby.openSlot"},
         KICK_BUTTON: {name: "multiLobby.kickButton"},
         CHAT_MESSAGE_PLACEHOLDER: {name: "multiLobby.chatMessagePlaceholder"},
         LOCATION_LABEL: {name: "multiLobby.locationLabel"},

@@ -2,7 +2,7 @@
 @use "../color-scheme";
 
 .dialogBackground {
-    z-index: 100;
+    z-index: common.$page-container-z-index;
 }
 
 .dialogContainer {
@@ -10,6 +10,7 @@
     max-width: 90vw;
     padding: 0.5em;
     box-sizing: border-box;
+    z-index: common.$inner-container-z-index;
 }
 
 body:not(.uiEffects) .dialogContainer {

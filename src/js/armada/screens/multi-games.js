@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2022 Krisztián Nagy
+ * Copyright 2021-2026 Krisztián Nagy
  * @file This module manages and provides the Multiplayer Games screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -41,7 +41,7 @@ define([
             REFRESH_BUTTON_ID = "refreshButton",
             CREATE_GAME_BUTTON_ID = "createGameButton",
             SERVER_INFO_CONTAINER_ID = "serverInfoContainer",
-            CONNECTING_LABEL_ID = "connectingLabel",
+            CONNECTING_INDICATOR_CONTAINER_ID = "connectingIndicatorContainer",
             NO_AVAILABLE_GAMES_ID = "noAvailableGamesLabel",
             SERVER_VERSION_VALUE_ID = "serverVersionValue",
             SERVER_REGION_VALUE_ID = "serverRegionValue",
@@ -130,7 +130,7 @@ define([
         /** @type SimpleComponent */
         this._serverInfoContainer = this.registerSimpleComponent(SERVER_INFO_CONTAINER_ID);
         /** @type SimpleComponent */
-        this._connectingLabel = this.registerSimpleComponent(CONNECTING_LABEL_ID);
+        this._connectingIndicatorContainer = this.registerSimpleComponent(CONNECTING_INDICATOR_CONTAINER_ID);
         /** @type SimpleComponent */
         this._noAvailableGamesLabel = this.registerSimpleComponent(NO_AVAILABLE_GAMES_ID);
         /** @type SimpleComponent */
@@ -311,12 +311,12 @@ define([
                 this._refreshButton.disable();
                 this._createGameButton.disable();
                 this._serverInfoContainer.hide();
-                this._connectingLabel.show();
+                this._connectingIndicatorContainer.show();
                 networking.onConnect(function () {
                     this._interval = setInterval(refresh, GAMES_REFRESH_INTERVAL);
                     refresh();
                     this._createGameButton.enable();
-                    this._connectingLabel.hide();
+                    this._connectingIndicatorContainer.hide();
                     this._serverVersionValue.setTextContent(networking.getServerApiVersion());
                     this._serverRegionValue.setTextContent(strings.get(strings.SERVER_REGION.PREFIX, networking.getServerRegion(), networking.getServerRegion()));
                     this._serverInfoContainer.show();
@@ -328,8 +328,8 @@ define([
             }
             networking.onDisconnect(function (wasConnected) {
                 this._cancelInterval();
-                this._createGamePopupBackground.hide();
-                this._playerPopupBackground.hide();
+                this._createGamePopupBackground.hide(true);
+                this._playerPopupBackground.hide(true);
                 if (!disconnectErrorShown) {
                     this._showMessage(
                             strings.get(wasConnected ?
@@ -355,7 +355,7 @@ define([
                     case networking.ERROR_CODE_PLAYER_NAME_ALREADY_EXISTS:
                         message = strings.MULTI_GAMES.PLAYER_NAME_ALREADY_EXISTS_ERROR;
                         callback = function () {
-                            this._playerPopupBackground.show();
+                            this._playerPopupBackground.show(true);
                         }.bind(this);
                         break;
                     case networking.ERROR_CODE_GAME_NAME_ALREADY_EXISTS:
@@ -367,8 +367,8 @@ define([
                     case networking.ERROR_CODE_INVALID_PLAYER_NAME:
                         message = strings.MULTI_GAMES.INVALID_PLAYER_NAME_ERROR;
                         callback = function () {
-                            this._createGamePopupBackground.hide();
-                            this._playerPopupBackground.show();
+                            this._createGamePopupBackground.hide(true);
+                            this._playerPopupBackground.show(true);
                         }.bind(this);
                         break;
                     case networking.ERROR_CODE_INVALID_TEXT:
@@ -403,7 +403,7 @@ define([
             }.bind(this));
             this._createGamePopupBackground.hide();
             if (!networking.getPlayerName()) {
-                this._playerPopupBackground.show();
+                this._playerPopupBackground.show(true);
                 this._playerNameInput.getElement().focus();
             }
             this._updatePlayerOkButton();
@@ -411,6 +411,8 @@ define([
         } else {
             this._cancelInterval();
             networking.onError(null);
+            this._playerPopupBackground.hide();
+            this._createGamePopupBackground.hide();
         }
     };
     /**
@@ -427,13 +429,13 @@ define([
             return false;
         }.bind(this);
         this._createGameButton.getElement().onclick = function () {
-            this._createGamePopupBackground.show();
+            this._createGamePopupBackground.show(true);
             this._updateCreateGameCreateButton();
             this._createGameNameInput.getElement().focus();
             return false;
         }.bind(this);
         this._createGameCancelButton.getElement().onclick = function () {
-            this._createGamePopupBackground.hide();
+            this._createGamePopupBackground.hide(true);
             return false;
         }.bind(this);
         this._createGameNameInput.getElement().maxLength = MAX_GAME_NAME_LENGTH;
@@ -460,12 +462,15 @@ define([
             return false;
         }.bind(this);
         this._playerNameInput.getElement().maxLength = MAX_PLAYER_NAME_LENGTH;
-        this._playerNameInput.getElement().onkeyup = function () {
+        this._playerNameInput.getElement().onkeyup = function (event) {
             this._updatePlayerOkButton();
+            if ((event.keyCode === 13) && this._playerOkButton.isEnabled()) {
+                this._playerOkButton.getElement().click();
+            }
         }.bind(this);
         this._playerOkButton.getElement().onclick = function () {
             networking.setPlayerName(this._playerNameInput.getElement().value);
-            this._playerPopupBackground.hide();
+            this._playerPopupBackground.hide(true);
             return false;
         }.bind(this);
         this._createGamePopupBackground.hide();
@@ -490,7 +495,8 @@ define([
                 },
                 joinButtonAction = function (index) {
                     networking.joinGame({
-                        gameName: games[index].name
+                        gameName: games[index].name,
+                        maxPlayers: games[index].maxPlayers
                     }, function () {
                         analytics.sendEvent("multijoin");
                         game.closeOrNavigateTo(armadaScreens.MULTI_LOBBY_SCREEN_NAME);

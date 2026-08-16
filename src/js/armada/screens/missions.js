@@ -50,6 +50,7 @@ define([
             DIFFICULTY_CONTAINER_ID = "difficultyContainer",
             DIFFICULTY_SELECTOR_ID = "difficultySelector",
             MISSION_DESCRIPTION_ID = "missionDescription",
+            MISSION_HUB_CONNECTING_INDICATOR_CONTAINER_ID = "missionHubConnectingIndicatorContainer",
             FILE_BUTTON_ID = "fileButton",
             SUBMIT_BUTTON_ID = "submitButton",
             SUBMIT_FILE_BUTTON_ID = "submitFileButton",
@@ -245,6 +246,8 @@ define([
         this._difficultySelector = null;
         /** @type SimpleComponent */
         this._missionDescription = this.registerSimpleComponent(MISSION_DESCRIPTION_ID);
+        /** @type SimpleComponent */
+        this._missionHubConnectingIndicatorContainer = this.registerSimpleComponent(MISSION_HUB_CONNECTING_INDICATOR_CONTAINER_ID);
         /** @type SimpleComponent */
         this._missionObjectivesTitle = this.registerSimpleComponent("missionObjectivesTitle");
         /** @type SimpleComponent */
@@ -544,6 +547,8 @@ define([
      */
     MissionsScreen.prototype._selectMission = function (index) {
         var missionFilename, missionName;
+        this._missionHubConnectingIndicatorContainer.hide();
+        this._missionDescription.show();
         if ((index >= 0) && (index < this._missionProvider.getMissionNames(this._custom).length)) {
             missionFilename = this._missionProvider.getMissionNames(this._custom)[index];
             missionName = utils.getFilenameWithoutExtension(missionFilename);
@@ -617,13 +622,18 @@ define([
         } else {
             this._missionTitle.setContent(strings.get(strings.MISSIONS.NO_SELECTED_NAME));
             this._missionLocation.setContent("");
-            this._missionDescription.setContent(strings.get(this._loadCustom ?
-                    strings.MISSIONS.CUSTOM_DESCRIPTION :
-                    this._community ?
-                    (missionHub.isReady() ? strings.MISSIONS.MISSION_HUB_DESCRIPTION : strings.MISSIONS.MISSION_HUB_CONNECTING_DESCRIPTION) :
-                    strings.MISSIONS.NO_SELECTED_DESCRIPTION), {
-                editor: '<a target="_blank" rel="noopener" href="editor.html#missions">Interstellar Armada editor</a>'
-            });
+            if (this._community && !missionHub.isReady()) {
+                this._missionDescription.hide();
+                this._missionHubConnectingIndicatorContainer.show();
+            } else {
+                this._missionDescription.setContent(strings.get(this._loadCustom ?
+                        strings.MISSIONS.CUSTOM_DESCRIPTION :
+                        this._community ?
+                        strings.MISSIONS.MISSION_HUB_DESCRIPTION :
+                        strings.MISSIONS.NO_SELECTED_DESCRIPTION), {
+                    editor: '<a target="_blank" rel="noopener" href="editor.html#missions">Interstellar Armada editor</a>'
+                });
+            }
             this._missionObjectivesTitle.hide();
             this._missionObjectives.hide();
             this._playerSpacecraftTitle.hide();

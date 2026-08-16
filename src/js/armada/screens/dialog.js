@@ -176,7 +176,7 @@ define([
         }
         this._activeButtonCount = data.buttons.length;
         while (i < this._buttons.length) {
-            this._buttons[i].hide(true);
+            this._buttons[i].hide();
             i++;
         }
     };

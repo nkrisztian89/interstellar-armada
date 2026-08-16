@@ -129,7 +129,7 @@ canvas {
 }
 
 .innerContainer {
-    z-index: 100;
+    z-index: common.$inner-container-z-index;
     background-color: color-scheme.$panel-color;
     border: none;
 }
@@ -148,7 +148,7 @@ canvas {
 /* To use with the outermost container div which houses the page content */
 .pageContainer {
     position: relative;
-    z-index: 100;
+    z-index: common.$page-container-z-index;
     padding: common.$page-padding;
     margin-bottom: common.$page-padding;
     margin-top: common.$page-padding;
@@ -248,6 +248,44 @@ canvas {
     background-color: rgba(0,0,0,0);
 }
 
+@keyframes glow-white-and-spin {
+    0% {filter: drop-shadow(0 0 0.05em white); transform: rotateY(0deg);}
+    50% {filter: drop-shadow(0 0 0.5em white); transform: rotateY(180deg);}
+    100% {filter: drop-shadow(0 0 0.05em white); transform: rotateY(360deg);}
+}
+
+/* A spinning, glowing logo with a status text below it, to indicate an in-progress operation. */
+
+/* The image part - can be used standalone e.g. on the LoadingBox */
+.loadingIndicatorImage {
+    display: block;
+    width: 4em;
+    margin: 0 auto;
+    animation: glow-white-and-spin 3s infinite;
+    &[hidden] {
+        display: none;
+    }
+}
+
+.loadingIndicator {
+    text-align: center;
+    
+    .loadingIndicatorText {
+        margin-top: 0.5em;
+    }
+}
+
+.loadingIndicatorContainer {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &[hidden] {
+        display: none;
+    }
+}
+
 .separatorBar {
     display: block;
     margin-left: 0;
@@ -319,10 +357,8 @@ li {
 }
 
 a, button {
-    color: color-scheme.$light-text-color;
     text-decoration: none;
-    font-weight: bold;
-    font-variant: small-caps;
+    @include common.button-text;
 }
 
 a {

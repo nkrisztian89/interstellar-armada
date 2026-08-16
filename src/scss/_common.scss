@@ -78,6 +78,10 @@ $ui-effects-heavy-blur-radius: 14px;
 $ui-effects-appear-duration: 0.2s;
 $ui-effects-appear-scale: 0.9;
 
+$page-container-z-index: 100;
+$inner-container-z-index: 100;
+$overlay-z-index: 200;
+
 @mixin glowing {
     box-shadow: $glow;
 }
@@ -102,6 +106,12 @@ $ui-effects-appear-scale: 0.9;
     text-shadow:
         color-scheme.$highlight-color 0 0 0.2em,
         color-scheme.$highlight-color 0 0 0.2em;
+}
+
+@mixin button-text {
+    color: color-scheme.$light-text-color;
+    font-weight: bold;
+    font-variant: small-caps;
 }
 
 @mixin bordered {
@@ -156,10 +166,10 @@ $ui-effects-appear-scale: 0.9;
             opacity: 0;
             transform: scale($ui-effects-appear-scale);
             transition: opacity $ui-effects-appear-duration ease-out, transform $ui-effects-appear-duration ease-out;
-        }
-        .uiEffectsShown .#{$box-selector} {
-            opacity: 1;
-            transform: scale(1);
+            &.uiEffectsShown {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
     }
 }

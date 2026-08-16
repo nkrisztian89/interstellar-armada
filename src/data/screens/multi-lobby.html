@@ -3,41 +3,66 @@
         <h1 id="title" class="translatable"></h1>
     </div>
     <div class="multiLobby pageContent">
-        <h2 id="gameTitle" class="gameTitle"></h2>
-        <div class="playersContainer">
-            <table class="multiPlayers outerContainer">
-                <thead>
-                    <tr>
-                        <th id="playerNameColumn" class="translatable"></th>
-                        <th>&nbsp;</th>
-                        <th id="spacecraftColumn" class="translatable"></th>
-                        <th id="connectionColumn" class="translatable"></th>
-                        <th id="pingColumn" class="translatable"></th>
-                        <th id="readyColumn" class="translatable"></th>
-                        <th id="kickColumn">&nbsp;</th>
-                    </tr>
-                </thead>
-                <tbody id="playersList">
-                </tbody>
-            </table>
-        </div>
-        <div class="settingsContainer">
-            <div id="hostSettings" class="hostSettings">
+        <div class="lobbyMainContainer">
+            <div class="lobbyLeftColumn">
+                <div class="playersContainer">
+                    <table class="multiPlayers outerContainer">
+                        <thead>
+                            <tr>
+                                <th id="playerNameColumn" class="translatable"></th>
+                                <th>&nbsp;</th>
+                                <th id="spacecraftColumn" class="translatable"></th>
+                                <th id="connectionColumn" class="translatable"></th>
+                                <th id="pingColumn" class="translatable"></th>
+                                <th id="readyColumn" class="translatable"></th>
+                                <th id="kickColumn" class="actionsColumn">&nbsp;</th>
+                            </tr>
+                        </thead>
+                        <tbody id="playersList">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="chatContainer">
+                    <div id="chatLog" class="chatLog"></div>
+                    <div class="chatInputRow">
+                        <div class="chatMessageContainer">
+                            <input id="chatMessage" class="chatMessage" type="text">
+                            <span id="remainingMessageChars" class="remainingMessageChars"></span>
+                        </div>
+                        <button id="chatSend" class="chatSend translatable"></button>
+                    </div>
+                </div>
             </div>
-            <div id="guestSettings">
-                <span id="difficultyContainer"><span id="difficultyLabel" class="translatable"></span>&nbsp;<span id="difficultyValue"></span><br></span>
-                <span id="locationLabel" class="translatable"></span>&nbsp;<span id="locationValue"></span><br>
-                <span id="loadoutLabel" class="translatable"></span>&nbsp;<span id="loadoutValue"></span><br>
-                <span id="enemiesPerWaveContainer"><span id="enemiesPerWaveLabel" class="translatable"></span>&nbsp;<span id="enemiesPerWaveValue"></span><br></span>
+            <div class="settingsContainer">
+                <div class="settingsInfoRow">
+                    <div id="gameNameLabel" class="smallSelectorPropertyContainer translatable"></div>
+                    <div id="gameNameValue" class="settingsInfoValue"></div>
+                </div>
+                <div class="settingsInfoRow">
+                    <div id="gameModeLabel" class="smallSelectorPropertyContainer translatable"></div>
+                    <div id="gameModeValue" class="settingsInfoValue"></div>
+                </div>
+                <div id="hostSettings" class="hostSettings">
+                </div>
+                <div id="guestSettings">
+                    <div id="difficultyContainer" class="settingsInfoRow">
+                        <div id="difficultyLabel" class="smallSelectorPropertyContainer translatable"></div>
+                        <div id="difficultyValue" class="settingsInfoValue"></div>
+                    </div>
+                    <div class="settingsInfoRow">
+                        <div id="locationLabel" class="smallSelectorPropertyContainer translatable"></div>
+                        <div id="locationValue" class="settingsInfoValue"></div>
+                    </div>
+                    <div class="settingsInfoRow">
+                        <div id="loadoutLabel" class="smallSelectorPropertyContainer translatable"></div>
+                        <div id="loadoutValue" class="settingsInfoValue"></div>
+                    </div>
+                    <div id="enemiesPerWaveContainer" class="settingsInfoRow">
+                        <div id="enemiesPerWaveLabel" class="smallSelectorPropertyContainer translatable"></div>
+                        <div id="enemiesPerWaveValue" class="settingsInfoValue"></div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="chatContainer">
-            <div id="chatLog" class="chatLog"></div>
-            <div class="chatMessageContainer">
-                <input id="chatMessage" class="chatMessage" type="text">
-                <span id="remainingMessageChars" class="remainingMessageChars"></span>
-            </div>
-            <button id="chatSend" class="chatSend translatable"></button>
         </div>
     </div>
     <div class="footer separatorBar">

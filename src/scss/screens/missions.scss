@@ -56,6 +56,7 @@ $header-height: 3em;
 $info-top-margin: 0.5em;
 
 .missionInfoBody {
+    position: relative;
     margin-top: $info-top-margin;
     padding-top: 0.5em;
     padding-right: 0.5em;

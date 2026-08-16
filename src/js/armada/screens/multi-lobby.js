@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2025 Krisztián Nagy
+ * Copyright 2021-2026 Krisztián Nagy
  * @file This module manages and provides the Multiplayer Lobby screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -42,7 +42,8 @@ define([
     var
             // ------------------------------------------------------------------------------
             // constants
-            GAME_TITLE_ID = "gameTitle",
+            GAME_NAME_VALUE_ID = "gameNameValue",
+            GAME_MODE_VALUE_ID = "gameModeValue",
             LEAVE_BUTTON_ID = "leaveButton",
             READY_BUTTON_ID = "readyButton",
             START_BUTTON_ID = "startButton",
@@ -58,7 +59,14 @@ define([
             MESSAGE_CLASS = "multi-message",
             MAX_MESSAGE_LENGTH = 50,
             INFO_BOX_ID = "infoBox",
-            SPACECRAFT_SELECTOR_BUTTON_CLASS = "selectSpacecraft",
+            OPEN_SLOT_CLASS = "openSlot fadedText",
+            LOCAL_PLAYER_ROW_CLASS = "myPlayerRow",
+            COLOR_COLUMN_CLASS = "colorColumn",
+            COLOR_INDICATOR_CLASS = "colorIndicator",
+            COLOR_SELECTOR_CLASS = "colorSelector",
+            SPACECRAFT_CELL_CLASS = "spacecraftCell",
+            SPACECRAFT_SELECTOR_ID_PREFIX = "spacecraftSelector",
+            ACTIONS_COLUMN_CLASS = "actionsColumn",
             KICK_BUTTON_CLASS = "kickPlayer",
             HOST_SETTINGS_ID = "hostSettings",
             GUEST_SETTINGS_ID = "guestSettings",
@@ -72,6 +80,7 @@ define([
             LOADOUT_SELECTOR_ID = "loadoutSelector",
             DIFFICULTY_SELECTOR_ID = "difficultySelector",
             ENEMIES_PER_WAVE_SELECTOR_ID = "enemiesPerWaveSelector",
+            SMALL_NARROW_MULTI_BAR_SELECTOR_CLASS_NAME = "smallMultiBarSelector narrow",
             PLAYER_COLORS = [
                 [0.8, 0.2, 0.2],
                 [0.2, 0.2, 0.8],
@@ -132,12 +141,6 @@ define([
             return PLAYER_COLORS[(index + 1) % PLAYER_COLORS.length];
         }
     }
-    function _getNextAvailableSpacecraft(spacecraft) {
-        var
-                spacecrafts = networking.getGameSettings().spacecrafts,
-                index = spacecrafts.indexOf(spacecraft);
-        return spacecrafts[(index + 1) % spacecrafts.length];
-    }
     // #########################################################################
     /**
      * @class Provides the behaviour for the Multiplayer Lobby screen
@@ -162,7 +165,9 @@ define([
                 {},
                 armadaScreens.BUTTON_EVENT_HANDLERS);
         /** @type SimpleComponent */
-        this._gameTitle = this.registerSimpleComponent(GAME_TITLE_ID);
+        this._gameNameValue = this.registerSimpleComponent(GAME_NAME_VALUE_ID);
+        /** @type SimpleComponent */
+        this._gameModeValue = this.registerSimpleComponent(GAME_MODE_VALUE_ID);
         /** @type SimpleComponent */
         this._leaveButton = this.registerSimpleComponent(LEAVE_BUTTON_ID);
         /** @type SimpleComponent */
@@ -199,13 +204,25 @@ define([
         this._enemiesPerWaveContainer = this.registerSimpleComponent(ENEMIES_PER_WAVE_CONTAINER_ID);
         /** @type Number */
         this._pingInterval = -1;
-        /** @type Selector*/
+        /**
+         * One per player slot index, holding a reference to the <td> element belonging to that player
+         * index in the players table. Lazily created and then reused across updates of the player list.
+         * @type Element[]
+         */
+        this._playerRows = [];
+        /**
+         * One per player slot index, holding a reference to the MultiBarSelector used to select the spacecraft
+         * of the player at that index. Lazily created and then reused across updates of the player list.
+         * @type MultiBarSelector[]
+         */
+        this._spacecraftSelectors = [];
+        /** @type MultiBarSelector*/
         this._locationSelector = null;
-        /** @type Selector*/
+        /** @type MultiBarSelector*/
         this._loadoutSelector = null;
-        /** @type Selector*/
+        /** @type MultiBarSelector*/
         this._difficultySelector = null;
-        /** @type Selector*/
+        /** @type MultiBarSelector*/
         this._enemiesPerWaveSelector = null;
         /**
          * @type InfoBox
@@ -222,54 +239,62 @@ define([
                 }));
         config.executeWhenReady(function () {
             this._difficultySelector = this.registerExternalComponent(
-                    new components.Selector(
+                    new components.MultiBarSelector(
                             DIFFICULTY_SELECTOR_ID,
-                            armadaScreens.SELECTOR_SOURCE,
+                            armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
                             {
-                                cssFilename: armadaScreens.SELECTOR_CSS,
-                                selectorClassName: "smallSelector",
+                                cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS,
+                                selectorClassName: SMALL_NARROW_MULTI_BAR_SELECTOR_CLASS_NAME,
                                 propertyContainerClassName: "smallSelectorPropertyContainer"
                             },
                             {id: strings.MULTI_LOBBY.DIFFICULTY_LABEL.name},
-                            missionsScreen.getDifficultyValues()),
+                            missionsScreen.getDifficultyValues(),
+                            false,
+                            false,
+                            true),
                     HOST_SETTINGS_ID);
             environments.executeWhenReady(function () {
                 this._locationSelector = this.registerExternalComponent(
-                        new components.Selector(
+                        new components.MultiBarSelector(
                                 LOCATION_SELECTOR_ID,
-                                armadaScreens.SELECTOR_SOURCE,
+                                armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
                                 {
-                                    cssFilename: armadaScreens.SELECTOR_CSS,
-                                    selectorClassName: "smallSelector",
+                                    cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS,
+                                    selectorClassName: SMALL_NARROW_MULTI_BAR_SELECTOR_CLASS_NAME,
                                     propertyContainerClassName: "smallSelectorPropertyContainer"
                                 },
                                 {id: strings.MULTI_LOBBY.LOCATION_LABEL.name},
-                                _getLocationValues()),
+                                _getLocationValues(),
+                                false,
+                                true),
                         HOST_SETTINGS_ID);
             }.bind(this));
             this._loadoutSelector = this.registerExternalComponent(
-                    new components.Selector(
+                    new components.MultiBarSelector(
                             LOADOUT_SELECTOR_ID,
-                            armadaScreens.SELECTOR_SOURCE,
+                            armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
                             {
-                                cssFilename: armadaScreens.SELECTOR_CSS,
-                                selectorClassName: "smallSelector",
+                                cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS,
+                                selectorClassName: SMALL_NARROW_MULTI_BAR_SELECTOR_CLASS_NAME,
                                 propertyContainerClassName: "smallSelectorPropertyContainer"
                             },
                             {id: strings.MULTI_LOBBY.LOADOUT_LABEL.name},
-                            _getLoadoutValues()),
+                            _getLoadoutValues(),
+                            false,
+                            true),
                     HOST_SETTINGS_ID);
             this._enemiesPerWaveSelector = this.registerExternalComponent(
-                    new components.Selector(
+                    new components.MultiBarSelector(
                             ENEMIES_PER_WAVE_SELECTOR_ID,
-                            armadaScreens.SELECTOR_SOURCE,
+                            armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
                             {
-                                cssFilename: armadaScreens.SELECTOR_CSS,
-                                selectorClassName: "smallSelector",
+                                cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS,
+                                selectorClassName: SMALL_NARROW_MULTI_BAR_SELECTOR_CLASS_NAME,
                                 propertyContainerClassName: "smallSelectorPropertyContainer"
                             },
                             {id: strings.MULTI_LOBBY.ENEMIES_PER_WAVE_LABEL.name},
-                            ENEMIES_PER_WAVE_OPTIONS),
+                            ENEMIES_PER_WAVE_OPTIONS,
+                            false),
                     HOST_SETTINGS_ID);
         }.bind(this));
 
@@ -330,10 +355,8 @@ define([
         var coop;
         screens.HTMLScreen.prototype.setActive.call(this, active);
         if (active) {
-            this._gameTitle.setTextContent(strings.get(strings.MULTI_LOBBY.GAME_TITLE), {
-                name: networking.getGameName(),
-                mode: strings.get(strings.MULTI_GAME_MODE.PREFIX, networking.getGameMode())
-            });
+            this._gameNameValue.setTextContent(networking.getGameName());
+            this._gameModeValue.setTextContent(strings.get(strings.MULTI_GAME_MODE.PREFIX, networking.getGameMode()));
             this._updatePlayersList();
             networking.onDisconnect(function () {
                 this._cancelInterval();
@@ -522,63 +545,166 @@ define([
         this._difficultySelector.setValueList(missionsScreen.getDifficultyValues());
     };
     /**
+     * Returns the MultiBarSelector for the spacecraft selector of the player at the given index within
+     * the players table, creating (and appending it into the passed table cell) if this is the first
+     * time it is needed.
+     * @param {Number} playerIndex
+     * @param {Element} tdElement The table cell to append the selector into, if it needs to be created
+     * @returns {MultiBarSelector}
+     */
+    MultiLobbyScreen.prototype._getSpacecraftSelector = function (playerIndex, tdElement) {
+        var selector = this._spacecraftSelectors[playerIndex];
+        if (!selector) {
+            selector = new components.MultiBarSelector(
+                    SPACECRAFT_SELECTOR_ID_PREFIX + playerIndex,
+                    armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
+                    {
+                        cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS,
+                        selectorClassName: SMALL_NARROW_MULTI_BAR_SELECTOR_CLASS_NAME
+                    },
+                    {caption: ""},
+                    [""],
+                    false,
+                    true);
+            selector.setRootElementID(this._getElementID(selector.getName()));
+            selector.onChange = function (stepping) {
+                if (stepping) {
+                    networking.updatePlayerSettings({
+                        spacecraft: networking.getGameSettings().spacecrafts[selector.getSelectedIndex()]
+                    });
+                }
+            };
+            this._spacecraftSelectors[playerIndex] = selector;
+            selector.executeWhenReady(function () {
+                this.addExternalComponent(selector, tdElement);
+            }.bind(this));
+        }
+        return selector;
+    };
+    /**
+     * Returns the <tr> element of the players table for the given row (player slot) index, creating it
+     * (with its full, fixed set of <td> cells, and the event handlers of its interactive elements,
+     * which look up the player currently occupying this row by index at the time they fire) if this is
+     * the first time it is needed
+     * @param {Number} rowIndex
+     * @returns {Element}
+     */
+    MultiLobbyScreen.prototype._getPlayerRow = function (rowIndex) {
+        var tr = this._playerRows[rowIndex], colorIndicator, kickButton;
+        if (!tr) {
+            tr = document.createElement("tr");
+            tr.innerHTML =
+                    '<td></td>' +
+                    '<td class="' + COLOR_COLUMN_CLASS + '"><div></div></td>' +
+                    '<td class="' + SPACECRAFT_CELL_CLASS + '"><span></span></td>' +
+                    '<td></td>' +
+                    '<td></td>' +
+                    '<td></td>' +
+                    '<td class="' + ACTIONS_COLUMN_CLASS + '"><button class="' + KICK_BUTTON_CLASS + '">' + strings.get(strings.MULTI_LOBBY.KICK_BUTTON) + '</button></td>';
+            colorIndicator = tr.getElementsByTagName("div")[0];
+            colorIndicator.onclick = function () {
+                var player = networking.getPlayers()[rowIndex];
+                if (player && player.me && !player.ready && _canChangePlayerColor()) {
+                    networking.updatePlayerSettings({color: _getNextAvailableColor(networking.getPlayerSettings().color)});
+                    this._updatePlayersList();
+                }
+            }.bind(this);
+            kickButton = tr.getElementsByTagName("button")[0];
+            kickButton.onclick = function () {
+                var player = networking.getPlayers()[rowIndex];
+                if (player && !player.me && networking.isHost()) {
+                    networking.kickPlayer(player.name);
+                }
+            }.bind(this);
+            this._playersList.getElement().appendChild(tr);
+            this._playerRows[rowIndex] = tr;
+        }
+        return tr;
+    };
+    /**
      * Update the player list display with the current player information
      */
     MultiLobbyScreen.prototype._updatePlayersList = function () {
-        var i, button, players = networking.getPlayers(),
-                colorSelectorId = "player-color-selector",
-                colorSelectorAction = function () {
-                    var color = _getNextAvailableColor(networking.getPlayerSettings().color);
-                    networking.updatePlayerSettings({
-                        color: color
-                    });
-                    this._updatePlayersList();
-                },
-                spacecraftSelector,
-                spacecraftSelectorId = "player-spacecraft-selector",
-                spacecraftSelectorAction = function () {
-                    var spacecraft = _getNextAvailableSpacecraft(networking.getPlayerSettings().spacecraft);
-                    networking.updatePlayerSettings({
-                        spacecraft: spacecraft
-                    });
-                    this._updatePlayersList();
-                },
-                getKickButtonId = function (index) {
-                    return "kick-player-" + index;
-                },
-                kickButtonAction = function (index) {
-                    networking.kickPlayer(players[index].name);
-                };
+        var
+                i, rowCount, tr, tds, player, textElement, selector,
+                players = networking.getPlayers(),
+                maxPlayers = networking.getMaxPlayers(),
+                spacecrafts = networking.getGameSettings().spacecrafts,
+                columnCount = networking.isHost() ? 7 : 6;
         this._kickColumn.setVisible(networking.isHost());
-        this._playersList.setContent("");
-        players.forEach(function (player, index) {
-            var tr, td;
-            tr = document.createElement("tr");
-            td = document.createElement("td");
-            td.textContent = player.name;
-            tr.appendChild(td);
-            tr.innerHTML += '<td><div ' + ((player.me && _canChangePlayerColor()) ? 'id="' + colorSelectorId + '"' : '') + ' class="colorIndicator' + ((player.me && !player.ready && _canChangePlayerColor()) ? ' colorSelector' : '') + '"></div></td>' +
-                    '<td>' + ((player.me && !player.ready) ? '<button id="' + spacecraftSelectorId + '" class="' + SPACECRAFT_SELECTOR_BUTTON_CLASS + '">' : '') + classes.getSpacecraftClass(player.settings.spacecraft).getDisplayName() + ((player.me && !player.ready) ? '</button>' : '') + '</td>' +
-                    '<td>' + (player.me ? "" : strings.get(player.peer ? strings.MULTI_LOBBY.CONNECTION_DIRECT : strings.MULTI_LOBBY.CONNECTION_SERVER)) + '</td>' +
-                    '<td>' + (player.me ? "" : (player.ping ? Math.round(player.ping) + " ms" : "?")) + '</td>' +
-                    '<td>' + (strings.get(((index === 0) || player.ready) ? strings.MULTI_LOBBY.READY_YES : strings.MULTI_LOBBY.READY_NO)) + '</td>' +
-                    (networking.isHost() ? '<td>' + (!player.me ? '<button id="' + getKickButtonId(index) + '" class="' + KICK_BUTTON_CLASS + '">' + strings.get(strings.MULTI_LOBBY.KICK_BUTTON) + '</button>' : "") + '</td>' : "") +
-                    '</tr>';
-            tr.querySelector(".colorIndicator").style.backgroundColor = _getPlayerColor(player);
-            this._playersList.getElement().appendChild(tr);
-        }.bind(this));
-        if (_canChangePlayerColor()) {
-            document.getElementById(colorSelectorId).onclick = colorSelectorAction.bind(this);
-        }
-        spacecraftSelector = document.getElementById(spacecraftSelectorId);
-        if (spacecraftSelector) {
-            spacecraftSelector.onclick = spacecraftSelectorAction.bind(this);
+        rowCount = Math.max(maxPlayers, this._playerRows.length);
+        for (i = 0; i < rowCount; i++) {
+            tr = this._getPlayerRow(i);
+            if (i >= maxPlayers) {
+                // a row left over from a previous game that allowed more players than this one
+                tr.hidden = true;
+                continue;
+            }
+            tr.hidden = false;
+            tds = tr.getElementsByTagName("td");
+            player = players[i];
+            if (!player) {
+                tr.className = "";
+                tds[0].colSpan = columnCount;
+                tds[0].className = OPEN_SLOT_CLASS;
+                tds[0].textContent = strings.get(strings.MULTI_LOBBY.OPEN_SLOT);
+                tds[1].hidden = true;
+                tds[2].hidden = true;
+                tds[3].hidden = true;
+                tds[4].hidden = true;
+                tds[5].hidden = true;
+                tds[6].hidden = true;
+                continue;
+            }
+            tr.className = player.me ? LOCAL_PLAYER_ROW_CLASS : "";
+            tds[0].colSpan = 1;
+            tds[0].className = "";
+            tds[0].textContent = player.name;
+            tds[1].hidden = false;
+            tds[2].hidden = false;
+            tds[3].hidden = false;
+            tds[4].hidden = false;
+            tds[5].hidden = false;
+            tds[6].hidden = !networking.isHost();
+            // color
+            tds[1].getElementsByTagName("div")[0].className = COLOR_INDICATOR_CLASS + ((player.me && !player.ready && _canChangePlayerColor()) ? " " + COLOR_SELECTOR_CLASS : "");
+            tds[1].getElementsByTagName("div")[0].style.backgroundColor = _getPlayerColor(player);
+            // spacecraft
+            textElement = tds[2].getElementsByTagName("span")[0];
+            if (spacecrafts.length < 2) {
+                if (this._spacecraftSelectors[i]) {
+                    this._spacecraftSelectors[i].hide();
+                }
+                textElement.hidden = false;
+                textElement.textContent = classes.getSpacecraftClass(player.settings.spacecraft).getDisplayName();
+            } else {
+                textElement.hidden = true;
+                selector = this._getSpacecraftSelector(i, tds[2]);
+                (function (selector, player) {
+                    selector.executeWhenReady(function () {
+                        selector.setValueList(spacecrafts.map(function (spacecraft) {
+                            return classes.getSpacecraftClass(spacecraft).getDisplayName();
+                        }));
+                        selector.selectValueWithIndex(spacecrafts.indexOf(player.settings.spacecraft), 0);
+                        selector.show();
+                        if (player.me && !player.ready) {
+                            selector.enable();
+                        } else {
+                            selector.disable();
+                        }
+                    });
+                }(selector, player));
+            }
+            // connection
+            tds[3].textContent = player.me ? "" : strings.get(player.peer ? strings.MULTI_LOBBY.CONNECTION_DIRECT : strings.MULTI_LOBBY.CONNECTION_SERVER);
+            // ping
+            tds[4].textContent = player.me ? "" : (player.ping ? Math.round(player.ping) + " ms" : "?");
+            // ready
+            tds[5].textContent = strings.get(((i === 0) || player.ready) ? strings.MULTI_LOBBY.READY_YES : strings.MULTI_LOBBY.READY_NO);
+            // kick button (host-only column; hidden within it for the local player's own row)
+            tds[6].getElementsByTagName("button")[0].hidden = player.me;
         }
         if (networking.isHost()) {
-            for (i = 1; i < players.length; i++) {
-                button = document.getElementById(getKickButtonId(i));
-                button.onclick = kickButtonAction.bind(this, i);
-            }
             if (networking.allPlayersReady()) {
                 this._startButton.enable();
             } else {
