@@ -1874,6 +1874,10 @@ define([
         }
         if (!preview) {
             resources.executeWhenReady(function () {
+                // abort in case the mission object has been destroyed before the callback gets executed
+                if (!this._views) {
+                    return;
+                }
                 if (this._views.length > 0) {
                     for (i = 0; i < this._views.length; i++) {
                         battleScene.addCameraConfiguration(this.createCameraConfigurationForSceneView(this._views[i], battleScene));
