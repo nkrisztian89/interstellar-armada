@@ -64,7 +64,7 @@ define([
             CREATE_GAME_MODE_ID = "createGameMode",
             CREATE_GAME_MAX_PLAYERS_ID = "createGameMaxPlayers",
             CREATE_GAME_SPACECRAFTS_ID = "createGameSpacecrafts",
-            SMALL_NUMBER_SELECTOR_CLASS = "smallNumberSelector",
+            SMALL_NARROW_MULTI_BAR_SELECTOR_CLASS = "smallMultiBarSelector narrow",
             PLAYERS_COLUMN_CLASS = "playersColumn",
             STARTED_COLUMN_CLASS = "startedColumn",
             JOIN_COLUMN_CLASS = "joinColumn",
@@ -163,9 +163,9 @@ define([
         this._playerCancelButton = this.registerSimpleComponent(PLAYER_CANCEL_BUTTON_ID);
         /** @type SimpleComponent */
         this._playerNameInput = this.registerSimpleComponent(PLAYER_NAME_INPUT_ID);
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._createGameModeSelector = null;
-        /** @type Selector */
+        /** @type MultiBarSelector */
         this._createGameMaxPlayersSelector = null;
         /** @type CheckGroup */
         this._createGameSpacecraftsCheckGroup = null;
@@ -186,23 +186,25 @@ define([
         this._interval = -1;
         config.executeWhenReady(function () {
             this._createGameModeSelector = this.registerExternalComponent(
-                    new components.Selector(
+                    new components.MultiBarSelector(
                             CREATE_GAME_MODE_ID,
-                            armadaScreens.SELECTOR_SOURCE,
+                            armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
                             {
-                                cssFilename: armadaScreens.SELECTOR_CSS,
-                                selectorClassName: SMALL_NUMBER_SELECTOR_CLASS
+                                cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS,
+                                selectorClassName: SMALL_NARROW_MULTI_BAR_SELECTOR_CLASS
                             },
                             {id: strings.MULTI_GAMES.GAME_MODE.name},
-                            _getGameModeValues()),
+                            _getGameModeValues(),
+                            false,
+                            true),
                     CREATE_GAME_MODE_CONTAINER_ID);
             this._createGameMaxPlayersSelector = this.registerExternalComponent(
-                    new components.Selector(
+                    new components.MultiBarSelector(
                             CREATE_GAME_MAX_PLAYERS_ID,
-                            armadaScreens.SELECTOR_SOURCE,
+                            armadaScreens.MULTI_BAR_SELECTOR_SOURCE,
                             {
-                                cssFilename: armadaScreens.SELECTOR_CSS,
-                                selectorClassName: SMALL_NUMBER_SELECTOR_CLASS
+                                cssFilename: armadaScreens.MULTI_BAR_SELECTOR_CSS,
+                                selectorClassName: SMALL_NARROW_MULTI_BAR_SELECTOR_CLASS
                             },
                             {id: strings.MULTI_GAMES.MAX_PLAYERS.name},
                             _getMaxPlayerValues()),

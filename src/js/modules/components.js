@@ -62,8 +62,8 @@ define([
             INFO_BOX_MESSAGE_PARAGRAPH_ID = "message",
             INFO_BOX_OK_BUTTON_ID = "okButton",
             INFO_BOX_HEADER_ID = "header",
-            SELECTOR_PROPERTY_LABEL_ID = "property",
-            SELECTOR_VALUE_BUTTON_ID = "value",
+            MULTI_BAR_SELECTOR_PROPERTY_LABEL_ID = "property",
+            MULTI_BAR_SELECTOR_VALUE_BUTTON_ID = "value",
             MULTI_BAR_SELECTOR_BARS_ID = "bars",
             MULTI_BAR_SELECTOR_BAR_CLASS_NAME = "multiBarSelectorBar",
             MULTI_BAR_SELECTOR_COLOR_TRANSITION_CLASS_NAME = "colorTransition",
@@ -1971,26 +1971,35 @@ define([
     };
     // #########################################################################
     /**
-     * @typedef {ExternalComponent~Style} Selector~Style
-     * @property {String} [selectorClassName] The root element of the Selector will have this CSS class
+     * @typedef {ExternalComponent~Style} MultiBarSelector~Style
+     * @property {String} [selectorClassName] The root element of the MultiBarSelector will have this CSS class
      * @property {String} [propertyContainerClassName] The element containing the property name label will have this CSS class
      */
     /**
-     * @class A component that consists of a label describing a property, and a
-     * button that can be clicked to select from a list of possible values for that
-     * property. (suitable for properties with a small amount of possible values, 
-     * as each click will show the next value, and when the last is reached, the 
-     * cycle will begin again)
+     * @class A component that consists of a label describing a property, and a button that can be clicked to select from a list
+     * of possible values for that property (suitable for properties with a small amount of possible values, as each click will
+     * show the next value, and when the last is reached, the cycle will begin again), together with a row of thin bars underneath
+     * the value button, indicating how high the current setting is at a glance. By default, as many bars are shown as there are
+     * available values, with as many of them illuminated (from the left) as the index of the currently selected value, plus one.
+     * Whenever only one value is available, a single bar is shown, illuminated exactly when the component is not disabled.
      * @extends ExternalComponent
      * @param {String} name See ExternalComponent.
      * @param {String} htmlFilename See ExternalComponent.
-     * @param {Selector~Style} [style] See ExternalComponent.
+     * @param {MultiBarSelector~Style} [style] See ExternalComponent.
      * @param {Components~LabelDescriptor} propertyLabelDescriptor The caption and id of the property label element that is displayed on this
      * selector, indicating what property can be set with it
      * @param {String[]} valueList The list of possible values that can be selected
      * for the property.
+     * @param {Boolean} [startFromZero=false] When true, one fewer bar (but at least one) is shown, and the index of the current value
+     * (not +1) is illuminated instead - suited for e.g. on/off-style settings, where the first (off) value then illuminates none of the bars.
+     * @param {Boolean} [singleBarLit=false] When true, instead of illuminating all the bars up to (and including) the one corresponding
+     * to the current value, only that one bar (the rightmost of the ones that would otherwise be lit) is illuminated - suited for settings
+     * whose values are not increasing levels of the same property (e.g. a list of unrelated named options).
+     * @param {Boolean} [colorTransition=false] When true, the lit bars are colored along a lime-yellow-red scale by their position among
+     * all the bars, instead of the regular single highlight color - suited for properties where progressing through the values represents
+     * an increasing severity / intensity (e.g. a difficulty setting).
      */
-    function Selector(name, htmlFilename, style, propertyLabelDescriptor, valueList) {
+    function MultiBarSelector(name, htmlFilename, style, propertyLabelDescriptor, valueList, startFromZero, singleBarLit, colorTransition) {
         ExternalComponent.call(this, name, htmlFilename, style);
         /**
          * The name of the property that can be set using this selector.
@@ -2012,26 +2021,46 @@ define([
          * this selector sets.
          * @type SimpleComponent
          */
-        this._propertyLabel = this.registerSimpleComponent(SELECTOR_PROPERTY_LABEL_ID);
+        this._propertyLabel = this.registerSimpleComponent(MULTI_BAR_SELECTOR_PROPERTY_LABEL_ID);
         /**
          * A wrapper for the HTML element which serves as the selector button to select
          * from the available values.
          * @type SimpleComponent
          */
-        this._valueSelector = this.registerSimpleComponent(SELECTOR_VALUE_BUTTON_ID);
+        this._valueSelector = this.registerSimpleComponent(MULTI_BAR_SELECTOR_VALUE_BUTTON_ID);
         /**
          * A function to execute when the selected value has been changed.
          * @type Function
          */
         this.onChange = null;
+        /**
+         * A wrapper for the HTML element containing the bars indicating how high the currently selected value is.
+         * @type SimpleComponent
+         */
+        this._bars = this.registerSimpleComponent(MULTI_BAR_SELECTOR_BARS_ID);
+        /**
+         * See the constructor parameter of the same name.
+         * @type Boolean
+         */
+        this._startFromZero = !!startFromZero;
+        /**
+         * See the constructor parameter of the same name.
+         * @type Boolean
+         */
+        this._singleBarLit = !!singleBarLit;
+        /**
+         * See the constructor parameter of the same name.
+         * @type Boolean
+         */
+        this._colorTransition = !!colorTransition;
     }
-    Selector.prototype = new ExternalComponent();
-    Selector.prototype.constructor = Selector;
+    MultiBarSelector.prototype = new ExternalComponent();
+    MultiBarSelector.prototype.constructor = MultiBarSelector;
     /**
      * Initializes the components, sets their text and sets the handler for the click
      * on the selector.
      */
-    Selector.prototype._initializeComponents = function () {
+    MultiBarSelector.prototype._initializeComponents = function () {
         ExternalComponent.prototype._initializeComponents.call(this);
         if (this._rootElement) {
             if (this._style.selectorClassName) {
@@ -2070,7 +2099,7 @@ define([
     /**
      * @override
      */
-    Selector.prototype.updateComponents = function () {
+    MultiBarSelector.prototype.updateComponents = function () {
         ExternalComponent.prototype.updateComponents.call(this);
         this._propertyLabel.setContent(_getLabelText(this._propertyLabelDescriptor));
     };
@@ -2078,7 +2107,7 @@ define([
      * Selects the value given as parameter from the list of available values.
      * @param {String} value
      */
-    Selector.prototype.selectValue = function (value) {
+    MultiBarSelector.prototype.selectValue = function (value) {
         if (this._rootElement) {
             var i = 0;
             while ((i < this._valueList.length) && (this._valueList[i] !== value)) {
@@ -2102,7 +2131,7 @@ define([
      * should be 1 for stepping up (forward), -1 for stepping down (backward) and 0 otherwise. The value of this is passed
      * to the onChange() handler.
      */
-    Selector.prototype.selectValueWithIndex = function (index, stepping) {
+    MultiBarSelector.prototype.selectValueWithIndex = function (index, stepping) {
         var originalIndex = this._valueIndex;
         if (this._rootElement) {
             if (this._valueList.length > index) {
@@ -2119,40 +2148,41 @@ define([
         } else {
             application.showError("Attemted to select value for selector " + this._name + " which is not yet appended to the page!");
         }
+        this._updateBars();
     };
     /**
      * Returns the currently selected value.
      * @returns {String}
      */
-    Selector.prototype.getSelectedValue = function () {
+    MultiBarSelector.prototype.getSelectedValue = function () {
         return this._valueList[this._valueIndex];
     };
     /**
      * Returns the index of the currently selected value.
      * @returns {Number}
      */
-    Selector.prototype.getSelectedIndex = function () {
+    MultiBarSelector.prototype.getSelectedIndex = function () {
         return this._valueIndex;
     };
     /**
      * Selects the next available value from the list. If the last value was selected,
      * selects the first one.
      */
-    Selector.prototype.selectNextValue = function () {
+    MultiBarSelector.prototype.selectNextValue = function () {
         this.selectValueWithIndex((this._valueIndex + 1) % this._valueList.length, 1);
     };
     /**
      * Selects the previous available value from the list. If the first value was selected,
      * selects the last one.
      */
-    Selector.prototype.selectPreviousValue = function () {
+    MultiBarSelector.prototype.selectPreviousValue = function () {
         this.selectValueWithIndex((this._valueIndex > 0) ? this._valueIndex - 1 : this._valueList.length - 1, -1);
     };
     /**
-     * 
+     *
      * @param {String[]} valueList
      */
-    Selector.prototype.setValueList = function (valueList) {
+    MultiBarSelector.prototype.setValueList = function (valueList) {
         this._valueList = valueList;
         if (this._valueIndex >= this._valueList.length) {
             this._valueIndex = 0;
@@ -2162,84 +2192,38 @@ define([
         } else {
             this._valueSelector.enable();
         }
+        if (this._rootElement) {
+            this._createBars();
+        }
     };
     /**
      * Re-selects the current value (based on index).
      * Useful for updating the string after the value list has changed.
      */
-    Selector.prototype.refreshValue = function () {
+    MultiBarSelector.prototype.refreshValue = function () {
         this.selectValueWithIndex(this._valueIndex);
     };
     /**
      * Returns whether the value button of this selector is currently in enabled state.
      * @returns {Boolean}
      */
-    Selector.prototype.isEnabled = function () {
+    MultiBarSelector.prototype.isEnabled = function () {
         return this._valueSelector.isEnabled();
     };
     /**
      * Puts the value button of this selector in disabled state, so it no longer reacts to clicks.
      */
-    Selector.prototype.disable = function () {
+    MultiBarSelector.prototype.disable = function () {
         this._valueSelector.disable();
     };
     /**
      * Puts the value button of this selector in enabled state if there are at least two available values.
      */
-    Selector.prototype.enable = function () {
+    MultiBarSelector.prototype.enable = function () {
         if (this._valueList.length >= 2) {
             this._valueSelector.enable();
         }
     };
-    // #########################################################################
-    /**
-     * @typedef {Selector~Style} MultiBarSelector~Style
-     */
-    /**
-     * @class A variant of Selector that, besides the text value, also displays a row of thin bars underneath the value button, indicating
-     * how high the current setting is at a glance. By default, as many bars are shown as there are available values, with as many of
-     * them illuminated (from the left) as the index of the currently selected value, plus one. Whenever only one value is available, 
-     * a single bar is shown, illuminated exactly when the component is not disabled.
-     * @extends Selector
-     * @param {String} name See ExternalComponent.
-     * @param {String} htmlFilename See ExternalComponent.
-     * @param {MultiBarSelector~Style} [style] See ExternalComponent.
-     * @param {Components~LabelDescriptor} propertyLabelDescriptor See Selector.
-     * @param {String[]} valueList See Selector.
-     * @param {Boolean} [startFromZero=false] When true, one fewer bar (but at least one) is shown, and the index of the current value
-     * (not +1) is illuminated instead - suited for e.g. on/off-style settings, where the first (off) value then illuminates none of the bars.
-     * @param {Boolean} [singleBarLit=false] When true, instead of illuminating all the bars up to (and including) the one corresponding
-     * to the current value, only that one bar (the rightmost of the ones that would otherwise be lit) is illuminated - suited for settings
-     * whose values are not increasing levels of the same property (e.g. a list of unrelated named options).
-     * @param {Boolean} [colorTransition=false] When true, the lit bars are colored along a lime-yellow-red scale by their position among
-     * all the bars, instead of the regular single highlight color - suited for properties where progressing through the values represents
-     * an increasing severity / intensity (e.g. a difficulty setting).
-     */
-    function MultiBarSelector(name, htmlFilename, style, propertyLabelDescriptor, valueList, startFromZero, singleBarLit, colorTransition) {
-        Selector.call(this, name, htmlFilename, style, propertyLabelDescriptor, valueList);
-        /**
-         * A wrapper for the HTML element containing the bars indicating how high the currently selected value is.
-         * @type SimpleComponent
-         */
-        this._bars = this.registerSimpleComponent(MULTI_BAR_SELECTOR_BARS_ID);
-        /**
-         * See the constructor parameter of the same name.
-         * @type Boolean
-         */
-        this._startFromZero = !!startFromZero;
-        /**
-         * See the constructor parameter of the same name.
-         * @type Boolean
-         */
-        this._singleBarLit = !!singleBarLit;
-        /**
-         * See the constructor parameter of the same name.
-         * @type Boolean
-         */
-        this._colorTransition = !!colorTransition;
-    }
-    MultiBarSelector.prototype = new Selector();
-    MultiBarSelector.prototype.constructor = MultiBarSelector;
     /**
      * Returns how many bars should be shown for the current value list.
      * @returns {Number}
@@ -2299,22 +2283,6 @@ define([
             } else {
                 bars[i].classList.remove(SELECTED_CLASS_NAME);
             }
-        }
-    };
-    /**
-     * @override
-     */
-    MultiBarSelector.prototype.selectValueWithIndex = function (index, stepping) {
-        Selector.prototype.selectValueWithIndex.call(this, index, stepping);
-        this._updateBars();
-    };
-    /**
-     * @override
-     */
-    MultiBarSelector.prototype.setValueList = function (valueList) {
-        Selector.prototype.setValueList.call(this, valueList);
-        if (this._rootElement) {
-            this._createBars();
         }
     };
     // #########################################################################
@@ -2567,7 +2535,6 @@ define([
         MenuComponent: MenuComponent,
         CheckGroup: CheckGroup,
         ListComponent: ListComponent,
-        Selector: Selector,
         MultiBarSelector: MultiBarSelector,
         Slider: Slider
     };

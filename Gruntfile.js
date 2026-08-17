@@ -43,7 +43,6 @@ module.exports = function (grunt) {
                 "css/listcomponent.css": 'src/scss/components/listcomponent.scss',
                 "css/loadingbox.css": 'src/scss/components/loadingbox.scss',
                 "css/menucomponent.css": 'src/scss/components/menucomponent.scss',
-                "css/selector.css": 'src/scss/components/selector.scss',
                 "css/multibarselector.css": 'src/scss/components/multibarselector.scss',
                 "css/slider.css": 'src/scss/components/slider.scss',
                 "css/editor.css": 'src/scss/editor.scss'

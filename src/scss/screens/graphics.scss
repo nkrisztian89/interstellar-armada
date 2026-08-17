@@ -12,6 +12,10 @@
     text-align: center;
     background: color-scheme.$panel-back-color;
     padding-top: 0.25em;
+
+    .smallMultiBarSelector {
+        margin: 0 auto;
+    }
 }
 
 $div-width: common.$input-width + 0.5em;

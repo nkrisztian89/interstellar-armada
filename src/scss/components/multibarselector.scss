@@ -141,9 +141,11 @@ div.smallMultiBarSelector {
     }
 
     div.multiBarSelectorValueWrapper {
+        width: 100%;
         @include common.shadowed;
 
         button.separate {
+            width: 100%;
             box-shadow: none;
         }
     }
@@ -160,4 +162,17 @@ div.multiBarSelector.narrow, div.smallMultiBarSelector.narrow {
             padding-bottom: calc(0.35em - #{1 * $bar-gap});
         }
     }
+}
+
+div.smallSelectorPropertyContainer {
+    font-size: 85%;
+    display: table-cell;
+    text-align: left;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0.5em 1em 0.5em 0.5em;
+}
+
+div.separateSelector {
+    display: inline-block;
 }

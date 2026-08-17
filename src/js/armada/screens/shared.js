@@ -31,8 +31,6 @@ define([
                 DEBRIEFING_VICTORY_THEME: "debriefing_victory",
                 DEBRIEFING_DEFEAT_THEME: "debriefing_defeat",
                 // components
-                SELECTOR_SOURCE: "selector.html",
-                SELECTOR_CSS: "selector.css",
                 MULTI_BAR_SELECTOR_SOURCE: "multibarselector.html",
                 MULTI_BAR_SELECTOR_CSS: "multibarselector.css",
                 SLIDER_SOURCE: "slider.html",

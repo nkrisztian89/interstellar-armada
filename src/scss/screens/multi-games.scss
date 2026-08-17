@@ -2,6 +2,9 @@
 @use "../color-scheme";
 
 $horizontal-margin: 1em;
+$setting-label-width: 10em;
+$setting-value-width: 11em;
+$setting-total-width: $setting-label-width + $setting-value-width;
 
 .multiGames.pageContent {
     width: 100%;
@@ -68,42 +71,37 @@ table.multiGames {
     margin: 1em auto;
     max-width: 95%;
     text-align: center;
+    
+    .smallMultiBarSelector {
+        width: $setting-total-width;
+        margin: 0 auto;
+
+        .multiBarSelectorPropertyContainer {
+            font-size: 100%;
+            width: $setting-label-width;
+        }
+    }
 }
 
 .createGameInputLabel {
     display: inline-block;
     vertical-align: middle;
-    width: 10em;
+    width: $setting-label-width;
     text-align: left;
 }
 
 input.createGameName {
-    width: 11em;
+    width: $setting-value-width;
     margin: 0;
 }
 
-.createGameInputContainer>.checkgroup {
-    display: inline-block;
-    vertical-align: middle;
-    width: 11em;
-}
-
-.smallNumberSelector {
+.createGameInputContainer {
     margin-top: 0.5em;
-    margin-left: auto;
-    margin-right: auto;
-    width: 21em;
-    & .selectorPropertyContainer {
-        text-align: left;
-        font-size: 100%;
-        width: 10em;
-        margin: 0;
-    }
-    & button {
-        padding-top: 0.2em;
-        padding-bottom: 0.2em;
-        min-width: 11em;
-        font-size: 100%;
+
+    &>.checkgroup {
+        display: inline-block;
+        vertical-align: middle;
+        width: $setting-value-width;
     }
 }
 

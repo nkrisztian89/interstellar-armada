@@ -8,7 +8,7 @@
 /**
  * @param utils Used for managing enums.
  * @param application Used for displaying errors.
- * @param components Used for the components (i.e. Selectors and MultiBarSelectors) of the screen.
+ * @param components Used for the components (i.e. MultiBarSelectors) of the screen.
  * @param screens The graphics screen is an HTMLScreen.
  * @param managedGL Used for the texture filtering enum type.
  * @param game Used for navigation.
@@ -76,7 +76,7 @@ define([
              * @returns String[][2]
              */
             _getGeneralLevelSettingValues = function () {
-                return graphics.getGeneralLevelNames().concat(CUSTOM_SETTING_ARRAY).map(_getMapToCaptionAndValueFunction(strings.SETTING));
+                return CUSTOM_SETTING_ARRAY.concat(graphics.getGeneralLevelNames()).map(_getMapToCaptionAndValueFunction(strings.SETTING));
             },
             /**
              * In the same format as the other value arrays
@@ -179,13 +179,11 @@ define([
             TITLE_HEADING_ID = "title",
             DEFAULTS_BUTTON_ID = "defaultsButton",
             GENERAL_LEVEL_SELECTOR_ID = "generalLevelSelector",
-            GENERAL_LEVEL_SELECTOR_CLASS_NAME = "separateSelector",
+            GENERAL_LEVEL_SELECTOR_CLASS_NAME = "smallMultiBarSelector separateSelector",
             GENERAL_LEVEL_SELECTOR_PROPERTY_CLASS_NAME = "smallSelectorPropertyContainer",
             /* On screens at least as wide as full HD, there is enough room to shrink the settings rows a bit, so that all the rows fit
              * without scrolling even when dpr != 1 and so the resolution setting shows. Smaller screens (where scrolling is needed
-             * regardless) keep the more easily tappable full-sized buttons. Use the narrow class for this implemented by both
-             * Selector and MultiBarSelector */
-            NARROW_SELECTOR_CLASS_NAME = "selector narrow",
+             * regardless) keep the more easily tappable full-sized buttons. Use MultiBarSelector's narrow class for this. */
             NARROW_MULTI_BAR_SELECTOR_CLASS_NAME = "multiBarSelector narrow",
             AA_SELECTOR_ID = "aaSelector",
             FILTERING_SELECTOR_ID = "filteringSelector",
@@ -240,7 +238,7 @@ define([
          */
         this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
         /**
-         * @type Selector
+         * @type MultiBarSelector
          */
         this._generalLevelSelector = null;
         /**
@@ -308,10 +306,10 @@ define([
          */
         this._uiEffectsSelector = null;
         graphics.executeWhenReady(function () {
-            this._generalLevelSelector = this._registerSelector(GENERAL_LEVEL_SELECTOR_ID,
+            this._generalLevelSelector = this._registerMultiBarSelector(GENERAL_LEVEL_SELECTOR_ID,
                     strings.GRAPHICS.GENERAL_LEVEL.name,
                     _getGeneralLevelSettingValues().map(_mapCaption), GENERAL_LEVEL_PARENT_ID,
-                    GENERAL_LEVEL_SELECTOR_CLASS_NAME, GENERAL_LEVEL_SELECTOR_PROPERTY_CLASS_NAME);
+                    GENERAL_LEVEL_SELECTOR_CLASS_NAME, GENERAL_LEVEL_SELECTOR_PROPERTY_CLASS_NAME, true);
             this._antialiasingSelector = this._registerMultiBarSelector(AA_SELECTOR_ID,
                     strings.GRAPHICS.ANTIALIASING.name,
                     strings.getOnOffSettingValues(), LEFT_OPTION_PARENT_ID, undefined, undefined, true);
@@ -369,29 +367,6 @@ define([
      * @param {String} propertyLabelID
      * @param {String[]} valueList
      * @param {String} parentID
-     * @param {String} [selectorClassName=NARROW_SELECTOR_CLASS_NAME]
-     * @param {String} [propertyContainerClassName]
-     * @returns {Selector}
-     */
-    GraphicsScreen.prototype._registerSelector = function (name, propertyLabelID, valueList, parentID, selectorClassName, propertyContainerClassName) {
-        return this.registerExternalComponent(
-                new components.Selector(
-                        name,
-                        armadaScreens.SELECTOR_SOURCE,
-                        {
-                            cssFilename: armadaScreens.SELECTOR_CSS,
-                            selectorClassName: selectorClassName || NARROW_SELECTOR_CLASS_NAME,
-                            propertyContainerClassName: propertyContainerClassName
-                        },
-                        {id: propertyLabelID},
-                        valueList),
-                parentID);
-    };
-    /**
-     * @param {String} name
-     * @param {String} propertyLabelID
-     * @param {String[]} valueList
-     * @param {String} parentID
      * @param {String} [selectorClassName=NARROW_MULTI_BAR_SELECTOR_CLASS_NAME]
      * @param {String} [propertyContainerClassName]
      * @param {Boolean} [startFromZero=false]
@@ -438,7 +413,7 @@ define([
         screens.HTMLScreen.prototype._initializeComponents.call(this);
         setCustomLevel = function (stepping) {
             if (stepping !== 0) {
-                this._generalLevelSelector.selectValueWithIndex(_getGeneralLevelSettingValues().length - 1, 0);
+                this._generalLevelSelector.selectValueWithIndex(0, 0);
             }
         }.bind(this);
         this._backButton.getElement().onclick = function () {
@@ -452,7 +427,7 @@ define([
             return false;
         }.bind(this);
         this._generalLevelSelector.onChange = function (stepping) {
-            if ((stepping !== 0) && (this._generalLevelSelector.getSelectedIndex() === (_getGeneralLevelSettingValues().length - 1))) {
+            if ((stepping !== 0) && (this._generalLevelSelector.getSelectedIndex() === 0)) {
                 if (stepping > 0) {
                     this._generalLevelSelector.selectNextValue();
                 } else {
@@ -460,8 +435,8 @@ define([
                 }
                 return;
             }
-            if (this._generalLevelSelector.getSelectedIndex() !== (_getGeneralLevelSettingValues().length - 1)) {
-                graphics.setGeneralLevel(graphics.getGeneralLevelNames()[this._generalLevelSelector.getSelectedIndex()]);
+            if (this._generalLevelSelector.getSelectedIndex() !== 0) {
+                graphics.setGeneralLevel(graphics.getGeneralLevelNames()[this._generalLevelSelector.getSelectedIndex() - 1]);
                 this._updateComponents();
             } else {
                 graphics.setGeneralLevel(null);
@@ -611,7 +586,7 @@ define([
     GraphicsScreen.prototype._updateValues = function () {
         graphics.executeWhenReady(function () {
             var generalLevel = graphics.getGeneralLevel();
-            this._generalLevelSelector.selectValueWithIndex(generalLevel ? _findIndexOf(generalLevel, _getGeneralLevelSettingValues()) : _getGeneralLevelSettingValues().length - 1);
+            this._generalLevelSelector.selectValueWithIndex(generalLevel ? _findIndexOf(generalLevel, _getGeneralLevelSettingValues()) : 0);
             this._antialiasingSelector.selectValueWithIndex((graphics.getAntialiasing() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._filteringSelector.selectValueWithIndex(_findIndexOf(graphics.getFiltering(), _getFilteringSettingValues()));
             this._resolutionSelector.setVisible(_isResolutionSettingRelevant());
