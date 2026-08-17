@@ -404,6 +404,8 @@ define([
                 }.bind(this));
             }.bind(this));
             networking.onKicked(function () {
+                // the server closes the connection right after a kick - prevent generic disconnect handling
+                networking.onDisconnect(null);
                 this._cancelInterval();
                 this._showMessage(strings.get(strings.MULTI_LOBBY.KICKED_MESSAGE), function () {
                     game.closeOrNavigateTo(armadaScreens.MULTI_GAMES_SCREEN_NAME);
