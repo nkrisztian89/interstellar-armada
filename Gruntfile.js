@@ -251,7 +251,8 @@ module.exports = function (grunt) {
                 ["orientationConfiguration"],
                 ["class"],
                 ["descriptor"],
-                ["distanceRange"]
+                ["distanceRange"],
+                ["blocksNavigation"]
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [

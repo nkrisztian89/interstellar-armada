@@ -46,6 +46,13 @@ define([
          */
         this._currentScreen = null;
         /**
+         * A deferred setCurrentScreen() / closeOrNavigateTo() call, saved instead of executed right away because the current screen
+         * was blocking navigation (see HTMLScreen.blocksNavigation()) at the time it was requested. Only the most recent such request
+         * is kept - an earlier one is superseded, not queued. Run via executePendingNavigation().
+         * @type Function
+         */
+        this._pendingNavigation = null;
+        /**
          * How many screens have been loaded and are ready to use so far
          * @type Number
          */
@@ -103,7 +110,12 @@ define([
      * screen is set superimposed. @see HTMLScreen#superimposeOnPage
      */
     ScreenManager.prototype.setCurrentScreen = function (screenName, superimpose, backgroundColor) {
-        var i, screen = this.getScreen(screenName);
+        var i, screen;
+        if (this._currentScreen.blocksNavigation()) {
+            this._pendingNavigation = this.setCurrentScreen.bind(this, screenName, superimpose, backgroundColor);
+            return;
+        }
+        screen = this.getScreen(screenName);
         if (!screen) {
             application.showError("Cannot switch to screen '" + screenName + "', because it does not exist!");
             return;
@@ -132,11 +144,19 @@ define([
     };
     /**
      * Closes the topmost superimposed screen, revealing the one below.
+     * @param {Boolean} [force=false] If false (the default) and the topmost superimposed screen blocks navigation (see
+     * HTMLScreen.blocksNavigation()), this call does nothing. Blocking screens can close themselves by passing true here.
+     * @returns {Boolean} Whether the screen was actually closed (false if it was left open because it blocks navigation and
+     * force was not passed)
      */
-    ScreenManager.prototype.closeSuperimposedScreen = function () {
+    ScreenManager.prototype.closeSuperimposedScreen = function (force) {
+        if (!force && this._currentScreen.blocksNavigation()) {
+            return false;
+        }
         this._currentScreen.hide();
         this._currentScreen = this._coveredScreens.pop();
         this._currentScreen.setActive(true);
+        return true;
     };
     /**
      * If the current screen was superimposed, closes it, otherwise simply navigates to
@@ -144,10 +164,25 @@ define([
      * @param {String} screenName
      */
     ScreenManager.prototype.closeOrNavigateTo = function (screenName) {
+        if (this._currentScreen.blocksNavigation()) {
+            this._pendingNavigation = this.closeOrNavigateTo.bind(this, screenName);
+            return;
+        }
         if (this._currentScreen.isSuperimposed()) {
             this.closeSuperimposedScreen();
         } else {
             this.setCurrentScreen(screenName);
+        }
+    };
+    /**
+     * Executes the navigation request (if any) that was deferred because the screen current at the time blocked navigation.
+     * To be called by that screen once it is closed.
+     */
+    ScreenManager.prototype.executePendingNavigation = function () {
+        var pendingNavigation = this._pendingNavigation;
+        if (pendingNavigation) {
+            this._pendingNavigation = null;
+            pendingNavigation();
         }
     };
     /**
@@ -168,6 +203,7 @@ define([
         setCurrentScreen: _screenManager.setCurrentScreen.bind(_screenManager),
         closeSuperimposedScreen: _screenManager.closeSuperimposedScreen.bind(_screenManager),
         closeOrNavigateTo: _screenManager.closeOrNavigateTo.bind(_screenManager),
+        executePendingNavigation: _screenManager.executePendingNavigation.bind(_screenManager),
         updateAllScreens: _screenManager.updateAllScreens.bind(_screenManager),
         executeWhenReady: _screenManager.executeWhenReady.bind(_screenManager)
     };

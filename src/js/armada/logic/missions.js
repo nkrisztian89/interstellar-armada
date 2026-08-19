@@ -1262,8 +1262,11 @@ define([
             for (i = 0; i < spacecrafts.length; i++) {
                 if (spacecrafts[i].piloted) {
                     this._pilotedCraft = new spacecraft.Spacecraft();
-                    this._pilotedCraft.loadFromJSON(spacecrafts[i]);
-                    this._spacecrafts.push(this._pilotedCraft);
+                    if (this._pilotedCraft.loadFromJSON(spacecrafts[i])) {
+                        this._spacecrafts.push(this._pilotedCraft);
+                    } else {
+                        this._pilotedCraft = null;
+                    }
                     break;
                 }
             }
@@ -1349,6 +1352,7 @@ define([
      * Loads all the data describing this mission from the passed JSON object.
      * @param {Object} dataJSON
      * @param {MissionParams} params
+     * @returns {Boolean} Whether loading was successful
      */
     Mission.prototype.loadFromJSON = function (dataJSON, params) {
         var i, j, craft, teamID, team, aiType, actions, count, factor, spacecrafts, vibrateCallback, craftDescriptor;
@@ -1395,7 +1399,9 @@ define([
             } else {
                 craftDescriptor = spacecrafts[i];
             }
-            craft.loadFromJSON(craftDescriptor, this._hitObjects, this._environment);
+            if (!craft.loadFromJSON(craftDescriptor, this._hitObjects, this._environment)) {
+                return false;
+            }
             if (!params.demoMode && spacecrafts[i].piloted) {
                 this._pilotedCraft = craft;
                 craft.multiplyMaxHitpoints(this._difficultyLevel.getPlayerHitpointsFactor());
@@ -1506,6 +1512,7 @@ define([
             this._state = MissionState.BATTLE;
         }
         application.log_DEBUG("Mission successfully loaded.", 2);
+        return true;
     };
     /**
      * Returns whether the mission has more than one spacecraft (alive or destroyed) on the player's team.
@@ -2415,13 +2422,15 @@ define([
      * Creates and returns a Mission object based on the data stored in this descriptor. Only works if the data has been loaded - either it
      * was given when constructing this object, or it was requested and has been loaded
      * @param {MissionParams} params
-     * @returns {Mission}
+     * @returns {Mission|null} The created mission object, or null if loading the mission failed
      */
     MissionDescriptor.prototype.createMission = function (params) {
         var result = null;
         if (this.isReadyToUse()) {
             result = new Mission(this.getName());
-            result.loadFromJSON(this._dataJSON, params);
+            if (!result.loadFromJSON(this._dataJSON, params)) {
+                result = null;
+            }
         } else {
             application.showError("Cannot create mission from descriptor that has not yet been initialized!");
         }

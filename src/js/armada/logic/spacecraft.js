@@ -1546,18 +1546,19 @@ define([
     };
     // methods
     /**
-     * Initializes the properties of this spacecraft based on the data stored
-     * in the passed JSON object.
+     * Initializes the properties of this spacecraft based on the data stored in the passed JSON object.
      * @param {Object} dataJSON
-     * @param {Spacecraft[]} [spacecraftArray=null] The array of spacecrafts
-     * participating in the same battle.
-     * @param {Environment} [environment] The environment the spacecraft is 
-     * situated in
+     * @param {Spacecraft[]} [spacecraftArray=null] The array of spacecrafts participating in the same battle
+     * @param {Environment} [environment] The environment the spacecraft is situated in
+     * @returns {Boolean} Whether loading was successful
      */
     Spacecraft.prototype.loadFromJSON = function (dataJSON, spacecraftArray, environment) {
-        var loadout;
+        var loadout, spacecraftClass = classes.getSpacecraftClass(dataJSON.class);
+        if (!spacecraftClass) {
+            return false;
+        }
         this._init(
-                classes.getSpacecraftClass(dataJSON.class),
+                spacecraftClass,
                 dataJSON.name,
                 dataJSON.position ? mat.translation4v(dataJSON.position) : null,
                 mat.rotation4FromJSON(dataJSON.rotations),
@@ -1583,6 +1584,7 @@ define([
             this.setAway(true);
         }
         this._initialBlinkTime = (dataJSON.initialBlinkTime !== undefined) ? dataJSON.initialBlinkTime : -1;
+        return true;
     };
     /**
      * Function to reset state before starting to execute the control actions triggered in the current simulation step.

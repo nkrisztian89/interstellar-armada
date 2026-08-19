@@ -42,6 +42,16 @@ define([
         HEADER: {name: "announcements.header"},
         BUTTON: {name: "announcements.button"}
     };
+    strings.ERROR_DIALOG = {
+        HEADER_CRITICAL: {name: "errorDialog.headerCritical"},
+        HEADER_SEVERE: {name: "errorDialog.headerSevere"},
+        HEADER_MINOR: {name: "errorDialog.headerMinor"},
+        RESTART_BUTTON: {name: "errorDialog.restartButton"},
+        IGNORE_BUTTON: {name: "errorDialog.ignoreButton"},
+        CONTINUE_BUTTON: {name: "errorDialog.continueButton"},
+        REPEAT_SUFFIX: {name: "errorDialog.repeatSuffix"},
+        SUPPRESSED_NOTE: {name: "errorDialog.suppressedNote"}
+    };
     strings.SCREEN = {
         BACK: {name: "screen.back"},
         CANCEL: {name: "screen.cancel"}

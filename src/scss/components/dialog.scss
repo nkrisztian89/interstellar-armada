@@ -1,23 +1,57 @@
 @use "../_common.scss";
 @use "../color-scheme";
 
+$minor-error-solid-color: color-scheme.$warning-color;
+$minor-error-transparent-color: rgba(color-scheme.$warning-color, 0.5);
+$severe-error-solid-color: color-scheme.$error-color;
+$severe-error-transparent-color: rgba(color-scheme.$error-color, 0.5);
+$critical-error-solid-color: color-scheme.$error-color;
+$critical-error-transparent-color: rgba(color-scheme.$error-color, 0.5);
+
 .dialogBackground {
     z-index: common.$page-container-z-index;
 }
 
-.dialogContainer {
+.errorDialogBackground {
+    z-index: common.$error-overlay-z-index;
+}
+
+.dialogContainer, .errorDialogContainer {
     width: 46em;
     max-width: 90vw;
     padding: 0.5em;
     box-sizing: border-box;
+}
+
+.dialogContainer {
     z-index: common.$inner-container-z-index;
 }
 
-body:not(.uiEffects) .dialogContainer {
+.errorDialogContainer.innerContainer {
+    &.minor {
+        --solid-color: #{$minor-error-solid-color};
+        --transparent-color: #{$minor-error-transparent-color};
+    }
+    &.severe {
+        --solid-color: #{$severe-error-solid-color};
+        --transparent-color: #{$severe-error-transparent-color};
+    }
+    &.critical {
+        --solid-color: #{$critical-error-solid-color};
+        --transparent-color: #{$critical-error-transparent-color};
+    }
+
+    z-index: common.$error-overlay-z-index;
+    box-shadow: black 0 0 5em inset, black 0 0 2em inset, var(--solid-color) 0 0 0.75em;
+}
+
+body:not(.uiEffects) .dialogContainer,
+body:not(.uiEffects) .errorDialogContainer {
     background-color: color-scheme.$panel-color;
 }
 
-body.uiEffects .dialogContainer {
+body.uiEffects .dialogContainer,
+body.uiEffects .errorDialogContainer {
     backdrop-filter: blur(common.$ui-effects-heavy-blur-radius);
 }
 
@@ -41,4 +75,55 @@ body.uiEffects .dialogContainer {
     @include common.styled-scrollbar;
 }
 
+.errorDialogHeader {
+    font-size: 100%;
+    padding: 0.25em;
+    border-radius: 0.3em;
+    background-image: linear-gradient(90deg, var(--transparent-color), transparent, transparent, var(--transparent-color));
+    text-shadow: 0 0 0.5em var(--solid-color);
+    text-transform: uppercase;
+}
+
+.errorIcon {
+    width: 0.8em;
+    margin: 0 0.5em;
+    filter: drop-shadow(0 0 0.25em var(--solid-color));
+}
+
+// error messages are set via textContent (they can contain arbitrary text) and can include multi-line details,
+// so literal newlines need to actually break the line
+.errorDialogMessage, .errorDialogDetails {
+    white-space: pre-line;
+}
+
+.errorDialogDetails {
+    font-size: 90%;
+    color: color-scheme.$dark-text-color;
+
+    &:empty {
+        display: none;
+    }
+}
+
+.errorDialogShowDetails {
+    display: inline-block;
+    margin: 0 0 0.5em 0;
+    color: color-scheme.$light-text-color;
+    font-weight: bold;
+    cursor: pointer;
+
+    &[hidden] {
+        display: none;
+    }
+
+    &:hover {
+        @include common.highlight-text;
+    }
+
+    &::after {
+        content: " ⏷";
+    }
+}
+
 @include common.ui-effects-box-appear("dialogBackground", "dialogContainer");
+@include common.ui-effects-box-appear("errorDialogBackground", "errorDialogContainer");

@@ -509,6 +509,11 @@ div#splashContainer {
     transform: translate(-50%, -60%);
 }
 
+img#splashImage {
+    max-width: 32em;
+    margin: 0;
+}
+
 @media screen and (max-width: 600px) {
     img#splashImage {
         width: 90%;
@@ -518,6 +523,38 @@ div#splashContainer {
 progress#splashProgress {
     margin-top: 1em;
     margin-bottom: 1em;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+// fallback error display for use before the game's screens (including the error dialog screen) have been added - see error-dialog.js
+div#splashError {
+    margin-top: 1em;
+    padding: 0.75em 1em;
+    max-width: 32em;
+    background-color: color-scheme.$panel-color;
+    text-align: center;
+
+    img#splashErrorIcon {
+        width: 2em;
+        margin: 0;
+    }
+
+    p#splashErrorText {
+        white-space: pre-line;
+        text-align: center;
+    }
+
+    button#splashErrorReload {
+        display: block;
+        margin: 0.75em auto 0;
+
+        &[hidden] {
+            display: none;
+        }
+    }
 }
 
 p {

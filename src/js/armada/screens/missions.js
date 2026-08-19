@@ -483,11 +483,13 @@ define([
         }
         if (_pilotedCraftDescriptor) {
             _spacecraft = new spacecraft.Spacecraft();
-            _spacecraft.loadFromJSON(Object.assign({}, _pilotedCraftDescriptor, {
+            if (!_spacecraft.loadFromJSON(Object.assign({}, _pilotedCraftDescriptor, {
                 class: _pilotedSpacecraftClass,
                 loadout: _pilotedSpacecraftLoadout || _pilotedCraftDescriptor.loadout,
                 equipment: _pilotedSpacecraftLoadout ? undefined : _pilotedCraftDescriptor.equipment
-            }));
+            }))) {
+                _spacecraft = null;
+            }
         }
         if (_spacecraft) {
             this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
@@ -838,24 +840,31 @@ define([
         this._updateSubmitMissionButton();
     };
     /**
-     * Does client side validation of mission data (done when selecting a mission file to submit
-     * to the Mission Hub)
+     * Validates mission data parsed from a mission file. With communityChecks, this also validates the fields required for a Mission
+     * Hub submission (author, title, description), matching the server side validation checks. Minimal validation only, aimed at
+     * catching non-mission JSON files. Full validation happens on actual mission load.
      * @param {Object} data The parsed mission JSON file
-     * @returns {Number} 0 if the validation is successful, the error code otherwise
+     * @param {Boolean} [communityChecks=false] Whether to also validate the community-submission-specific fields
+     * @returns {Number} 0 (VALID) if the validation is successful, the error code otherwise
      */
-    MissionsScreen.prototype._validateMissionData = function (data) {
+    MissionsScreen.prototype._validateMissionData = function (data, communityChecks) {
         var piloted, spacecraft, i;
-        if (!data || (typeof data !== "object") || !data.info || (typeof data.info !== "object") || !_validateString(data.info.author)) {
+        if (!data || (typeof data !== "object")) {
             return InvalidSubmitParamError.WRONG_MISSION_FILE_FORMAT;
         }
-        if (data.info.author !== this._submitMissionSenderNameInput.getElement().value) {
-            return InvalidSubmitParamError.SENDER_CREATOR_MISMATCH;
-        }
-        if (!_validateString(data.title, MIN_TITLE_LENGTH, MAX_TITLE_LENGTH)) {
-            return InvalidSubmitParamError.INVALID_MISSION_TITLE;
-        }
-        if (!_validateString(data.description, MIN_DESCRIPTION_LENGTH)) {
-            return InvalidSubmitParamError.INVALID_MISSION_DESCRIPTON;
+        if (communityChecks) {
+            if (!data.info || (typeof data.info !== "object") || !_validateString(data.info.author)) {
+                return InvalidSubmitParamError.WRONG_MISSION_FILE_FORMAT;
+            }
+            if (data.info.author !== this._submitMissionSenderNameInput.getElement().value) {
+                return InvalidSubmitParamError.SENDER_CREATOR_MISMATCH;
+            }
+            if (!_validateString(data.title, MIN_TITLE_LENGTH, MAX_TITLE_LENGTH)) {
+                return InvalidSubmitParamError.INVALID_MISSION_TITLE;
+            }
+            if (!_validateString(data.description, MIN_DESCRIPTION_LENGTH)) {
+                return InvalidSubmitParamError.INVALID_MISSION_DESCRIPTON;
+            }
         }
         if (!Array.isArray(data.spacecrafts)) {
             return InvalidSubmitParamError.WRONG_MISSION_FILE_FORMAT;
@@ -1023,16 +1032,20 @@ define([
                             this._showMissionHubClientError(ErrorCategory.INVALID_SUBMIT_PARAMS + InvalidSubmitParamError.WRONG_MISSION_FILE_FORMAT);
                             this._resetSubmitFile();
                         } else {
-                            game.showError("The selected file is not a valid mission file!", game.ErrorSeverity.MINOR);
+                            game.showError("The selected file is not a valid mission file!", game.ErrorSeverity.MINOR, undefined, true);
                         }
                         return;
                     }
                     if (data) {
                         if (this._loadCustom) {
+                            if (this._validateMissionData(data) !== VALID) {
+                                game.showError("The selected file is not a valid mission file!", game.ErrorSeverity.MINOR, undefined, true);
+                                return;
+                            }
                             data.name = file.name;
                             data.custom = true;
                             if (missions.getMissionNames().indexOf(data.name) >= 0) {
-                                game.showError("A mission with this filename already exists!", game.ErrorSeverity.MINOR);
+                                game.showError("A mission with this filename already exists!", game.ErrorSeverity.MINOR, undefined, true);
                             } else {
                                 missions.createMissionDescriptor(data);
                                 this._listComponent.setCaption(missions.getMissionNames(this._custom).length - 1, data.title || utils.getFilenameWithoutExtension(data.name));
@@ -1044,7 +1057,7 @@ define([
                                 analytics.sendEvent("customload");
                             }
                         } else if (this._community) {
-                            validationResult = this._validateMissionData(data);
+                            validationResult = this._validateMissionData(data, true);
                             if (validationResult === VALID) {
                                 this._missionToSubmit = text;
                                 this._submitFileButton.setTextContent(file.name);
@@ -1056,7 +1069,7 @@ define([
                         }
                     }
                 }.bind(this)).catch(function () {
-                    game.showError("The selected file doesn't seem to be a valid mission file!", game.ErrorSeverity.MINOR);
+                    game.showError("The selected file doesn't seem to be a valid mission file!", game.ErrorSeverity.MINOR, undefined, true);
                 });
             }
         }.bind(this);

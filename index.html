@@ -50,6 +50,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                     splashImage = undefined;
                 </script>
                 <progress id="splashProgress" class="horizontallyCentered" value="0" max="100"></progress>
+                <div id="splashError" hidden>
+                    <img id="splashErrorIcon" src="assets/images/error.svg"/>
+                    <p id="splashErrorText"></p>
+                    <button id="splashErrorReload">Reload</button>
+                </div>
             </div>
         </div>
         <script data-main="js/main.js" src="assets/libs/require.min.js"></script>

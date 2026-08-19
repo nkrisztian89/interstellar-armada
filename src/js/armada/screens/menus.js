@@ -472,7 +472,7 @@ define([
                         "escape": function (event) {
                             if (!event.repeat) {
                                 game.closeSuperimposedScreen();
-                                battle.resumeBattle(false, true);
+                                battle.resumeBattle(true);
                             }
                         }
                     });

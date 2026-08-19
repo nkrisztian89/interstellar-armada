@@ -124,7 +124,11 @@ define([
                 DIALOG_SCREEN_NAME: "dialog",
                 DIALOG_SCREEN_SOURCE: "dialog.html",
                 DIALOG_SCREEN_CSS: "dialog.css",
-                DIALOG_BACKGROUND_CLASS_NAME: "dialogBackground"
+                DIALOG_BACKGROUND_CLASS_NAME: "dialogBackground",
+                ERROR_DIALOG_SCREEN_NAME: "errorDialog",
+                ERROR_DIALOG_SCREEN_SOURCE: "errorDialog.html",
+                ERROR_DIALOG_SCREEN_CSS: "dialog.css",
+                ERROR_DIALOG_BACKGROUND_CLASS_NAME: "errorDialogBackground"
             },
             // --------------------------------------------------------------------------------------------
             // Constants

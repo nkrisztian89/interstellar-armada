@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015, 2017, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides a class that can hold and manage asynchronously loaded resources.
  * Usage:
  * - subclass GenericResource to implement a kind of resource you want to manage e.g. TextFileResource (see the class description for details)
@@ -315,7 +315,7 @@ define([
         var resource;
         if (!this._resources[resourceName]) {
             if (!params || params.allowNullResult !== true) {
-                application.showError("Requested a resource named '" + resourceName + "' from " + this._resourceType + ", which does not exist.");
+                application.showError("Requested a resource named '" + resourceName + "' from " + this._resourceType + ", which does not exist.", application.ErrorSeverity.SEVERE);
             }
             return null;
         }
@@ -517,12 +517,15 @@ define([
      * @returns {GenericResource}
      */
     ResourceManager.prototype.getResource = function (resourceType, resourceName, params) {
-        var resource;
-        resource = this._resourceHolders[resourceType] ? this._resourceHolders[resourceType].getResource(resourceName, params) : null;
-        if (!resource) {
+        var resource, holder = this._resourceHolders[resourceType];
+        if (!holder) {
             if (!params || (params.allowNullResult !== true)) {
-                application.showError("Requested a resource named '" + resourceName + "' of type '" + resourceType + "', which does not exist.");
+                application.showError("Requested a resource named '" + resourceName + "' of type '" + resourceType + "', which does not exist.", application.ErrorSeverity.SEVERE);
             }
+            return null;
+        }
+        resource = holder.getResource(resourceName, params);
+        if (!resource) {
             return null;
         }
         if (!params || !params.doNotLoad) {

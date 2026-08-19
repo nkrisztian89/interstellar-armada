@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file This module builds on Application to provide a template for creating games.
  * To use, just augment this module, calling
  * - setGameName()
@@ -111,7 +111,20 @@ define([
              */
             _requestSettingsLoad = function (settingsFileDescriptor) {
                 application.requestTextFile(settingsFileDescriptor.folder, settingsFileDescriptor.filename, function (settingsText) {
-                    var settingsJSON = JSON.parse(settingsText);
+                    var settingsJSON = null;
+                    // settingsText is null if the request failed outright, but it can also be a non-JSON error page
+                    // (e.g. a 404 response, which still "succeeds" as far as the XHR is concerned) - either
+                    // way, the game cannot continue booting without its settings, which have no fallback here
+                    try {
+                        settingsJSON = settingsText && JSON.parse(settingsText);
+                    } catch (e) {
+                        settingsJSON = null;
+                    }
+                    if (!settingsJSON) {
+                        application.showError("The game cannot start, as its settings file ('" + settingsFileDescriptor.filename + "') failed to load or parse.",
+                                application.ErrorSeverity.CRITICAL, "Please reload the page to try again.");
+                        return;
+                    }
                     application.log("Loading game settings...", 1);
                     application._loadGameSettingsAndExecuteCallback(settingsJSON, function () {
                         application.log("Game settings loaded.", 1);
@@ -126,7 +139,20 @@ define([
              */
             _requestConfigLoad = function () {
                 application.requestTextFile(_configFolder, _configFileName, function (configText) {
-                    var configJSON = JSON.parse(configText);
+                    var configJSON = null;
+                    // configText is null if the request failed outright, but it can also be a non-JSON error page
+                    // (e.g. a 404 response, which still "succeeds" as far as the XHR is concerned) - either
+                    // way, the game cannot continue booting without its configuration, which has no fallback here
+                    try {
+                        configJSON = configText && JSON.parse(configText);
+                    } catch (e) {
+                        configJSON = null;
+                    }
+                    if (!configJSON) {
+                        application.showError("The game cannot start, as its configuration file ('" + _configFileName + "') failed to load or parse.",
+                                application.ErrorSeverity.CRITICAL, "Please reload the page to try again.");
+                        return;
+                    }
                     application.log("Loading game configuration...");
                     application.setFolders(configJSON.folders);
                     application.setLogVerbosity(configJSON.logVerbosity);
@@ -276,6 +302,7 @@ define([
     application.addScreen = screenManager.addScreen;
     application.closeSuperimposedScreen = screenManager.closeSuperimposedScreen;
     application.closeOrNavigateTo = screenManager.closeOrNavigateTo;
+    application.executePendingNavigation = screenManager.executePendingNavigation;
     application.updateAllScreens = screenManager.updateAllScreens;
     application.executeWhenAllScreensReady = screenManager.executeWhenReady;
     return application;

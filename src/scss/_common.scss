@@ -81,6 +81,7 @@ $ui-effects-appear-scale: 0.9;
 $page-container-z-index: 100;
 $inner-container-z-index: 100;
 $overlay-z-index: 200;
+$error-overlay-z-index: 300;
 
 @mixin glowing {
     box-shadow: $glow;

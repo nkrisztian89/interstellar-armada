@@ -711,6 +711,7 @@ define([
      */
     DatabaseScreen.prototype.hide = function () {
         if (screens.HTMLScreenWithCanvases.prototype.hide.call(this)) {
+            this._loadingBox.hide();
             this.executeWhenReady(function () {
                 _itemViewScene.clearNodes(true);
                 _itemViewScene.clearPointLights();

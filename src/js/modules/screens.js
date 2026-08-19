@@ -127,14 +127,22 @@ define([
      * @param {Object.<String, Object.<String, Function>>} [elementEventHandlers] Objects storing the event handlers for HTML elements on
      * this page: the keys are the query selectors to choose the elements, the values are event handler objects just like the eventHandlers
      * parameter.
+     * @param {Boolean} [blocksNavigation=false] If true, while this screen is the current one, ScreenManager's navigation calls are deferred
+     * instead of executed right away, so this screen stays current. This screen should call executePendingNavigation() on the ScreenManager
+     * once it is closed, so that the last deferred navigation (if any) can be executed.
      */
-    function HTMLScreen(name, htmlFilename, style, eventHandlers, keyCommands, elementEventHandlers) {
+    function HTMLScreen(name, htmlFilename, style, eventHandlers, keyCommands, elementEventHandlers, blocksNavigation) {
         asyncResource.AsyncResource.call(this);
         /**
          * An ID of this screen. The IDs of HTML elements on this screen are prefixed by this name.
          * @type String
          */
         this._name = name;
+        /**
+         * See the blocksNavigation constructor parameter.
+         * @type Boolean
+         */
+        this._blocksNavigation = !!blocksNavigation;
         /**
          * The name of the HTML file that stores the source for this page.
          * @type String
@@ -331,6 +339,14 @@ define([
      */
     HTMLScreen.prototype.getName = function () {
         return this._name;
+    };
+    /**
+     * Whether ScreenManager navigation requests (e.g. setCurrentScreen() / closeOrNavigateTo()) should be deferred instead of executed
+     * right away while this screen is the current one.
+     * @returns {Boolean}
+     */
+    HTMLScreen.prototype.blocksNavigation = function () {
+        return this._blocksNavigation;
     };
     /**
      * Specifies whether this screen is currently active. (e.g. should listen to input)
@@ -2212,7 +2228,7 @@ define([
             this.stopRenderLoop();
             application.showError(
                     "The 3D graphics (WebGL) context has been lost.",
-                    application.ErrorSeverity.SEVERE,
+                    application.ErrorSeverity.CRITICAL,
                     "This can happen e.g. after a graphics driver reset or if the system has run out of graphics memory. Please reload the page to continue playing.");
         }
     };

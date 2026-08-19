@@ -37,7 +37,8 @@
  * @param gameplaySettingsScreen Used to create the gameplay settings screen
  * @param controlsScreen Used to create the control settings screen
  * @param aboutScreen Used to create the about screen
- * @param dialogScreen Used to create the dialog screen
+ * @param dialogScreen Used to create the dialog and error dialog screens
+ * @param errorDialog Used to route showError() calls to the error dialog screen instead of alert()
  */
 define([
     "modules/game",
@@ -70,11 +71,12 @@ define([
     "armada/screens/gameplay-settings",
     "armada/screens/control-settings",
     "armada/screens/about",
-    "armada/screens/dialog"
+    "armada/screens/dialog",
+    "armada/screens/error-dialog"
 ], function (
         game, components, analytics, lights,
         constants, graphics, audio, config, environments, missions, missionHub, control, strings, networking, announcements,
-        armadaScreens, menus, missionsScreen, multiGames, multiLobby, battle, debriefing, multiScore, database, generalSettings, graphicsScreen, audioScreen, gameplaySettingsScreen, controlsScreen, aboutScreen, dialogScreen) {
+        armadaScreens, menus, missionsScreen, multiGames, multiLobby, battle, debriefing, multiScore, database, generalSettings, graphicsScreen, audioScreen, gameplaySettingsScreen, controlsScreen, aboutScreen, dialogScreen, errorDialog) {
     "use strict";
     // -------------------------------------------------------------------------
     // local variables
@@ -94,6 +96,11 @@ define([
     game.setConfigFileName("config.json");
     game.setFileCacheBypassEnabled(true);
     game.setPreviouslyRunVersion(localStorage[constants.VERSION_LOCAL_STORAGE_ID]);
+    // failing to load config or settings should already use the proper error handler, analytics.sendEvent() will simply no-op in this case
+    game.showError = function (message, severity, details, disableIgnore) {
+        analytics.sendEvent("error", undefined, {message: (message.length > 120) ? message.substr(0, 120) + "..." : message});
+        errorDialog.showError(message, severity, details, disableIgnore);
+    };
     // -------------------------------------------------------------------------
     // Overridden protected methods
     game._loadGameSettingsAndExecuteCallback = function (settingsJSON, callback) {
@@ -124,7 +131,6 @@ define([
         });
     };
     game._loadGameConfigurationAndExecuteCallback = function (configJSON, callback) {
-        var showError = game.showError;
         config.loadConfigurationFromJSON(configJSON.dataFiles.logic);
         graphics.loadConfigurationFromJSON(configJSON.graphics);
         audio.loadConfigurationFromJSON(configJSON.audio);
@@ -137,10 +143,6 @@ define([
         networking.init(configJSON.multiUrl);
         missionHub.init(configJSON.missionHubUrl);
         announcements.init(configJSON.announcementsUrl);
-        game.showError = function (message, severity, details) {
-            analytics.sendEvent("error", undefined, {message: (message.length > 120) ? message.substr(0, 120) + "..." : message});
-            showError(message, severity, details);
-        };
         document.getElementById(armadaScreens.GAME_VERSION_LABEL_ID).textContent = game.getVersion();
         callback();
     };
@@ -163,6 +165,7 @@ define([
         game.addScreen(aboutScreen.getAboutScreen());
         game.addScreen(menus.getIngameMenuScreen(), true);
         game.addScreen(dialogScreen.getDialogScreen(), true);
+        game.addScreen(dialogScreen.getErrorDialogScreen(), true);
         _progressBar.value = 4;
         game.executeWhenAllScreensReady(function () {
             _progressBar.value = 5;
@@ -170,7 +173,10 @@ define([
                 _progressBar.value = 6;
                 components.clearStoredDOMModels();
                 localStorage[constants.VERSION_LOCAL_STORAGE_ID] = game.getVersion();
-                armadaScreens.initAudio(callback);
+                armadaScreens.initAudio(function () {
+                    callback();
+                    errorDialog.setScreensReady();
+                });
             });
         });
     };

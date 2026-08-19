@@ -10,6 +10,7 @@
  * @param application Used for file loading and logging functionality
  * @param game Used to dispatch messages to BattleScreen
  * @param strings Used for translation support
+ * @param armadaScreens Used to access the BattleScreen for dispatching/clearing messages
  * @param SpacecraftEvents Used to trigger spacecraft events
  * @param ai Used to execute actions such as Radio Silence on spacecraft AIs
  * @param conditions Used for parsing and creating conditions from mission data
@@ -19,6 +20,7 @@ define([
     "modules/application",
     "modules/game",
     "armada/strings",
+    "armada/screens/shared",
     "armada/logic/SpacecraftEvents",
     "armada/logic/ai",
     "armada/logic/missions/conditions",
@@ -27,6 +29,7 @@ define([
         utils,
         application, game,
         strings,
+        armadaScreens,
         SpacecraftEvents,
         ai,
         conditions) {
@@ -308,7 +311,7 @@ define([
                 return;
             }
         }
-        game.getScreen().queueHUDMessage({
+        game.getScreen(armadaScreens.BATTLE_SCREEN_NAME).queueHUDMessage({
             text: strings.get(
                     strings.MISSION.PREFIX,
                     utils.getFilenameWithoutExtension(mission.getName()) + strings.MISSION.MESSAGES_SUFFIX.name + this._params.textID,
@@ -353,7 +356,7 @@ define([
      * @override
      */
     ClearMessagesAction.prototype.execute = function () {
-        game.getScreen().clearHUDMessages();
+        game.getScreen(armadaScreens.BATTLE_SCREEN_NAME).clearHUDMessages();
     };
     // #########################################################################
     /**

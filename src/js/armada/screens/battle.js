@@ -238,6 +238,12 @@ define([
              */
             _battleCursor,
             /**
+             * Whether the initial start of the battle already happened (resumeBattle() will do its first time
+             * setup when this is false)
+             * @type Boolean
+             */
+            _battleStarted,
+            /**
              * Whether the time is stopped in the simulated battle currently
              * @type Boolean
              */
@@ -2787,8 +2793,10 @@ define([
                         if (!_battleScreen.isVisible()) {
                             return;
                         }
-                        while (game.getScreen() !== _battleScreen) {
-                            game.closeSuperimposedScreen();
+                        while ((game.getScreen() !== _battleScreen)) {
+                            if (!game.closeSuperimposedScreen()) {
+                                break;
+                            }
                         }
                         this.pauseBattle();
                     }.bind(this),
@@ -2796,7 +2804,7 @@ define([
                         if (game.getScreen() !== _battleScreen) {
                             return;
                         }
-                        this._doStartBattle();
+                        this.resumeBattle();
                     }.bind(this),
                     buttonselect: armadaScreens.playButtonSelectSound,
                     buttonclick: armadaScreens.playButtonClickSound
@@ -2822,6 +2830,8 @@ define([
     BattleScreen.prototype.hide = function () {
         var shadows;
         if (screens.HTMLScreenWithCanvases.prototype.hide.call(this)) {
+            this._infoBox.hide();
+            this._loadingBox.hide();
             if (_multi) {
                 _multi = false;
             }
@@ -2894,7 +2904,7 @@ define([
         this._touchControlSheet.hide();
         this._touchControlSheet.getElement().onclick = function () {
             this._touchControlSheet.hide();
-            this._doStartBattle();
+            this.resumeBattle();
         }.bind(this);
         _handleResize();
     };
@@ -2903,21 +2913,6 @@ define([
      */
     BattleScreen.prototype._updateComponents = function () {
         screens.HTMLScreenWithCanvases.prototype._updateComponents.call(this);
-    };
-    /**
-     * Start the time and switch to player / spectator camera. Called when the
-     * "ready message" is closed or at the start of battle if it is disabled.
-     */
-    BattleScreen.prototype._doStartBattle = function () {
-        this.resumeBattle();
-        resumeTime();
-        if (!_demoMode) {
-            control.switchToPilotMode(_mission.getPilotedSpacecraft(), true);
-        } else {
-            control.switchToSpectatorMode(false, true);
-            _battleScene.getCamera().followNextNode();
-            _timeInSameView = 0;
-        }
     };
     /**
      * Pauses the battle by canceling all control, simulation and the render loop (e.g. for when a menu is 
@@ -2956,14 +2951,18 @@ define([
     };
     /**
      * Resumes the simulation and control of the battle and the render loop
-     * @param {Boolean} [start=false] Whether this is the start of the battle 
-     * (as opposed to resuming after a pause)
      * @param {Boolean} [escapePressed=false] Whether the escape key is being
      * pressed to resume (coming from the in-game menu)
      */
-    BattleScreen.prototype.resumeBattle = function (start, escapePressed) {
+    BattleScreen.prototype.resumeBattle = function (escapePressed) {
+        if (!_mission || this._infoBox.isVisible() || (game.getScreen() !== this) || !this.isVisible()) {
+            // battle will automatically be resumed when the InfoBox is closed
+            // if we lock the pointer now, the user won't be able to close it
+            // never resume when the BattleScreen is not the active screen
+            return;
+        }
         document.body.style.cursor = _battleCursor || game.getDefaultCursor();
-        if (_multi && !start) {
+        if (_multi && _battleStarted) {
             control.startListening();
         } else {
             if (!_simulationRunning) {
@@ -2993,6 +2992,17 @@ define([
         audio.resetVoiceVolume();
         if (control.getInputInterpreter(control.MOUSE_NAME).isEnabled()) {
             this.requestPointerLock(true);
+        }
+        if (!_battleStarted) {
+            resumeTime();
+            if (!_demoMode) {
+                control.switchToPilotMode(_mission.getPilotedSpacecraft(), true);
+            } else {
+                control.switchToSpectatorMode(false, true);
+                _battleScene.getCamera().followNextNode();
+                _timeInSameView = 0;
+            }
+            _battleStarted = true;
         }
     };
     /**
@@ -5038,10 +5048,15 @@ define([
     };
     /**
      * @private
-     * @param {Mission} mission
+     * @param {Mission|null} mission The mission to start, or null if loading it failed
      */
     BattleScreen.prototype._startBattle = function (mission) {
         var missionDescriptor, custom, anticipationMusicNames, anticipationMusic, anticipationMusicIndex, combatMusicNames, combatMusic, combatMusicIndex, i, canvas, shadows;
+        if (!mission) {
+            application.showError("Loading the mission was aborted due to errors. Returning to mission selection.", application.ErrorSeverity.SEVERE, undefined, true);
+            game.closeOrNavigateTo(armadaScreens.MISSIONS_SCREEN_NAME);
+            return;
+        }
         canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
         _mission = mission;
         _targets = _mission.getTargetSpacecrafts();
@@ -5327,8 +5342,7 @@ define([
                     networking.onGameStart(function () {
                         var i, players;
                         this._loadingBox.hide();
-                        this.resumeBattle(true);
-                        resumeTime();
+                        this.resumeBattle();
                         _timeSinceHostUpdate = 0;
                         if (networking.isHost()) {
                             _timeSinceGuestUpdates = [];
@@ -5337,7 +5351,6 @@ define([
                                 _timeSinceGuestUpdates.push(0);
                             }
                         }
-                        control.switchToPilotMode(_mission.getPilotedSpacecraft(), true);
                         networking.onGameUpdate(!networking.isHost() ?
                                 function (data) {
                                     var i, spacecrafts = _mission.getSpacecrafts();
@@ -5417,7 +5430,7 @@ define([
                     _battleScene.setShouldAnimate(false);
                 }
                 if (!_multi && !config.getBattleSetting(config.BATTLE_SETTINGS.SHOW_READY_MESSAGE)) {
-                    this._doStartBattle();
+                    this.resumeBattle();
                 }
             }.bind(this));
         }.bind(this));
@@ -5444,6 +5457,7 @@ define([
      */
     BattleScreen.prototype.startNewBattle = function (params) {
         var canvas, missionParams;
+        _battleStarted = false;
         _loadingStartTime = performance.now();
         canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
         params = params || {};
