@@ -52,7 +52,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 body,html {
     width: auto;
     height: auto;
-    cursor: common.$cursor, auto;
+    @include common.cursor-default(auto);
 }
 
 body {
@@ -94,7 +94,7 @@ img.orientation {
 
 /* Adding this class to the body of the document will ensure the cursor will show wait above all elements */
 body.wait, body.wait * {
-    cursor: common.$cursor, wait;
+    @include common.cursor-default(wait);
 }
 
 canvas {
@@ -398,7 +398,7 @@ button {
     &.disabled {
         color: color-scheme.$text-disabled-color;
         background-color: color-scheme.$panel-disabled-color;
-        cursor: common.$cursor, default;
+        @include common.cursor-default(default);
         pointer-events: none;
     }
     &:hover:not(.disabled):not(.menu), &.selected {
@@ -432,13 +432,13 @@ a, button {
 }
 
 a, a:hover, a:active, button, button:hover, button:active {
-    cursor: common.$cursor-light, pointer;
+    @include common.cursor-light(pointer);
 }
 
 .clickable:hover {
     color: color-scheme.$light-text-color;
     background-color: color-scheme.$panel-front-color;
-    cursor: common.$cursor-light, pointer;
+    @include common.cursor-light(pointer);
 }
 
 .highlightedItem {
@@ -717,10 +717,10 @@ input[type=range] {
 
     margin: 0.25em 0 0 0;
     padding: 0;
-    cursor: common.$cursor, pointer;
+    @include common.cursor-default(pointer);
 
     &:hover {
-        cursor: common.$cursor-light, pointer;
+        @include common.cursor-light(pointer);
     }
     &:focus {
         outline: none; /* Removes the blue border. */
@@ -870,7 +870,7 @@ input[type=checkbox] {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    cursor: common.$cursor-light, default;
+    @include common.cursor-light(default);
     
     height: 1.5em;
     width: 1.1em;
@@ -899,7 +899,7 @@ input[type=checkbox] {
 }
 
 label {
-    cursor: common.$cursor, default;
+    @include common.cursor-default(default);
 }
 
 div.wrapper {

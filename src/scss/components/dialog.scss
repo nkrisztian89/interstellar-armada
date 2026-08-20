@@ -110,7 +110,7 @@ body.uiEffects .errorDialogContainer {
     margin: 0 0 0.5em 0;
     color: color-scheme.$light-text-color;
     font-weight: bold;
-    cursor: pointer;
+    @include common.cursor-light(pointer);
 
     &[hidden] {
         display: none;

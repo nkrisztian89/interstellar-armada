@@ -30,8 +30,28 @@ $shadow: 0em 0em 0.5em color-scheme.$shadow-color;
 
 $text-glow: color-scheme.$text-glow-color 0.1em 0.1em 0.5em;
 
-$cursor: url(../assets/images/cursor.png) 6 6;
-$cursor-light: url(../assets/images/cursor-light.png) 6 6;
+$cursor-url: url(../assets/images/cursor.png);
+$cursor-2x-url: url(../assets/images/cursor@2x.png);
+$cursor-light-url: url(../assets/images/cursor-light.png);
+$cursor-light-2x-url: url(../assets/images/cursor-light@2x.png);
+
+$cursor: $cursor-url 6 6;
+$cursor-light: $cursor-light-url 6 6;
+
+// image-set() lets a supporting browser pick the @2x source on a high-DPI display while keeping
+// the cursor at the same on-screen size. Other browsers treat the whole declaration as invalid
+// and fall back to the plain url() cursor declared just before it.
+@mixin cursor-default($fallback) {
+    cursor: $cursor, $fallback;
+    cursor: -webkit-image-set($cursor-url 1x, $cursor-2x-url 2x) 6 6, $fallback;
+    cursor: image-set($cursor-url 1x, $cursor-2x-url 2x) 6 6, $fallback;
+}
+
+@mixin cursor-light($fallback) {
+    cursor: $cursor-light, $fallback;
+    cursor: -webkit-image-set($cursor-light-url 1x, $cursor-light-2x-url 2x) 6 6, $fallback;
+    cursor: image-set($cursor-light-url 1x, $cursor-light-2x-url 2x) 6 6, $fallback;
+}
 
 
 @function mulpercent($percent, $value) {

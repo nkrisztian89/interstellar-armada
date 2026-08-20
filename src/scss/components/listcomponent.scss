@@ -31,7 +31,7 @@
 }
 
 .listElement:not(.disabled) {
-    cursor: common.$cursor-light, pointer;
+    @include common.cursor-light(pointer);
 }
 
 .caption {
