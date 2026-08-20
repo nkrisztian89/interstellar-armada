@@ -379,6 +379,12 @@ button {
     text-align: center;
     padding: common.$button-padding;
     background-color: color-scheme.$panel-color;
+    &:not(.disabled) {
+        background-image: color-scheme.$slight-gradient;
+    }
+    &:active {
+        background-image: color-scheme.$inverted-gradient;
+    }
     &:active, &:focus {
         outline: none;
     }
@@ -710,7 +716,7 @@ input[type=range] {
        common.$button-font-size below), which would otherwise make all the em-based sizes here stay visually constant regardless of
        window size, unlike the rest of the (vmin-based) UI */
     font-size: inherit;
-    -webkit-appearance: none;
+    appearance: none;
     width: 100%; /* Specific width is required for Firefox. */
     background: transparent; /* Otherwise white in Chrome */
     height: 1.8em;
@@ -733,43 +739,33 @@ input[type=range] {
         height: 1.6em;
         width: 0.8em;
         border-radius: 0.15em;
-        /*cursor: pointer;*/
+        border: none;
         margin-top: -0.6em; /* needed for Chrome, but in Firefox and IE it is automatic 
                               * depends on height */
 
         /* gray appearance similar to buttons - for consistent look */
         background-color: color-scheme.$panel-front-color;
-        border: 0.1em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
+        background-image: color-scheme.$slight-gradient;
         @include common.shadowed;
-        /* glowing green appearance for better contrast */
-        /*    background-color: #00cc00;
-            border: 2px solid #008800;
-            box-shadow: 0em 0em 0.5em #00cc00;*/
 
         &:hover {
-            /* gray appearance similar to buttons - for consistent look */
             background-color: color-scheme.relLighten(color-scheme.$panel-color,1.5);
-            border: 0.1em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
-            /* glowing green appearance for better contrast */
-            /*    background-color: #44ff44;
-                border: 2px solid #00aa00;
-                box-shadow: 0em 0em 0.5em #44ff44;*/
         }
     }
 
     &::-moz-range-thumb {
-        height: 1.35em;
-        width: 0.6em;
+        height: 1.5em;
+        width: 0.75em;
 
         border-radius: 0.15em;
+        border: none;
 
         background-color: color-scheme.$panel-front-color;
-        border: 0.1em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
+        background-image: color-scheme.$slight-gradient;
         @include common.shadowed;
 
         &:hover {
             background-color: color-scheme.relLighten(color-scheme.$panel-color,1.5);
-            border: 0.1em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
         }
     }
 
@@ -778,14 +774,14 @@ input[type=range] {
         width: 0.8em;
 
         border-radius: 0.15em;
+        border: none;
 
         background-color: color-scheme.$panel-front-color;
-        border: 0.1em solid color-scheme.relLighten(color-scheme.$panel-color,1.5);
+        background-image: color-scheme.$slight-gradient;
         @include common.shadowed;
 
         &:hover {
             background-color: color-scheme.relLighten(color-scheme.$panel-color,1.5);
-            border: 0.1em solid color-scheme.relLighten(color-scheme.$panel-color,2.5);
         }
     }
 
