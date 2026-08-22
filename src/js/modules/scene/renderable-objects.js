@@ -255,7 +255,7 @@ define([
             } else if (this._textures[role] instanceof managedGL.ManagedCubemap) {
                 uniformName = managedGL.getUniformName(managedGL.getCubemapUniformRawName(role));
             } else {
-                application.showError("Attempting to add a texture of unknown type (" + this._textures[role].constructor.name + ") to the GL context.");
+                application.showError("Code validation error: Attempting to add a texture of unknown type (" + this._textures[role].constructor.name + ") to the GL context.");
                 continue;
             }
             // reusing functions created before
@@ -1229,7 +1229,7 @@ define([
                             uniformArrayLength *= 16;
                             break;
                         default:
-                            application.showError("Cannot create uniform parameter array with elements of type: '" + parameterArrayDeclarations[parameterArrayNames[i]] + "'!");
+                            application.showError("Shader validation error: Cannot create uniform parameter array with elements of type: '" + parameterArrayDeclarations[parameterArrayNames[i]] + "'!");
                     }
                     this._parameterArrays[parameterArrayNames[i]] = new Float32Array(uniformArrayLength);
                     this._parameterArrays[parameterArrayNames[i]].fill(0.0);

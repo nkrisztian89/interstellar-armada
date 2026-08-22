@@ -2979,7 +2979,7 @@ define([
                 this.startRenderLoop();
             } else {
                 application.showError(
-                        "Trying to resume simulation while it is already going on!",
+                        "Code validation error: Trying to resume simulation while it is already going on!",
                         application.ErrorSeverity.MINOR,
                         "No action was taken, to avoid double-running the simulation.");
             }
@@ -3745,7 +3745,7 @@ define([
                         _flightModeText.setColor(colors.cruise);
                         break;
                     default:
-                        application.showError("Unknown flight mode: " + craft.getFlightMode() + "!");
+                        application.showError("Code validation error: Unknown flight mode: " + craft.getFlightMode() + "!");
                 }
                 _flightModeIndicatorTextLayer.show();
             } else {

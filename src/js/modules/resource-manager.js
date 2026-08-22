@@ -99,7 +99,7 @@ define([
      */
     GenericResource.prototype.request = function (params) {
         if ((this._loading) && (!utils.equivalent(this._requestParams || null, params || null))) {
-            application.showError("Attempting to request resource '" + this._name + "' with different parameters while it is being loaded!");
+            application.showError("Code validation error: Attempting to request resource '" + this._name + "' with different parameters while it is being loaded!");
         } else {
             this._requested = true;
             this._requestParams = params;
@@ -109,7 +109,7 @@ define([
      * 
      */
     GenericResource.prototype.requiresReload = function () {
-        application.showError("Resource class does not implement requiresReload!");
+        application.showError("Code validation error: Resource class does not implement requiresReload!");
     };
     /** 
      * @returns {Boolean}
@@ -129,13 +129,13 @@ define([
      * 
      */
     GenericResource.prototype._requestFiles = function () {
-        application.showError("Attempting to request files for a resource type that has no file request function implemented!");
+        application.showError("Code validation error: Attempting to request files for a resource type that has no file request function implemented!");
     };
     /**
      * @returns {Boolean} Whether the loading was successful (no errors)
      */
     GenericResource.prototype._loadData = function () {
-        application.showError("Attempting to load data for a resource type that has no data loading function implemented!");
+        application.showError("Code validation error: Attempting to load data for a resource type that has no data loading function implemented!");
         return false;
     };
     /**
@@ -183,7 +183,7 @@ define([
      */
     function JSONResource(dataJSON, sourceFolder, nameIsOptional) {
         GenericResource.call(this, dataJSON ?
-                (dataJSON.name || (nameIsOptional && ((dataJSON && dataJSON.source) || UNNAMED_RESOURCE_NAME)) || application.showError("Cannot initialize instance of " + this.constructor.name + ": a name is required!")) :
+                (dataJSON.name || (nameIsOptional && ((dataJSON && dataJSON.source) || UNNAMED_RESOURCE_NAME)) || application.showError("Data validation error: Cannot initialize instance of " + this.constructor.name + ": a name is required!")) :
                 null);
         /**
          * @type String
@@ -297,7 +297,7 @@ define([
     ResourceHolder.prototype.addResource = function (resource, unlisted) {
         var resourceName = resource.getName();
         if (this._resources[resourceName]) {
-            application.showError("Attempting to add a resource named '" + resourceName + "' that already exists! Data will be overwritten.");
+            application.showError("Data validation error: Attempting to add a resource named '" + resourceName + "' that already exists! Data will be overwritten.");
         } else if (!unlisted) {
             this._resourceNames.push(resourceName);
         }
@@ -479,11 +479,11 @@ define([
      */
     ResourceManager.prototype.createResource = function (resourceType, dataJSON) {
         if (!this._resourceClasses) {
-            application.showError("Cannot create resource of type '" + resourceType + "': no resource constructors were assigned!");
+            application.showError("Code validation error: Cannot create resource of type '" + resourceType + "': no resource constructors were assigned!");
             return;
         }
         if (!this._resourceClasses[resourceType]) {
-            application.showError("Cannot create resource of type '" + resourceType + "': no resource constructor was assigned for this resource type!");
+            application.showError("Code validation error: Cannot create resource of type '" + resourceType + "': no resource constructor was assigned for this resource type!");
             return;
         }
         this.addResource(resourceType, new this._resourceClasses[resourceType](dataJSON, this._sourceFolder));
@@ -634,7 +634,7 @@ define([
      */
     ResourceManager.prototype.getResourceNames = function (resourceType) {
         if (!this._resourceHolders[resourceType]) {
-            application.showError("Asked for the names of resources of type: '" + resourceType + "', but no such resource type exists!");
+            application.showError("Code validation error: Asked for the names of resources of type: '" + resourceType + "', but no such resource type exists!");
             return null;
         }
         return this._resourceHolders[resourceType].getResourceNames();

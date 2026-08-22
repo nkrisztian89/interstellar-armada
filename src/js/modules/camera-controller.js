@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file This file provides a class that builds on the Control module to provide a Controller for cameras of the SceneGraph module
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -113,7 +113,7 @@ define([
             if (this._context) {
                 this._context.makeControllerPriority(this);
             } else {
-                application.showError("Cannot make camera controller the priority controller because it is not added to any control context!");
+                application.showError("Code validation error: Cannot make camera controller the priority controller because it is not added to any control context!");
             }
         }.bind(this), function () {
             if (this._controlledCamera.getConfiguration().resetsOnFocusChange()) {
@@ -122,7 +122,7 @@ define([
             if (this._context) {
                 this._context.restoreDefaultControllerPriorityOrder();
             } else {
-                application.showError("Cannot restore original priority order of the camera controller's context because it is not added to any!");
+                application.showError("Code validation error: Cannot restore original priority order of the camera controller's context because it is not added to any!");
             }
         }.bind(this));
         // turning the camera in the six directions

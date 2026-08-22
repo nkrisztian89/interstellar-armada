@@ -1858,7 +1858,7 @@ define([
             this._shadowMappingEnabled = true;
             this._setupContext();
         } else {
-            application.showError("Cannot enable shadow mapping, as no shadow mapping shader or no shadow mapping ranges were specified");
+            application.showError("Data validation error: Cannot enable shadow mapping, as no shadow mapping shader or no shadow mapping ranges were specified");
         }
     };
     /**

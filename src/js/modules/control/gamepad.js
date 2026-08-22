@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides an input interpreter subclass (based on the base class provided by the generic control module) to
  * catch and process input from a joystick or gamepad using the Gamepad API.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -275,7 +275,7 @@ define([
          */
         this._actionNames = dataJSON.actionNames;
         if (this._sensitivityFactor && this._staticSensitivity) {
-            application.showError("Sensitivity action group defined with both factored and static sensitivity!", application.ErrorSeverity.MINOR);
+            application.showError("Data validation error: Sensitivity action group defined with both factored and static sensitivity!", application.ErrorSeverity.MINOR);
         }
     }
     /**

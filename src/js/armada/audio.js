@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018, 2020-2024 Krisztián Nagy
+ * Copyright 2016-2026 Krisztián Nagy
  * @file Provides functionality to parse and load the audio settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -188,7 +188,7 @@ define([
      */
     AudioSettingsContext.prototype.loadSettingsFromJSON = function (dataJSON, onlyRestoreSettings) {
         if (typeof dataJSON !== "object") {
-            application.showError("Cannot initialize audio settings from JSON: audio section missing or has wrong type ('" + typeof dataJSON + "')!");
+            application.showError("Data validation error: Cannot initialize audio settings from JSON: audio section missing or has wrong type ('" + typeof dataJSON + "')!");
             return;
         }
         onlyRestoreSettings = onlyRestoreSettings || false;

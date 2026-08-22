@@ -461,7 +461,7 @@ define([
                 }
                 return true;
             }
-            application.showError("Attempting to show screen '" + this._name + "' before adding it to the page!");
+            application.showError("Code validation error: Attempting to show screen '" + this._name + "' before adding it to the page!");
         }
         return false;
     };
@@ -523,7 +523,7 @@ define([
                 }
                 return true;
             }
-            application.showError("Attempting to hide screen '" + this._name + "' before adding it to the page!");
+            application.showError("Code validation error: Attempting to hide screen '" + this._name + "' before adding it to the page!");
         }
         return false;
     };
@@ -760,7 +760,7 @@ define([
          */
         this._yScaleMode = types.getEnumValue(utils.ScaleMode, layoutDescriptor.yScaleMode || utils.ScaleMode.ASPECT);
         if (!this._isValid()) {
-            application.showError("Invalid layout specified!");
+            application.showError("Code validation error: Invalid layout specified!");
         }
     }
     /**
@@ -1202,7 +1202,7 @@ define([
          */
         this._scaleMode = types.getEnumValue(utils.ScaleMode, scaleMode);
         if (this._scaleMode === utils.ScaleMode.ASPECT) {
-            application.showError("Cannot set the scaling mode to aspect for fonts!");
+            application.showError("Code validation error: Cannot set the scaling mode to aspect for fonts!");
         }
         /**
          * The RGBA color to use when rendering
@@ -1453,7 +1453,7 @@ define([
                                 }
                                 break;
                             default:
-                                application.showError("Unrecognized text modifier: '" + modifier[0] + "'!");
+                                application.showError("Data validation error: Unrecognized text modifier: '" + modifier[0] + "'!");
                         }
                     }
                 };
@@ -2193,7 +2193,7 @@ define([
         if (typeof this._alpha[canvasName] === "boolean") {
             return this._alpha[canvasName];
         }
-        application.showError("No alpha channel support is defined for canvas '" + canvasName + "' of screen '" + this._name + "'!");
+        application.showError("Code validation error: No alpha channel support is defined for canvas '" + canvasName + "' of screen '" + this._name + "'!");
         return false;
     };
     /**

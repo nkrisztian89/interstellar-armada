@@ -1514,7 +1514,7 @@ define([
             // enabling fallback disables the check for requirements - feature settings are not loaded yet, requirements cannot be checked
             this.setShaderComplexity(dataJSON.shaders.complexity, false, true);
         } else {
-            application.showError("Missing required settings.graphics.shaders from the setting definition object!");
+            application.showError("Data validation error: Missing required settings.graphics.shaders from the setting definition object!");
         }
         if (typeof dataJSON.context === "object") {
             this.setAntialiasing(types.getBooleanValue(dataJSON.context.antialiasing, {name: "settings.graphics.context.antialiasing"}), false);
@@ -1530,7 +1530,7 @@ define([
             }
             this.setPointLightAmount(dataJSON.context.pointLightAmount, false, true);
         } else {
-            application.showError("Missing required settings.graphics.context from the setting definition object!");
+            application.showError("Data validation error: Missing required settings.graphics.context from the setting definition object!");
         }
         // load the LOD load settings (maximum loaded LOD)
         this.setLODLevel(dataJSON.levelOfDetail.maxLevel, false);

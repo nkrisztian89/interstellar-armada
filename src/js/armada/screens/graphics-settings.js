@@ -43,7 +43,7 @@ define([
                     var caption, stringDefinition = stringCategory.PREFIX;
                     // if no prefix is available for this string category, try to grab the caption
                     if (!stringDefinition) {
-                        application.showError("Cannot find caption string specified for setting '" + element + "', because no prefix is available for the corresponding string category!");
+                        application.showError("Code validation error: Cannot find caption string specified for setting '" + element + "', because no prefix is available for the corresponding string category!");
                         return [element, element];
                     }
                     caption = strings.get(stringDefinition, element);

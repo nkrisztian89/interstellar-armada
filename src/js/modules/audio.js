@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018, 2020-2024 Krisztián Nagy
+ * Copyright 2016-2026 Krisztián Nagy
  * @file This module provides some wrappers for Web Audio API functions for easier use.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -502,11 +502,11 @@ define([
      */
     SoundClip.prototype.setSource = function (value) {
         if (this._soundCategory !== SoundCategory.SOUND_EFFECT) {
-            application.showError("Cannot set sound source for clip '" + this._sampleName + "', because its sound category is not sound effect!");
+            application.showError("Code validation error: Cannot set sound source for clip '" + this._sampleName + "', because its sound category is not sound effect!");
         } else if (this._soundSource) {
-            application.showError("Cannot set sound source for clip '" + this._sampleName + "', because it already has a source!");
+            application.showError("Code validation error: Cannot set sound source for clip '" + this._sampleName + "', because it already has a source!");
         } else if (this._playing) {
-            application.showError("Cannot set sound source for clip '" + this._sampleName + "', because it is already playing!");
+            application.showError("Code validation error: Cannot set sound source for clip '" + this._sampleName + "', because it is already playing!");
         } else {
             this._soundSource = value;
         }
@@ -622,7 +622,7 @@ define([
                     currentNode.connect(_voiceGain);
                     break;
                 default:
-                    application.showError("Cannot play sound '" + this._sampleName + "', because it has an unkown category: " + this._soundCategory);
+                    application.showError("Data validation error: Cannot play sound '" + this._sampleName + "', because it has an unkown category: " + this._soundCategory);
             }
         }
         this._playing = true;
@@ -665,7 +665,7 @@ define([
                 this._startPlayingSample(0, onFinish);
             }
         } else if (this._sampleName) {
-            application.showError("Attempting to play back '" + this._sampleName + "', which is not loaded!");
+            application.showError("Code validation error: Attempting to play back '" + this._sampleName + "', which is not loaded!");
         }
     };
     /**

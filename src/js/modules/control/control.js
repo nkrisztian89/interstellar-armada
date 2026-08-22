@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides general functionality to handle various types of user input.
  * Provides a base input interpreter class which can be subclassed for each needed input device to catch and process its inputs, 
  * translating it to actions using a list of bindings added to the interpreter.
@@ -742,7 +742,7 @@ define([
                 this._actions[actionName].setExecuteNonTriggered(actionFunction);
             }
         } else {
-            application.showError("Attempting to initialize action '" + actionName + "', but no such action was defined " +
+            application.showError("Data validation error: Attempting to initialize action '" + actionName + "', but no such action was defined " +
                     "for '" + this.getType() + "' type controllers.",
                     application.ErrorSeverity.SEVERE,
                     "The action definition might be missing from the " +
@@ -928,7 +928,7 @@ define([
             this._inputInterpretersByType[interpreterTypeName] = inputInterpreter;
         } else {
             application.showError(
-                    "Attempting to add an input interpreter of an unregistered type to the control context!",
+                    "Code validation error: Attempting to add an input interpreter of an unregistered type to the control context!",
                     application.ErrorSeverity.SEVERE,
                     "Interpreter type: " + inputInterpreter.constructor.name);
         }
@@ -949,7 +949,7 @@ define([
         if (this._inputInterpretersByType[interpreterTypeName]) {
             return this._inputInterpretersByType[interpreterTypeName];
         }
-        application.showError("Asked for a interpreter of type '" + interpreterTypeName + "', which does not exist!");
+        application.showError("Code validation error: Asked for a interpreter of type '" + interpreterTypeName + "', which does not exist!");
         return null;
     };
     /**
@@ -976,7 +976,7 @@ define([
             controller.setContext(this);
         } else {
             application.showError(
-                    "Attempting to add a controller of an unregistered type to the control context!",
+                    "Code validation error: Attempting to add a controller of an unregistered type to the control context!",
                     application.ErrorSeverity.SEVERE,
                     "Controller type: " + controller.prototype.constructor.name);
         }
@@ -999,7 +999,7 @@ define([
         if (this._controllersByType[controllerTypeName]) {
             return this._controllersByType[controllerTypeName];
         }
-        application.showError("Asked for a controller of type '" + controllerTypeName + "', which does not exist!");
+        application.showError("Code validation error: Asked for a controller of type '" + controllerTypeName + "', which does not exist!");
         return null;
     };
     /**
@@ -1088,7 +1088,7 @@ define([
             if (this._controllerTypes[dataJSON.controllers[i].type]) {
                 this.addController(new this._controllerTypes[dataJSON.controllers[i].type](dataJSON.controllers[i]));
             } else {
-                application.showError("Attempting to load unregistered controller type: '" + dataJSON.controllers[i].type + "'!",
+                application.showError("Data validation error: Attempting to load unregistered controller type: '" + dataJSON.controllers[i].type + "'!",
                         application.ErrorSeverity.SEVERE,
                         (Object.keys(this._controllerTypes).length > 0) ?
                         ("Every controller to be loaded must be of one of the registered types: " + Object.keys(this._controllerTypes).join(", ") + ".") :
@@ -1116,7 +1116,7 @@ define([
                 if (this._inputInterpreterTypes[dataJSON.inputDevices[i].type]) {
                     this.addInputInterpreter(new this._inputInterpreterTypes[dataJSON.inputDevices[i].type](dataJSON.inputDevices[i]));
                 } else if (!dataJSON.inputDevices[i].optional) {
-                    application.showError("Attempting to load unregistered input device type: '" + dataJSON.inputDevices[i].type + "'!",
+                    application.showError("Data validation error: Attempting to load unregistered input device type: '" + dataJSON.inputDevices[i].type + "'!",
                             application.ErrorSeverity.SEVERE,
                             (Object.keys(this._inputInterpreterTypes).length > 0) ?
                             ("Every input device interpreter to be loaded must be of one of the registered types: " + Object.keys(this._inputInterpreterTypes).join(", ") + ".") :

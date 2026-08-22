@@ -117,7 +117,7 @@ define([
         }
         screen = this.getScreen(screenName);
         if (!screen) {
-            application.showError("Cannot switch to screen '" + screenName + "', because it does not exist!");
+            application.showError("Code validation error: Cannot switch to screen '" + screenName + "', because it does not exist!");
             return;
         }
         if ((superimpose !== true) && (this._currentScreen !== null)) {

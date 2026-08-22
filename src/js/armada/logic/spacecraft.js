@@ -1978,7 +1978,7 @@ define([
             }
             node = scene.addObject(visualModel);
             if (params.visualModel) {
-                application.showError("Attempting to specify a visual model for the Spacecraft.addToScene() operation while a new one is also created!", application.ErrorSeverity.MINOR);
+                application.showError("Code validation error: Attempting to specify a visual model for the Spacecraft.addToScene() operation while a new one is also created!", application.ErrorSeverity.MINOR);
             }
         } else {
             visualModel = params.visualModel || this._visualModel;

@@ -4279,7 +4279,7 @@ define([
                 this._restricted = false;
                 break;
             default:
-                application.showError("Cannot switch to unknown flight mode: '" + flightMode + "'!");
+                application.showError("Code validation error: Cannot switch to unknown flight mode: '" + flightMode + "'!");
                 return false;
         }
         return true;

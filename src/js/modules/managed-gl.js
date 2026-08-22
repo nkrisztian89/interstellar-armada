@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021, 2023 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Provides an interface to interact with WebGL in a managed way. Offers
  * rather low level functionality, but using it is still much more transparent 
  * than accessing WebGL directly.
@@ -118,7 +118,7 @@ define([
             case ShaderVariableType.BOOL:
                 return 1;
             default:
-                application.showError("Cannot determine vector size of GLSL type '" + shaderVariableType + "'!");
+                application.showError("Shader validation error: Cannot determine vector size of GLSL type '" + shaderVariableType + "'!");
                 return 0;
         }
     }
@@ -154,7 +154,7 @@ define([
             case ShaderVariableType.BOOL:
                 return 1;
             default:
-                application.showError("Cannot determine vector count of GLSL type '" + shaderVariableType + "'!");
+                application.showError("Shader validation error: Cannot determine vector count of GLSL type '" + shaderVariableType + "'!");
                 return 0;
         }
     }
@@ -494,7 +494,7 @@ define([
          */
         this._unpacked = unpacked;
         if (this._unpacked && (!isSamplerType(this._type) || (this._arraySize < 1))) {
-            application.showError("Uniform '" + this._name + "' cannot be declared as an unpacked array!");
+            application.showError("Shader validation error: Uniform '" + this._name + "' cannot be declared as an unpacked array!");
             this._unpacked = false;
         }
         /**
@@ -611,7 +611,7 @@ define([
         if (this._type === ShaderVariableType.STRUCT) {
             this._members.push(member);
         } else {
-            application.showError("Attempting to add a member to uniform " + this._name + ", which is not of struct type!");
+            application.showError("Shader validation error: Attempting to add a member to uniform " + this._name + ", which is not of struct type!");
         }
     };
     /**
@@ -1493,9 +1493,9 @@ define([
          */
         this._numFragmentUniformVectors = 0;
         if (!this._vertexShaderSource) {
-            application.showError("Cannot initialize shader '" + this._name + "': no vertex shader source specified!");
+            application.showError("Shader validation error: Cannot initialize shader '" + this._name + "': no vertex shader source specified!");
         } else if (!this._fragmentShaderSource) {
-            application.showError("Cannot initialize shader '" + this._name + "': no fragment shader source specified!");
+            application.showError("Shader validation error: Cannot initialize shader '" + this._name + "': no fragment shader source specified!");
         } else {
             this._parseShaderSources(vertexAttributeRoles, replacedDefines, unpackSamplerArrays);
         }
@@ -1617,7 +1617,7 @@ define([
                                 attributeRole = this._uniformNamesForInstanceAttributeNames[attributeName];
                                 this._instanceAttributes.push(new ShaderAttribute(attributeName, attributeSize, attributeRole));
                             } else {
-                                application.showError("Role for attribute named '" + attributeName + "' not found for shader '" + this._name + "'!");
+                                application.showError("Shader validation error: Role for attribute named '" + attributeName + "' not found for shader '" + this._name + "'!");
                                 return;
                             }
                         } else {
@@ -2992,7 +2992,7 @@ define([
                 application.log_DEBUG("Binding framebuffer texture: '" + texture.getName() + "' to texture unit " + place + (reserved ? ", reserving place." : "."), 3);
                 texture.bindGLTexture(this.gl, place);
             } else {
-                application.showError("Cannot set object: '" + texture.toString() + "' as current texture, because it is not of an appropriate type.");
+                application.showError("Code validation error: Cannot set object: '" + texture.toString() + "' as current texture, because it is not of an appropriate type.");
             }
             this._boundTextures[place] = {texture: texture, reserved: reserved};
         }

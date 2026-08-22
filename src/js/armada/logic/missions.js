@@ -2392,7 +2392,7 @@ define([
             mission.loadEnvironment(this._dataJSON);
             return mission.getEnvironment();
         }
-        application.showError("Cannot get mission environment from mission descriptor that has not yet been initialized!");
+        application.showError("Code validation error: Cannot get mission environment from mission descriptor that has not yet been initialized!");
         return null;
     };
     /**
@@ -2407,7 +2407,7 @@ define([
             mission.loadObjectives(this._dataJSON);
             return mission.getObjectives();
         }
-        application.showError("Cannot get mission objectives from mission descriptor that has not yet been initialized!");
+        application.showError("Code validation error: Cannot get mission objectives from mission descriptor that has not yet been initialized!");
         return null;
     };
     /**
@@ -2432,7 +2432,7 @@ define([
                 result = null;
             }
         } else {
-            application.showError("Cannot create mission from descriptor that has not yet been initialized!");
+            application.showError("Code validation error: Cannot create mission from descriptor that has not yet been initialized!");
         }
         return result;
     };

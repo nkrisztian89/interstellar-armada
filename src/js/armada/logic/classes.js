@@ -609,7 +609,7 @@ define([
      * @param {String} resourceName
      */
     GenericClass.prototype.showResourceAccessError = function (resourceType, resourceName) {
-        application.showError("Attempting to access " + resourceType + " ('" + resourceName + "') of class '" + this._name + "' before it has been loaded!");
+        application.showError("Code validation error: Attempting to access " + resourceType + " ('" + resourceName + "') of class '" + this._name + "' before it has been loaded!");
     };
     /**
      * Updates the properties for the case when the graphics settings have been changed.
@@ -710,7 +710,7 @@ define([
      */
     ShadedClass.prototype.getInstancedShader = function () {
         if (this._instancedShader === null) {
-            application.showError("Attempting to access the instanced shader of '" + this._name + "', which does not exist (or is not loaded)!");
+            application.showError("Code validation error: Attempting to access the instanced shader of '" + this._name + "', which does not exist (or is not loaded)!");
             return null;
         }
         if (!this._managedInstancedShader) {
@@ -898,7 +898,7 @@ define([
                 if (j < graphics.getMaxLuminosityFactors()) {
                     this._defaultLuminosityFactors[j] = dataJSON.defaultLuminosityFactors[i][1];
                 } else {
-                    application.showError("Attempting to set luminosity of group with index " + j + ", while there are only " +
+                    application.showError("Data validation error: Attempting to set luminosity of group with index " + j + ", while there are only " +
                             graphics.getMaxLuminosityFactors() + " luminosity groups available. (and indices start with 0)",
                             application.ErrorSeverity.MINOR,
                             "Happened while creating textured model class '" + this.getName() + "'.");

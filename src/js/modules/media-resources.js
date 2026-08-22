@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017, 2020-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file Augments the functionality of ResourceManager to provide a customized resource manager class storing various media resources,
  * for which the respective classes are also provided. These classes are based on the classes of ManagedGL and EgomModel.
  * The provided resource manager is ready to use, can load media resource descriptions from a specified JSON file, then mark the 
@@ -314,7 +314,7 @@ define([
             }
         }
         if (mostFittingQualityIndex === -1) {
-            application.showError("Texture '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
+            application.showError("Data validation error: Texture '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
             return null;
         }
         return mostFittingQuality;
@@ -452,11 +452,11 @@ define([
      */
     TextureResource.prototype.getManagedTexture = function (type, quality) {
         if (this.isReadyToUse() === false) {
-            application.showError("Cannot get managed GL texture for '" + this.getName() + "', as it has not been loaded from file yet!");
+            application.showError("Code validation error: Cannot get managed GL texture for '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
         if (!this._images[type]) {
-            application.showError("The requested texture '" + this.getName() + "' has no type '" + type + "' available!");
+            application.showError("Data validation error: The requested texture '" + this.getName() + "' has no type '" + type + "' available!");
             type = Object.keys(this._images)[0];
         }
         this._managedTextures[type] = this._managedTextures[type] || {};
@@ -595,7 +595,7 @@ define([
             }
         }
         if (mostFittingQualityIndex === -1) {
-            application.showError("Cubemap '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
+            application.showError("Data validation error: Cubemap '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
             return null;
         }
         return mostFittingQuality;
@@ -712,7 +712,7 @@ define([
     CubemapResource.prototype.getManagedCubemap = function (qualityPreferenceList) {
         var i, result, mostFittingQuality;
         if (this.isReadyToUse() === false) {
-            application.showError("Cannot get managed GL cubemap for '" + this.getName() + "', as it has not been loaded from file yet!");
+            application.showError("Code validation error: Cannot get managed GL cubemap for '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
         // return from cache if possible
@@ -984,7 +984,7 @@ define([
     ShaderResource.prototype.getManagedShader = function (replacedDefines, unpackSamplerArrays) {
         var i;
         if (this.isReadyToUse() === false) {
-            application.showError("Cannot get managed GL shader for '" + this.getName() + "', as it has not been loaded from file yet!");
+            application.showError("Code validation error: Cannot get managed GL shader for '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
         replacedDefines = replacedDefines || null;
@@ -1152,7 +1152,7 @@ define([
                     }
                 }
             }
-            application.showError("Could not find any files to load for model: '" + this._name + "'!");
+            application.showError("Data validation error: Could not find any files to load for model: '" + this._name + "'!");
         } else {
             // if no LOD was specified, request files to cover all available LODs
             this._requestFiles({maxLOD: this.getMaxLOD()});
@@ -1183,7 +1183,7 @@ define([
      */
     ModelResource.prototype.getEgomModel = function () {
         if (this.isReadyToUse() === false) {
-            application.showError("Cannot get model object for '" + this.getName() + "', as it has not been loaded from file yet!");
+            application.showError("Code validation error: Cannot get model object for '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
         return this._model;
@@ -1288,7 +1288,7 @@ define([
     SoundEffectResource.prototype.play = function (soundCategory, volume, position, rolloff, long) {
         var sample, index;
         if (this.isReadyToUse() === false) {
-            application.showError("Cannot play sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
+            application.showError("Code validation error: Cannot play sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
             return -1;
         }
         index = this.getRandomSampleIndex();
@@ -1316,7 +1316,7 @@ define([
     SoundEffectResource.prototype.createSoundClip = function (soundCategory, volume, loop, shouldStack, stackTimeThreshold, stackVolumeFactor, source) {
         var sample;
         if (this.isReadyToUse() === false) {
-            application.showError("Cannot create sound source for sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
+            application.showError("Code validation error: Cannot create sound source for sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
         sample = this._samples[Math.floor(Math.random() * this._samples.length)];
@@ -1393,7 +1393,7 @@ define([
      */
     MusicResource.prototype.createSoundClip = function (volume, loop) {
         if (this.isReadyToUse() === false) {
-            application.showError("Cannot create sound source for music '" + this.getName() + "', as it has not been loaded from file yet!");
+            application.showError("Code validation error: Cannot create sound source for music '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
         if (this._sample) {

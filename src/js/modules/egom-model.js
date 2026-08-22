@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2024 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file 
  * Provides a class representing a 3D model with several meshes storing the geometry of the model at different levels of detail. The model
  * can be edited directly, loaded from an EgomModel (egm) file, can provide its vertex data in a format suitable to be loaded to WebGL
@@ -1364,7 +1364,7 @@ define([
         application.log_DEBUG("Loading EgomModel data from file: " + filename + " ...", 2);
         // checking the passed JSON file
         if (typeof dataJSON !== "object") {
-            application.showError("'" + filename + "' does not appear to be a JSON file.",
+            application.showError("Model validation error: '" + filename + "' does not appear to be a JSON file.",
                     application.ErrorSeverity.SEVERE,
                     "A model was supposed to be loaded from this file, but only models of EgomModel JSON format are accepted.");
             return false;
@@ -1372,11 +1372,11 @@ define([
         // checking EgomModel version
         version = dataJSON.version;
         if (!version) {
-            application.showError("Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", application.ErrorSeverity.SEVERE);
+            application.showError("Model validation error: Model from file: '" + filename + "' could not be loaded, because the file version could not have been determined.", application.ErrorSeverity.SEVERE);
             return false;
         }
         if (_supportedVersions.indexOf(version) < 0) {
-            application.showError("Model from file: '" + filename + "' could not be loaded, because the version of the file (" + version + ") is not supported.",
+            application.showError("Model validation error: Model from file: '" + filename + "' could not be loaded, because the version of the file (" + version + ") is not supported.",
                     application.ErrorSeverity.SEVERE, "Supported versions are: " + _supportedVersions.join(", ") + ".");
             return false;
         }

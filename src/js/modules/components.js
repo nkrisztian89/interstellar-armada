@@ -526,7 +526,7 @@ define([
         this._element = document.getElementById(this._elementID);
         if (!this._element) {
             application.showError(
-                    "Cannot initialize component: '" + this._name + "'!",
+                    "Template validation error: Cannot initialize component: '" + this._name + "'!",
                     application.ErrorSeverity.SEVERE,
                     "No element can be found on the page with a corresponding ID: '" + this._elementID + "'!");
             return;
@@ -758,7 +758,7 @@ define([
                 this._simpleComponents[i].setElementID(this._getElementID(this._simpleComponents[i].getName()));
             }
         } else {
-            application.showError("Attempting to change the root element ID for external component '" + this._name + "' after it has already been added to the page!");
+            application.showError("Code validation error: Attempting to change the root element ID for external component '" + this._name + "' after it has already been added to the page!");
         }
     };
     /**
@@ -1273,14 +1273,14 @@ define([
      */
     MenuComponent.prototype._validateStyle = function (style) {
         if (typeof style !== "object") {
-            application.showError("Invalid menu style specified: not an object!");
+            application.showError("Code validation error: Invalid menu style specified: not an object!");
             return;
         }
         if (!style.selectedButtonClassName) {
-            application.showError("Attempting to specify a menu style without specifying a class for selected menu buttons!");
+            application.showError("Code validation error: Attempting to specify a menu style without specifying a class for selected menu buttons!");
         }
         if (!style.disabledClassName) {
-            application.showError("Attempting to specify a menu style without specifying a class for disabled menu buttons!");
+            application.showError("Code validation error: Attempting to specify a menu style without specifying a class for disabled menu buttons!");
         }
     };
     /**
@@ -1678,17 +1678,17 @@ define([
      */
     ListComponent.prototype._validateStyle = function (style) {
         if (typeof style !== "object") {
-            application.showError("Invalid menu style specified: not an object!");
+            application.showError("Code validation error: Invalid list style specified: not an object!");
             return;
         }
         if (!style.disabledElementClassName) {
-            application.showError("Attempting to specify a list style without specifying a class for disabled list elements!");
+            application.showError("Code validation error: Attempting to specify a list style without specifying a class for disabled list elements!");
         }
         if (!style.selectedElementClassName) {
-            application.showError("Attempting to specify a list style without specifying a class for selected list elements!");
+            application.showError("Code validation error: Attempting to specify a list style without specifying a class for selected list elements!");
         }
         if (!style.highlightedElementClassName) {
-            application.showError("Attempting to specify a list style without specifying a class for highlighted list elements!");
+            application.showError("Code validation error: Attempting to specify a list style without specifying a class for highlighted list elements!");
         }
     };
     /**
@@ -2117,11 +2117,11 @@ define([
                 this.selectValueWithIndex(i, 0);
             } else {
                 application.showError(
-                        "Attempted to select value: '" + value + "' for '" + _getLabelText(this._propertyLabelDescriptor) + "', which is not one of the available options.",
+                        "Code validation error: Attempted to select value: '" + value + "' for '" + _getLabelText(this._propertyLabelDescriptor) + "', which is not one of the available options.",
                         application.ErrorSeverity.MINOR);
             }
         } else {
-            application.showError("Attemted to select value for selector " + this._name + " which is not yet appended to the page!");
+            application.showError("Code validation error: Attemted to select value for selector " + this._name + " which is not yet appended to the page!");
         }
     };
     /**
@@ -2142,11 +2142,11 @@ define([
                 }
             } else {
                 application.showError(
-                        "Attempted to select value with index '" + index + "' for '" + _getLabelText(this._propertyLabelDescriptor) + "', while the available range is: 0-" + (this._valueList.length - 1),
+                        "Code validation error: Attempted to select value with index '" + index + "' for '" + _getLabelText(this._propertyLabelDescriptor) + "', while the available range is: 0-" + (this._valueList.length - 1),
                         application.ErrorSeverity.MINOR);
             }
         } else {
-            application.showError("Attemted to select value for selector " + this._name + " which is not yet appended to the page!");
+            application.showError("Code validation error: Attemted to select value for selector " + this._name + " which is not yet appended to the page!");
         }
         this._updateBars();
     };
@@ -2455,10 +2455,10 @@ define([
             if (index >= 0) {
                 this.setNumericValue(index);
             } else {
-                application.showError("Cannot set listed value '" + value + "' for slider '" + this.getName() + "', because it is not in the value list!");
+                application.showError("Code validation error: Cannot set listed value '" + value + "' for slider '" + this.getName() + "', because it is not in the value list!");
             }
         } else {
-            application.showError("Cannot set listed value '" + value + "' for slider '" + this.getName() + "', because it has no value list!");
+            application.showError("Code validation error: Cannot set listed value '" + value + "' for slider '" + this.getName() + "', because it has no value list!");
         }
     };
     /**

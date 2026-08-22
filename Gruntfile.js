@@ -250,9 +250,8 @@ module.exports = function (grunt) {
                 ["positionConfiguration"],
                 ["orientationConfiguration"],
                 ["class"],
-                ["descriptor"],
                 ["distanceRange"],
-                ["blocksNavigation"]
+                ["blocksNavigation", ""]
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [
@@ -481,10 +480,11 @@ module.exports = function (grunt) {
                     replacement: ""
                 };
             }),
-            // application.showError() calls that report invalid/missing data in resources.json, classes.json, environments.json or
-            // mission JSON content are prefixed in the source with "Data validation error: ". Such content is verified
-            // via the dev-build, so these calls serve no purpose for the prod build and are stripped from it;
-            // the editor keeps them to warn about mistakes made while editing content.
+            // application.showError() (or, within application.js/game.js itself, this.showError()) calls that report a problem which can only
+            // be caused by incorrect content of the fixed prod build bundle (JSON data - resources.json/classes.json/environments.json/config.json/
+            // settings.json/mission JSON, JS code, HTML templates, GLSL shaders or .egm model files) are prefixed in the source with one of the
+            // labels below. This content is verified before making the prod build, so these calls serve no purpose for it and are stripped. 
+            // The editor keeps them to warn about mistakes made while editing content.
             dataValidationErrorRemovals = (function () {
                 var i, parenContent = "[^()]*", callPattern;
                 // tolerate up to 5 levels of nested parentheses inside the call,
@@ -493,7 +493,7 @@ module.exports = function (grunt) {
                     // use single-character [^()] (not [^()]+) inside the alternation to avoid catastrophic backtracking
                     parenContent = "(?:[^()]|\\(" + parenContent + "\\))*";
                 }
-                callPattern = "application\\.showError\\(\\s*\"Data validation error: " + parenContent + "\\)";
+                callPattern = "(?:application|this)\\.showError\\(\\s*\"(?:Data|Code|Template|Shader|Model) validation error: " + parenContent + "\\)";
                 return [
                     {
                         // "|| application.showError(...)" in a logical expression

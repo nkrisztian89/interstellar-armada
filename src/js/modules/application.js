@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2026 Krisztián Nagy
  * @file A low level module with no dependencies that offers general functionality useful for managing basic application functions such
  * as accessing files from a directory structure using AJAX.
  * Usage:
@@ -145,7 +145,7 @@ define(function () {
             if (_folders[fileType] !== undefined) {
                 return _folders[fileType];
             }
-            this.showError("Asked for folder for file type '" + fileType + "', and folder for such files is not registered!", ErrorSeverity.SEVERE);
+            this.showError("Data validation error: Asked for folder for file type '" + fileType + "', and folder for such files is not registered!", ErrorSeverity.SEVERE);
             return null;
         },
         /**
@@ -168,15 +168,15 @@ define(function () {
                             if (referringFolderFileTypes.indexOf(substitutedFolderFileType) < 0) {
                                 folder = folder.replace(folder.substring(start, Math.min(end + 3, folder.length)), resolveFolder(substitutedFolder, substitutedFolderFileType, referringFolderFileTypes.concat(fType)));
                             } else {
-                                this.showError("Circular reference detected among the following folders: " + referringFolderFileTypes.concat(fType).join(", "), ErrorSeverity.SEVERE);
+                                this.showError("Data validation error: Circular reference detected among the following folders: " + referringFolderFileTypes.concat(fType).join(", "), ErrorSeverity.SEVERE);
                                 return null;
                             }
                         } else {
-                            this.showError("Invalid folder name specified! Cannot find referenced folder '" + folder.substring(start + 2, end) + "' in " + folder + "!", ErrorSeverity.SEVERE);
+                            this.showError("Data validation error: Invalid folder name specified! Cannot find referenced folder '" + folder.substring(start + 2, end) + "' in " + folder + "!", ErrorSeverity.SEVERE);
                             return null;
                         }
                     } else {
-                        this.showError("Invalid folder name specified! Cannot resolve: '" + folder + "'", ErrorSeverity.SEVERE, "References to other folders must be surrounded by {{ and }}.");
+                        this.showError("Data validation error: Invalid folder name specified! Cannot resolve: '" + folder + "'", ErrorSeverity.SEVERE, "References to other folders must be surrounded by {{ and }}.");
                         return null;
                     }
                 }
@@ -272,7 +272,7 @@ define(function () {
          */
         hasVersionChanged: function () {
             if (_firstRun === undefined) {
-                this.showError("Cannot determine whether the game version has changed, because the previously ran version is not set!");
+                this.showError("Code validation error: Cannot determine whether the game version has changed, because the previously ran version is not set!");
             } else {
                 return (_previouslyRunVersion !== _version);
             }
