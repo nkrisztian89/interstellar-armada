@@ -845,6 +845,8 @@
         "backButton": "Vissza a menübe",
         "title": "Grafikai beállítások",
         "generalLevel": "Grafika részletessége:",
+        "detectedGpu": "Észlelt GPU: {model}",
+        "defaultSettings": "Alapértelmezett beállítások: {level}",
         "antialiasing": "Élsimítás:",
         "filtering": "Textúrák szűrése:",
         "bilinear": "bilineáris",

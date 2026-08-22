@@ -406,6 +406,8 @@ define([
         BACK: {name: "graphics.backButton"},
         TITLE: {name: "graphics.title"},
         GENERAL_LEVEL: {name: "graphics.generalLevel"},
+        DETECTED_GPU: {name: "graphics.detectedGpu"},
+        DEFAULT_SETTINGS: {name: "graphics.defaultSettings"},
         ANTIALIASING: {name: "graphics.antialiasing"},
         FILTERING: {name: "graphics.filtering"},
         BILINEAR: {name: "graphics.bilinear"},

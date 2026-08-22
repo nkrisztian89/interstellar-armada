@@ -86,7 +86,23 @@
                 }
             ],
             "autoDecreaseIfInstancingNotAvailable": true
-        }
+        },
+        "overrides": [
+            {
+                "generalLevel": "maximum",
+                "conditions": {
+                    "highEnd": true,
+                    "recent": true,
+                    "browser": ["chrome", "opera", "edge", "electron"]
+                }
+            }, {
+                "generalLevel": "high",
+                "conditions": {
+                    "dedicated": true,
+                    "browser": ["chrome", "opera", "edge", "electron"]
+                }
+            }
+        ]
     },
     "audio": {
         "masterVolume": 1,

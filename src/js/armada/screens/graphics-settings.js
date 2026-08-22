@@ -10,7 +10,7 @@
  * @param application Used for displaying errors.
  * @param components Used for the components (i.e. MultiBarSelectors) of the screen.
  * @param screens The graphics screen is an HTMLScreen.
- * @param managedGL Used for the texture filtering enum type.
+ * @param managedGL Used for the texture filtering enum type and for querying GPU info.
  * @param game Used for navigation.
  * @param strings Used for translation support.
  * @param armadaScreens Used for common screen constants.
@@ -178,6 +178,7 @@ define([
             BACK_BUTTON_ID = "backButton",
             TITLE_HEADING_ID = "title",
             DEFAULTS_BUTTON_ID = "defaultsButton",
+            GPU_INFO_ID = "gpuInfo",
             GENERAL_LEVEL_SELECTOR_ID = "generalLevelSelector",
             GENERAL_LEVEL_SELECTOR_CLASS_NAME = "smallMultiBarSelector separateSelector",
             GENERAL_LEVEL_SELECTOR_PROPERTY_CLASS_NAME = "smallSelectorPropertyContainer",
@@ -237,6 +238,10 @@ define([
          * @type SimpleComponent
          */
         this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._gpuInfo = this.registerSimpleComponent(GPU_INFO_ID);
         /**
          * @type MultiBarSelector
          */
@@ -421,8 +426,9 @@ define([
             return false;
         }.bind(this);
         this._defaultsButton.getElement().onclick = function () {
-            graphics.restoreDefaults();
-            setCustomLevel();
+            if (!graphics.restoreDefaults()) {
+                setCustomLevel();
+            }
             this._updateValues();
             return false;
         }.bind(this);
@@ -493,7 +499,17 @@ define([
      * @override
      */
     GraphicsScreen.prototype._updateComponents = function () {
+        var defaultLevel;
         screens.HTMLScreen.prototype._updateComponents.call(this);
+        if (managedGL.getUnmaskedInfo()) {
+            defaultLevel = graphics.getDefaultGeneralLevel();
+            if (defaultLevel || application.isDebugVersion()) {
+                this._gpuInfo.setContent(strings.get(strings.GRAPHICS.DETECTED_GPU) + "<br>" + strings.get(strings.GRAPHICS.DEFAULT_SETTINGS), {
+                    model: (graphics.getGPUBrand() + " " + graphics.getGPUModel()).trim(),
+                    level: defaultLevel && strings.get(strings.SETTING.PREFIX, defaultLevel)
+                });
+            }
+        }
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
         this._generalLevelSelector.setValueList(_getGeneralLevelSettingValues().map(_mapCaption));
         this._antialiasingSelector.setValueList(managedGL.isAntialiasingAvailable() ? strings.getOnOffSettingValues() : strings.getOffSettingValue());

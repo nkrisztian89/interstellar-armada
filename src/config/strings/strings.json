@@ -797,6 +797,8 @@
         "backButton": "Back to menu",
         "title": "Graphics settings",
         "generalLevel": "Graphics quality:",
+        "detectedGpu": "Detected GPU: {model}",
+        "defaultSettings": "Default settings: {level}",
         "antialiasing": "Anti-aliasing:",
         "filtering": "Texture filtering:",
         "bilinear": "bilinear",

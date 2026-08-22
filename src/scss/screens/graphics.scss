@@ -8,6 +8,7 @@
 }
 
 .generalLevelDiv {
+    position: relative;
     margin: 0.5em auto;
     text-align: center;
     background: color-scheme.$panel-back-color;
@@ -15,6 +16,19 @@
 
     .smallMultiBarSelector {
         margin: 0 auto;
+    }
+}
+
+.gpuInfo {
+    position: absolute;
+    left: 0.5em;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 80%;
+    text-align: left;
+    color: color-scheme.$dark-text-color;
+    &:empty {
+        display: none;
     }
 }
 

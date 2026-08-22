@@ -2457,11 +2457,14 @@ define([
      * @returns {String}
      */
     ManagedGLContext.prototype.getInfoString = function () {
+        var unmaskedInfo = this.getUnmaskedInfo();
         return this.gl ?
                 "WebGL version: " + this.gl.getParameter(this.gl.VERSION) + "\n" +
                 "Shading language version: " + this.gl.getParameter(this.gl.SHADING_LANGUAGE_VERSION) + "\n" +
                 "WebGL vendor: " + this.gl.getParameter(this.gl.VENDOR) + "\n" +
                 "WebGL renderer: " + this.gl.getParameter(this.gl.RENDERER) + "\n" +
+                "Unmasked vendor: " + (unmaskedInfo ? unmaskedInfo.vendor : "unavailable") + "\n" +
+                "Unmasked renderer: " + (unmaskedInfo ? unmaskedInfo.renderer : "unavailable") + "\n" +
                 "Available vertex shader uniform vectors: " + this._maxVertexShaderUniforms + "\n" +
                 "Available vertex attributes: " + this._maxVertexAttributes + "\n" +
                 "Available texture units in vertex shaders: " + this._maxVertexTextures + "\n" +
@@ -2474,6 +2477,30 @@ define([
                 "Fragment shader high precision float support: " + (this._fragmentShaderHighPrecisionSupport ? "yes" : "no")
                 :
                 "N/A";
+    };
+    /**
+     * @typedef {Object} WebGLUnmaskedInfo
+     * @property {String} vendor The unmasked GPU vendor string.
+     * @property {String} renderer The unmasked GPU renderer string.
+     */
+    /**
+     * Returns the unmasked (real) GPU vendor and renderer strings reported by the WEBGL_debug_renderer_info extension.
+     * Browsers / privacy settings can disable this extension, in which case null is returned.
+     * @returns {WebGLUnmaskedInfo|null}
+     */
+    ManagedGLContext.prototype.getUnmaskedInfo = function () {
+        var ext;
+        if (!this.gl) {
+            return null;
+        }
+        ext = this.gl.getExtension("WEBGL_debug_renderer_info");
+        if (!ext) {
+            return null;
+        }
+        return {
+            vendor: this.gl.getParameter(ext.UNMASKED_VENDOR_WEBGL),
+            renderer: this.gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)
+        };
     };
     /**
      * Returns the name of this managed context.
@@ -3102,6 +3129,7 @@ define([
         isAntialiasingAvailable: _genericContext.isAntialiased.bind(_genericContext),
         isAnisotropicFilteringAvailable: _genericContext.isAnisotropicFilteringAvailable.bind(_genericContext),
         isInstancingAvailable: _genericContext.isInstancingAvailable.bind(_genericContext),
-        areDepthTexturesAvailable: _genericContext.areDepthTexturesAvailable.bind(_genericContext)
+        areDepthTexturesAvailable: _genericContext.areDepthTexturesAvailable.bind(_genericContext),
+        getUnmaskedInfo: _genericContext.getUnmaskedInfo.bind(_genericContext)
     };
 });

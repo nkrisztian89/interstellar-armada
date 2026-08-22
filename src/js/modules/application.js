@@ -45,6 +45,21 @@ define(function () {
                  */
                 MINOR: "minor"
             },
+            /**
+             * @enum {String}
+             * The possible values identifying the browser (family) the application is currently running in, as far as it can be determined
+             * from the user agent string.
+             */
+            BrowserType = {
+                CHROME: "chrome",
+                ELECTRON: "electron",
+                FIREFOX: "firefox",
+                OPERA: "opera",
+                EDGE: "edge",
+                IE: "ie",
+                SAFARI: "safari",
+                UNKNOWN: "unknown"
+            },
             // -------------------------------------------------------------------------
             // Private variables
             DEFAULT_TEXT_MIME_TYPE = "text/plain; charset=utf-8",
@@ -109,7 +124,14 @@ define(function () {
              * of releases since the previously run version.
              * @type String
              */
-            _releases;
+            _releases,
+            /**
+             * Cached result of getBrowserType().
+             * @type String
+             */
+            _browserType;
+    Object.freeze(ErrorSeverity);
+    Object.freeze(BrowserType);
     /**
      * Logs the passed message. (currently on console)
      * @param {String} message The message to log.
@@ -121,12 +143,46 @@ define(function () {
             console.log(message); //eslint-disable-line no-console
         }
     }
+    /**
+     * A simple attempt at determining the browser (family) the application is currently running in, based on the user agent string.
+     * By the nature of user agent strings, this is not 100% accurate. Chromium-based browsers other than Chrome/Opera/Edge are
+     * also detected as Chrome, and some browsers might not be detected at all.
+     * @returns {String} (enum BrowserType)
+     */
+    function getBrowserType() {
+        var ua;
+        if (_browserType === undefined) {
+            ua = (typeof navigator !== "undefined") && navigator.userAgent;
+            if (!ua) {
+                _browserType = BrowserType.UNKNOWN;
+            } else if ((ua.indexOf("Edg/") >= 0) || (ua.indexOf("Edge/") >= 0)) {
+                _browserType = BrowserType.EDGE;
+            } else if ((ua.indexOf("OPR/") >= 0) || (ua.indexOf("Opera") >= 0)) {
+                _browserType = BrowserType.OPERA;
+            } else if (ua.indexOf("Electron/") >= 0) {
+                _browserType = BrowserType.ELECTRON;
+            } else if (ua.indexOf("Chrome/") >= 0) {
+                _browserType = BrowserType.CHROME;
+            } else if (ua.indexOf("Firefox/") >= 0) {
+                _browserType = BrowserType.FIREFOX;
+            } else if ((ua.indexOf("MSIE ") >= 0) || (ua.indexOf("Trident/") >= 0)) {
+                _browserType = BrowserType.IE;
+            } else if ((ua.indexOf("Safari/") >= 0) && (ua.indexOf("Version/") >= 0)) {
+                _browserType = BrowserType.SAFARI;
+            } else {
+                _browserType = BrowserType.UNKNOWN;
+            }
+        }
+        return _browserType;
+    }
     return {
         // -------------------------------------------------------------------------
         // Public enums
         ErrorSeverity: ErrorSeverity,
+        BrowserType: BrowserType,
         // -------------------------------------------------------------------------
         // Public methods
+        getBrowserType: getBrowserType,
         /**
          * Returns the path of the folder where the files of the passed type are stored,
          * relative to the site root.

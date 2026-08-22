@@ -9,6 +9,7 @@
 /**
  * @param mat Used for getting the elements of identity matrices for default uniform values
  * @param types Used for type checking JSON settings and set values
+ * @param gpuDetection Used to determine default graphics settings based on the GPU
  * @param application Using the application module for error displaying functionality
  * @param asyncResource GraphicsSettingsContext is an AsynchResource subclass
  * @param managedGL Used for checking valid texture filtering values
@@ -20,6 +21,7 @@
 define([
     "utils/matrices",
     "utils/types",
+    "utils/gpu-detection",
     "modules/application",
     "modules/async-resource",
     "modules/managed-gl",
@@ -28,7 +30,7 @@ define([
     "modules/screens",
     "armada/constants",
     "utils/polyfill"
-], function (mat, types, application, asyncResource, managedGL, resources, sceneGraph, screens, constants) {
+], function (mat, types, gpuDetection, application, asyncResource, managedGL, resources, sceneGraph, screens, constants) {
     "use strict";
     var
             // --------------------------------------------------------------------------------------------
@@ -827,6 +829,11 @@ define([
              */
             _changeHandlers = [],
             /**
+             * Cached result of _getGPUInfo().
+             * @type GPUInfo
+             */
+            _gpuInfo,
+            /**
              * Stores a default context the methods of which are exposed in the interface of this module.
              * @type GraphicsSettingsContext
              */
@@ -1173,6 +1180,47 @@ define([
      * @class Can load, store, save, and modify a set of graphics settings and provide their current values for other game modules.
      * @extends AsyncResource
      */
+    /**
+     * Determines and caches the current GPU info.
+     * @returns {GPUInfo}
+     */
+    function _getGPUInfo() {
+        var unmaskedInfo;
+        if (!_gpuInfo) {
+            unmaskedInfo = managedGL.getUnmaskedInfo();
+            _gpuInfo = unmaskedInfo ? gpuDetection.extractInfo(unmaskedInfo.vendor, unmaskedInfo.renderer) : gpuDetection.extractInfo();
+            application.log_DEBUG("Detected GPU info: " + JSON.stringify(_gpuInfo), 1);
+        }
+        return _gpuInfo;
+    }
+    /**
+     * @typedef {GPUInfo} GraphicsContext Hardware and software context information that can be used to determine how powerful are the
+     * graphics capabilities of the current system.
+     * @property {String} browser The type (family) of browser used to run the game - different browsers offer vastly different graphics performance
+     */
+    /**
+     * Checks whether the passed conditions (see settings.graphics.overrides) are satisfied by the passed context object.
+     * A plain (non-array) value in conditions means the corresponding context property must equal it exactly, an array
+     * value means the context property must be one of the listed values.
+     * @param {Object} conditions
+     * @param {GraphicsContext} context
+     * @returns {Boolean}
+     */
+    function _conditionsMatch(conditions, context) {
+        var key;
+        for (key in conditions) {
+            if (conditions.hasOwnProperty(key)) {
+                if (Array.isArray(conditions[key])) {
+                    if (conditions[key].indexOf(context[key]) < 0) {
+                        return false;
+                    }
+                } else if (context[key] !== conditions[key]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     function GraphicsSettingsContext() {
         asyncResource.AsyncResource.call(this);
         /**
@@ -1313,6 +1361,12 @@ define([
          * @type String
          */
         this._currentGeneralLevel = null;
+        /**
+         * A list of {generalLevel, conditions} objects (loaded from settings.graphics.overrides) - if the environment (detected GPU /
+         * browser) matches the conditions of one of these, its generalLevel is applied instead of the flat default settings.
+         * @type Object[]
+         */
+        this._overrides = null;
     }
     GraphicsSettingsContext.prototype = new asyncResource.AsyncResource();
     GraphicsSettingsContext.prototype.constructor = GraphicsSettingsContext;
@@ -1504,11 +1558,23 @@ define([
      * @param {Object} dataJSON The JSON object storing the game settings.
      * @param {Boolean} [onlyRestoreSettings=false] Whether only the default 
      * settings should be restored or completely new settings should be initialized.
+     * @returns {String|null} The name of the general graphics quality level that was applied, if any.
      */
     GraphicsSettingsContext.prototype.loadSettingsFromJSON = function (dataJSON, onlyRestoreSettings) {
+        var overrideLevel;
         onlyRestoreSettings = onlyRestoreSettings || false;
         if (!onlyRestoreSettings) {
             this._dataJSON = dataJSON;
+            this._overrides = dataJSON.overrides || null;
+        }
+        // only consider overrides when loading the default settings, not when loading one specific named general level
+        // (e.g. through setGeneralLevel(), including the recursive call a few lines below when an override does apply)
+        if (dataJSON === this._dataJSON) {
+            overrideLevel = this.getDefaultGeneralLevel();
+            if (overrideLevel) {
+                this.setGeneralLevel(overrideLevel, false);
+                return overrideLevel;
+            }
         }
         if (typeof dataJSON.shaders === "object") {
             // enabling fallback disables the check for requirements - feature settings are not loaded yet, requirements cannot be checked
@@ -1567,6 +1633,7 @@ define([
         // now that all default settings are loaded, disable the features and decrease the shader complexity until the requirements are 
         // satisfied
         this._setFallbackShaderComplexity(true);
+        return null;
     };
     /**
      * Loads the custom graphics settings stored in HTML5 local storage.
@@ -1614,9 +1681,10 @@ define([
     };
     /**
      * Restores the default settings that were loaded from file, and erases the custom changes that are stored in HTML5 local storage.
+     * @returns {String|null} The name of the general graphics quality level that was applied, if any.
      */
     GraphicsSettingsContext.prototype.restoreDefaults = function () {
-        this.loadSettingsFromJSON(this._dataJSON, true);
+        var level = this.loadSettingsFromJSON(this._dataJSON, true);
         localStorage.removeItem(GENERAL_LEVEL_LOCAL_STORAGE_ID);
         localStorage.removeItem(ANTIALIASING_LOCAL_STORAGE_ID);
         localStorage.removeItem(FILTERING_LOCAL_STORAGE_ID);
@@ -1633,6 +1701,7 @@ define([
         localStorage.removeItem(POINT_LIGHT_AMOUNT_LOCAL_STORAGE_ID);
         localStorage.removeItem(PARTICLE_AMOUNT_LOCAL_STORAGE_ID);
         localStorage.removeItem(DUST_PARTICLE_AMOUNT_LOCAL_STORAGE_ID);
+        return level;
     };
     /**
      * Returns the current antialiasing setting.
@@ -2545,6 +2614,43 @@ define([
     GraphicsSettingsContext.prototype.getGeneralLevel = function () {
         return this._currentGeneralLevel;
     };
+    
+    /**
+     * Returns the string ID of the general graphics level that should be applied according to the settings.graphics.overrides list, based
+     * on the detected GPU and browser (the first entry whose conditions are fully matched, in list order), or null if none of them match.
+     * @returns {String|null}
+     */
+    GraphicsSettingsContext.prototype.getDefaultGeneralLevel = function () {
+        var i, context;
+        if (!this._overrides) {
+            return null;
+        }
+        context = Object.assign({}, _getGPUInfo(), {
+            browser: application.getBrowserType()
+        });
+        for (i = 0; i < this._overrides.length; i++) {
+            if (!this._generalLevels[this._overrides[i].generalLevel]) {
+                application.showError("Data validation error: Override defined for unknown general graphics level: '" + this._overrides[i].generalLevel + "'!");
+            } else if (_conditionsMatch(this._overrides[i].conditions, context)) {
+                return this._overrides[i].generalLevel;
+            }
+        }
+        return null;
+    };
+    /**
+     * Returns the detected brand of the graphics card (enum GPUBrand).
+     * @returns {String}
+     */
+    GraphicsSettingsContext.prototype.getGPUBrand = function () {
+        return _getGPUInfo().brand;
+    };
+    /**
+     * Returns the detected graphics card model name. (empty string if it could not be determined)
+     * @returns {String}
+     */
+    GraphicsSettingsContext.prototype.getGPUModel = function () {
+        return _getGPUInfo().model;
+    };
     // -------------------------------------------------------------------------
     // Public functions
     /**
@@ -2749,6 +2855,9 @@ define([
         getGeneralLevelNames: _context.getGeneralLevelNames.bind(_context),
         setGeneralLevel: _context.setGeneralLevel.bind(_context),
         getGeneralLevel: _context.getGeneralLevel.bind(_context),
+        getDefaultGeneralLevel: _context.getDefaultGeneralLevel.bind(_context),
+        getGPUBrand: _context.getGPUBrand.bind(_context),
+        getGPUModel: _context.getGPUModel.bind(_context),
         isAnaglyphRenderingEnabled: _context.isAnaglyphRenderingEnabled.bind(_context),
         getAnaglyphRenderingSettings: _context.getAnaglyphRenderingSettings.bind(_context),
         getAnaglyphOriginalColorRatio: getAnaglyphOriginalColorRatio,

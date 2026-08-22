@@ -796,6 +796,8 @@
         "backButton": "Torna al menu",
         "title": "Impostazioni grafiche",
         "generalLevel": "Qualità grafica:",
+        "detectedGpu": "GPU rilevata: {model}",
+        "defaultSettings": "Impostazioni predefinite: {level}",
         "antialiasing": "Anti-aliasing:",
         "filtering": "Filtraggio delle texture:",
         "bilinear": "bilineare",
