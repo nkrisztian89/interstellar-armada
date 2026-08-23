@@ -2413,7 +2413,7 @@ define([
         this._maxFragmentShaderUniforms = gl_.getParameter(gl_.MAX_FRAGMENT_UNIFORM_VECTORS);
         this._maxVaryings = gl_.getParameter(gl_.MAX_VARYING_VECTORS);
         this._fragmentShaderHighPrecisionSupport = !!gl_.getShaderPrecisionFormat && (gl_.getShaderPrecisionFormat(gl_.FRAGMENT_SHADER, gl_.HIGH_FLOAT).precision > 0);
-        application.log("WebGL context successfully created.\n" + this.getInfoString(), 1);
+        application.log("WebGL context successfully created.\n" + this.getInfoString(true), 1);
         // -------------------------------------------------------------------------------------------------------
         // initializing extensions
         // anisotropic filtering
@@ -2454,29 +2454,32 @@ define([
     };
     /**
      * Returns a string containing detailed information about the graphics support and driver limits of this context.
+     * @param {Boolean} [includeUnmasked=false] Whether to include the unmasked GPU vendor and renderer strings in the output (if available).
      * @returns {String}
      */
-    ManagedGLContext.prototype.getInfoString = function () {
-        var unmaskedInfo = this.getUnmaskedInfo();
+    ManagedGLContext.prototype.getInfoString = function (includeUnmasked) {
+        var unmaskedInfo = includeUnmasked ? this.getUnmaskedInfo() : null;
         return this.gl ?
-                "WebGL version: " + this.gl.getParameter(this.gl.VERSION) + "\n" +
-                "Shading language version: " + this.gl.getParameter(this.gl.SHADING_LANGUAGE_VERSION) + "\n" +
-                "WebGL vendor: " + this.gl.getParameter(this.gl.VENDOR) + "\n" +
-                "WebGL renderer: " + this.gl.getParameter(this.gl.RENDERER) + "\n" +
+            "WebGL version: " + this.gl.getParameter(this.gl.VERSION) + "\n" +
+            "Shading language version: " + this.gl.getParameter(this.gl.SHADING_LANGUAGE_VERSION) + "\n" +
+            "WebGL vendor: " + this.gl.getParameter(this.gl.VENDOR) + "\n" +
+            "WebGL renderer: " + this.gl.getParameter(this.gl.RENDERER) + "\n" +
+            (includeUnmasked ?
                 "Unmasked vendor: " + (unmaskedInfo ? unmaskedInfo.vendor : "unavailable") + "\n" +
-                "Unmasked renderer: " + (unmaskedInfo ? unmaskedInfo.renderer : "unavailable") + "\n" +
-                "Available vertex shader uniform vectors: " + this._maxVertexShaderUniforms + "\n" +
-                "Available vertex attributes: " + this._maxVertexAttributes + "\n" +
-                "Available texture units in vertex shaders: " + this._maxVertexTextures + "\n" +
-                "Available varying vectors: " + this._maxVaryings + "\n" +
-                "Available fragment shader uniform vectors: " + this._maxFragmentShaderUniforms + "\n" +
-                "Available texture units: " + this._maxBoundTextures + "\n" +
-                "Maximum texture size: " + this._maxTextureSize + "\n" +
-                "Maximum cubemap size: " + this._maxCubemapSize + "\n" +
-                "Maximum renderbuffer size: " + this._maxRenderbufferSize + "\n" +
-                "Fragment shader high precision float support: " + (this._fragmentShaderHighPrecisionSupport ? "yes" : "no")
-                :
-                "N/A";
+                "Unmasked renderer: " + (unmaskedInfo ? unmaskedInfo.renderer : "unavailable") + "\n" :
+                "") +
+            "Available vertex shader uniform vectors: " + this._maxVertexShaderUniforms + "\n" +
+            "Available vertex attributes: " + this._maxVertexAttributes + "\n" +
+            "Available texture units in vertex shaders: " + this._maxVertexTextures + "\n" +
+            "Available varying vectors: " + this._maxVaryings + "\n" +
+            "Available fragment shader uniform vectors: " + this._maxFragmentShaderUniforms + "\n" +
+            "Available texture units: " + this._maxBoundTextures + "\n" +
+            "Maximum texture size: " + this._maxTextureSize + "\n" +
+            "Maximum cubemap size: " + this._maxCubemapSize + "\n" +
+            "Maximum renderbuffer size: " + this._maxRenderbufferSize + "\n" +
+            "Fragment shader high precision float support: " + (this._fragmentShaderHighPrecisionSupport ? "yes" : "no")
+            :
+            "N/A";
     };
     /**
      * @typedef {Object} WebGLUnmaskedInfo

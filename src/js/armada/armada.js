@@ -98,7 +98,9 @@ define([
     game.setPreviouslyRunVersion(localStorage[constants.VERSION_LOCAL_STORAGE_ID]);
     // failing to load config or settings should already use the proper error handler, analytics.sendEvent() will simply no-op in this case
     game.showError = function (message, severity, details, disableIgnore) {
-        analytics.sendEvent("error", undefined, {message: (message.length > 120) ? message.substr(0, 120) + "..." : message});
+        analytics.sendEvent("error", undefined,
+                {message: (message.length > 120) ? message.substr(0, 120) + "..." : message},
+                {severity: severity, details: details});
         errorDialog.showError(message, severity, details, disableIgnore);
     };
     // -------------------------------------------------------------------------

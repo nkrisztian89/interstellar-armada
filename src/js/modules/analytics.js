@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018, 2020-2025 Krisztián Nagy
+ * Copyright 2017-2026 Krisztián Nagy
  * @file This is a simple analytics module that sends requests to an analytics backend
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -12,6 +12,12 @@ define([
     "modules/application"
 ], function (application) {
     "use strict";
+    /**
+     * @type {Object} AnalyticsEventItem
+     * @property {Function} [callback]
+     * @property {XMLHttpRequest} [request]
+     * @property {String} [body]
+     */
     // private variables
     var
             /**
@@ -42,8 +48,8 @@ define([
             /**
              * Queued requests and callbacks that are waiting for the current request
              * (the first one in the queue) to complete before they can be executed
-             * (in order). Elements are {callback: Function} or {request: XMLHTTPRequest}
-             * @type Array
+             * (in order). Elements are {callback: Function} or {request: XMLHttpRequest}
+             * @type AnalyticsEventItem[]
              */
             _queue = [],
             /**
@@ -68,7 +74,7 @@ define([
                         _processQueue();
                     } else {
                         if (item.request) {
-                            item.request.send(null);
+                            item.request.send(item.body || null);
                         }
                     }
                 }
@@ -93,9 +99,11 @@ define([
              * @param {Function} onSuccess Function to execute when the request succeeds. Gets the request as its argument.
              * @param {Function} onError Function to execute when an error happens with the request. Gets the request as its argument. If this
              * function returns false, the request will not be retried again.
+             * @param {Object} [body] When given, sent as a JSON request body (with the appropriate Content-Type header) instead of no body at all.
              */
-            _queueRequest = function (path, retryIn, independent, onSuccess, onError) {
+            _queueRequest = function (path, retryIn, independent, onSuccess, onError, body) {
                 var request = new XMLHttpRequest(),
+                        bodyString = body ? JSON.stringify(body) : null,
                         handleError = function (message) {
                             application.log_DEBUG(message, 1);
                             if (onError) {
@@ -112,7 +120,7 @@ define([
                                         if (!independent) {
                                             _processQueue();
                                         }
-                                    }, onError);
+                                    }, onError, body);
                                 }, retryIn);
                             } else {
                                 if (!independent) {
@@ -138,12 +146,15 @@ define([
                 }.bind(this);
                 request.overrideMimeType("text/plain; charset=utf-8");
                 request.open("POST", _baseUrl + path, true);
+                if (bodyString) {
+                    request.setRequestHeader("Content-Type", "application/json");
+                }
                 if (independent) {
-                    request.send(null);
+                    request.send(bodyString);
                 } else {
-                    _queue.push({request: request});
+                    _queue.push({request: request, body: bodyString});
                     if (_queue.length === 1) {
-                        request.send(null);
+                        request.send(bodyString);
                     }
                 }
             };
@@ -192,8 +203,9 @@ define([
      * @param {String} eventName
      * @param {String[]} [urlParams]
      * @param {Object} [queryParams]
+     * @param {Object} [body] When given, sent as a JSON request body
      */
-    function sendEvent(eventName, urlParams, queryParams) {
+    function sendEvent(eventName, urlParams, queryParams, body) {
         var url, i, p;
         if (!_enabled) {
             return;
@@ -219,7 +231,7 @@ define([
             }
             _queueRequest(url, 1000, false, function () {
                 application.log_DEBUG("Successfully sent analytics event '" + eventName + "'!", 2);
-            });
+            }, undefined, body);
         });
     }
     /**

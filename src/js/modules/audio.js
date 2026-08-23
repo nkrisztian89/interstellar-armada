@@ -717,8 +717,8 @@ define([
             if (successCallback) {
                 successCallback();
             }
-        }, function () {
-            application.showError("Decoding audio sample '" + name + "' failed!");
+        }, function (error) {
+            application.showError("Decoding audio sample '" + name + "' failed!", application.ErrorSeverity.MINOR, "Error: " + error.message);
             if (failureCallback) {
                 failureCallback();
             }
