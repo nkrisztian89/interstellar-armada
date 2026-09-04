@@ -469,7 +469,7 @@
         "x-10",
         "z+80"
       ],
-      "loadout": "rebel",
+      "loadout": "rebel-tier2",
       "away": true
     },
     {
@@ -486,7 +486,7 @@
         "x-5",
         "z+90"
       ],
-      "loadout": "rebel",
+      "loadout": "rebel-tier2",
       "away": true
     }
   ]

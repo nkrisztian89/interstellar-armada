@@ -13094,16 +13094,28 @@
           }
         },
         {
-          "name": "rebel",
+          "name": "rebel-tier1",
           "basedOn": "unarmed",
           "weapons": [
             {
-              "class": "damagedSmallPlasmaTurret"
+              "class": "damagedPirateTurret"
             }
           ],
           "shield": {
             "class": "rebelCorvetteMk1"
           }
+        },
+        {
+          "name": "rebel-tier2",
+          "basedOn": "rebel-tier1",
+          "weapons": [
+            {
+              "class": "damagedPirateTurret"
+            },
+            {
+              "class": "damagedPirateTurret"
+            }
+          ]
         },
         {
           "name": "pirate",

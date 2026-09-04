@@ -789,7 +789,7 @@
       "rotations": [
         "z+180"
       ],
-      "loadout": "rebel",
+      "loadout": "rebel-tier2",
       "excludeFromReferenceScore": true
     },
     {
@@ -805,7 +805,7 @@
       "rotations": [
         "z+180"
       ],
-      "loadout": "rebel",
+      "loadout": "rebel-tier2",
       "excludeFromReferenceScore": true
     },
     {

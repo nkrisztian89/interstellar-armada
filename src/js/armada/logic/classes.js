@@ -5165,6 +5165,11 @@ define([
      * @param {String} name
      */
     SpacecraftClass.prototype.getLoadout = function (name) {
+        if (!this._loadouts[name]) {
+            application.showError(
+                    "Data validation error: Non-existing loadout '" + name + "' requested for spacecraft class " + this.getName() + "!",
+                    application.ErrorSeverity.MINOR);
+        }
         return this._loadouts[name];
     };
     /**
