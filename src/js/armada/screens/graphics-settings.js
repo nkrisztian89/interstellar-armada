@@ -505,7 +505,7 @@ define([
             defaultLevel = graphics.getDefaultGeneralLevel();
             if (defaultLevel || application.isDebugVersion()) {
                 this._gpuInfo.setContent(strings.get(strings.GRAPHICS.DETECTED_GPU) + "<br>" + strings.get(strings.GRAPHICS.DEFAULT_SETTINGS), {
-                    model: (graphics.getGPUBrand() + " " + graphics.getGPUModel()).trim(),
+                    model: (graphics.getGPUInfo().brand + " " + graphics.getGPUInfo().model).trim(),
                     level: defaultLevel && strings.get(strings.SETTING.PREFIX, defaultLevel)
                 });
             }

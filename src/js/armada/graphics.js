@@ -1175,24 +1175,8 @@ define([
         OrderedNamedNumericOptions.prototype.applyLimit.call(this, limit);
         this._updatePreferenceList();
     };
-    // ############################################################################################
-    /**
-     * @class Can load, store, save, and modify a set of graphics settings and provide their current values for other game modules.
-     * @extends AsyncResource
-     */
-    /**
-     * Determines and caches the current GPU info.
-     * @returns {GPUInfo}
-     */
-    function _getGPUInfo() {
-        var unmaskedInfo;
-        if (!_gpuInfo) {
-            unmaskedInfo = managedGL.getUnmaskedInfo();
-            _gpuInfo = unmaskedInfo ? gpuDetection.extractInfo(unmaskedInfo.vendor, unmaskedInfo.renderer) : gpuDetection.extractInfo();
-            application.log_DEBUG("Detected GPU info: " + JSON.stringify(_gpuInfo), 1);
-        }
-        return _gpuInfo;
-    }
+    // -------------------------------------------------------------------------
+    // Private functions
     /**
      * @typedef {GPUInfo} GraphicsContext Hardware and software context information that can be used to determine how powerful are the
      * graphics capabilities of the current system.
@@ -1221,6 +1205,26 @@ define([
         }
         return true;
     }
+    // -------------------------------------------------------------------------
+    // Public functions
+    /**
+     * Determines and caches the current GPU info.
+     * @returns {GPUInfo}
+     */
+    function getGPUInfo() {
+        var unmaskedInfo;
+        if (!_gpuInfo) {
+            unmaskedInfo = managedGL.getUnmaskedInfo();
+            _gpuInfo = unmaskedInfo ? gpuDetection.extractInfo(unmaskedInfo.vendor, unmaskedInfo.renderer) : gpuDetection.extractInfo();
+            application.log_DEBUG("Detected GPU info: " + JSON.stringify(_gpuInfo), 1);
+        }
+        return _gpuInfo;
+    }
+    // ############################################################################################
+    /**
+     * @class Can load, store, save, and modify a set of graphics settings and provide their current values for other game modules.
+     * @extends AsyncResource
+     */
     function GraphicsSettingsContext() {
         asyncResource.AsyncResource.call(this);
         /**
@@ -2625,7 +2629,7 @@ define([
         if (!this._overrides) {
             return null;
         }
-        context = Object.assign({}, _getGPUInfo(), {
+        context = Object.assign({}, getGPUInfo(), {
             browser: application.getBrowserType()
         });
         for (i = 0; i < this._overrides.length; i++) {
@@ -2636,20 +2640,6 @@ define([
             }
         }
         return null;
-    };
-    /**
-     * Returns the detected brand of the graphics card (enum GPUBrand).
-     * @returns {String}
-     */
-    GraphicsSettingsContext.prototype.getGPUBrand = function () {
-        return _getGPUInfo().brand;
-    };
-    /**
-     * Returns the detected graphics card model name. (empty string if it could not be determined)
-     * @returns {String}
-     */
-    GraphicsSettingsContext.prototype.getGPUModel = function () {
-        return _getGPUInfo().model;
     };
     // -------------------------------------------------------------------------
     // Public functions
@@ -2856,8 +2846,7 @@ define([
         setGeneralLevel: _context.setGeneralLevel.bind(_context),
         getGeneralLevel: _context.getGeneralLevel.bind(_context),
         getDefaultGeneralLevel: _context.getDefaultGeneralLevel.bind(_context),
-        getGPUBrand: _context.getGPUBrand.bind(_context),
-        getGPUModel: _context.getGPUModel.bind(_context),
+        getGPUInfo: getGPUInfo,
         isAnaglyphRenderingEnabled: _context.isAnaglyphRenderingEnabled.bind(_context),
         getAnaglyphRenderingSettings: _context.getAnaglyphRenderingSettings.bind(_context),
         getAnaglyphOriginalColorRatio: getAnaglyphOriginalColorRatio,
